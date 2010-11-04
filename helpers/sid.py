@@ -7,8 +7,6 @@ Object Type
 def compute_sid(params_dictionary):
 	hash_string  = ''
 	keys = params_dictionary.items()#.sort()
-	print keys
-	print 'asdfasdf'
 	for key in keys:
 		pass
 #		hash_string += key + '=' + params_dictionary[key]

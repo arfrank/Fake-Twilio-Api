@@ -10,7 +10,6 @@ handlers:
 - url: /(.*)/accounts/.*
   script: handlers/accounts.py
 
-
-
 - url: .*
   script: handlers/main.py
+  secure: always
