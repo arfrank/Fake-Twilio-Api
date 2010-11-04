@@ -1,0 +1,16 @@
+application: twilioapi
+version: 1
+runtime: python
+api_version: 1
+
+handlers:
+- url: /(.*)/accounts/(.*)/SMS/.*
+  script: handlers/sms.py
+
+- url: /(.*)/accounts/.*
+  script: handlers/accounts.py
+
+
+
+- url: .*
+  script: handlers/main.py

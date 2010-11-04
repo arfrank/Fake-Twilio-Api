@@ -1,0 +1,13 @@
+{% extends "../templates/base.html" %}
+{% block 'content' %}
+	<h1>Register</h1>
+	<form action="/register" method="post" accept-charset="utf-8">
+		<p>
+			<label for="email">Email: </label><input type="email" name="email" value="" id="email"><br>
+			<label for="password">Choose Password: </label><input type="password" name="password" value=""><br>
+			<label for="password_confirm">Confirm Password: </label><input type="password" name="password_confirm" value=""><br>
+			
+			<input type="submit" value="Register">
+		</p>
+	</form>
+{% endblock %}
