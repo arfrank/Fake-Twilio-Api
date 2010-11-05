@@ -12,7 +12,9 @@ handlers:
   script: handlers/sms.py
 
 #/2010-04-01/Accounts/{AccountSid}/AvailablePhoneNumbers/{IsoCountryCode}/Local
-- url: /(.*)/Accounts/(.*)/AvailablePhoneNumbers/(.*)/.*
+- url: /(.*)/Accounts/(.*)/AvailablePhoneNumbers/(.*)/Local
+  script: handlers/phone_numbers.py
+- url: /(.*)/Accounts/(.*)/AvailablePhoneNumbers/(.*)/TollFree
   script: handlers/phone_numbers.py
 
 - url: /(.*)/Accounts/.*
