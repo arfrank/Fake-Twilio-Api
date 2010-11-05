@@ -17,6 +17,15 @@ handlers:
 - url: /(.*)/Accounts/(.*)/AvailablePhoneNumbers/(.*)/TollFree
   script: handlers/phone_numbers.py
 
+# /2010-04-01/Accounts/{AccountSid}/OutgoingCallerIds/{OutgoingCallerIdSid}
+- url: /(.*)/Accounts/(.*)/OutgoingCallerIds/.*
+  script: handlers/outgoing_caller_ids.py
+
+# /2010-04-01/Accounts/{AccountSid}/IncomingPhoneNumbers/{IncomingPhoneNumberSid}
+- url: /(.*)/Accounts/(.*)/IncomingPhoneNumbers/.*
+  script: handlers/incoming_phone_numbers.py
+
+
 - url: /(.*)/Accounts/.*
   script: handlers/accounts.py
 
