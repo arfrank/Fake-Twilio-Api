@@ -11,5 +11,5 @@ def to_xml(dictionary):
 		if type(dictionary[item]) is dict:
 			string += "<"+item+">"+to_xml(dictionary[item])+"</"+item+">"
 		else:
-			string +='<'+item+'>'+dictionary[item]+"</"+item+">"
+			string +='<'+item+'>'+str(dictionary[item])+"</"+item+">"
 	return string	

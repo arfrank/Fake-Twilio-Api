@@ -1,3 +1,5 @@
+#/2010-04-01/Accounts/{AccountSid}/AvailablePhoneNumbers/{IsoCountryCode}/Local
+
 #!/usr/bin/env python
 #
 # Copyright 2007 Google Inc.

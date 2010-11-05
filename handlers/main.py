@@ -76,6 +76,7 @@ class Account(webapp.RequestHandler):
 			path = os.path.join(os.path.dirname(__file__), '../templates/account.html')
 			self.response.out.write(template.render(path,{'data':{'account':session['account']}}))
 
+
 class Logout(webapp.RequestHandler):
 	def get(self):
 		session = get_current_session()
@@ -88,6 +89,7 @@ def main():
 											('/login',Login),
 											('/logout',Logout),
 											('/account',Account)
+											
 										],
 										 debug=True)
 	util.run_wsgi_app(application)

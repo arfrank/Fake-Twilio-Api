@@ -1,28 +1,28 @@
 from google.appengine.ext import db
 from models import base
+from random import random
+from hashlib import sha256
 
 class Message(base.CommonModel):
 	To = db.StringProperty()
 	From = db.StringProperty()
 	Body = db.StringProperty()
-	DateCreated = db.StringProperty()
-	DateUpdated = db.StringProperty()
-	DateSent = db.StringProperty()
+	DateSent = db.DateTimeProperty()
 	AccountSid = db.StringProperty()
-	__Sid = db.StringProperty()
+	Sid = db.StringProperty()
 	Status = db.StringProperty()
 	Direction = db.StringProperty()
 	Price = db.StringProperty()
+	StatusCallback = db.StringProperty()
 
-	def __init__(To,From,Body,AccountSid,Direction,Status):
-		self.To = To
-		self.From = From
-		self.Body = Body
-		self.AccountSid = AccountSid
-		self.Direction = Direction
-		self.Status = Status
-		self.Price = Price
-		self.__Sid = self.__compute_sid()
-		
-	def __compute_sid():
-		pass
+	@classmethod
+	def new(cls,To,From,Body,AccountSid,Direction,Status,Price=None,StatusCallback = None):
+		To = To
+		From = From
+		Body = Body
+		AccountSid = AccountSid
+		Direction = Direction
+		Status = Status
+		Price = Price
+		Sid = 'SM'+sha256(To+str(random())+From).hexdigest()
+		return cls(To=To,From=From,Body=Body,AccountSid=AccountSid,Direction=Direction,Status=Status,Price = Price,Sid = Sid,StatusCallback = StatusCallback)

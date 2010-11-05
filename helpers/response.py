@@ -14,6 +14,7 @@ def format_response(response_data,format):
 		return simplejson.dumps(response_data)
 	elif format == 'XML':
 		return xml.to_xml(response_data)
-	else:
-		#format not supported
+	elif format == 'CSV':
 		pass
+	elif format == 'HTML':
+		return 'RENDER TEMPLATE FOR HTML'

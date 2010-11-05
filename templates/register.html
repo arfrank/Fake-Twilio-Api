@@ -1,6 +1,7 @@
 {% extends "../templates/base.html" %}
 {% block 'content' %}
 	<h1>Register</h1>
+	<div id="content">
 	<form action="/register" method="post" accept-charset="utf-8">
 		<p>
 			<label for="email">Email: </label><input type="email" name="email" value="" id="email"><br>
@@ -10,4 +11,5 @@
 			<input type="submit" value="Register">
 		</p>
 	</form>
+</div>
 {% endblock %}

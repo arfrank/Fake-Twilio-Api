@@ -8,9 +8,8 @@
 			background:#ee9999;
 			margin-top:100px;
 		}
-		#content{
+		#content-container{
 			border:10px solid #fff;
-			padding:20px;
 			background:#ccc;
 			border-radius:25px;
 			height:400px;
@@ -19,22 +18,33 @@
 			-webkit-box-shadow:5px 5px 25px #000;
 			box-shadow:5px 5px 25px #000;
 		}
-		#content h1{
-			padding-bottom:15px;
+		#content-container h1{
+			background:#f00;
+			margin-top:0px;
+			padding:15px;
+			-webkit-border-top-left-radius: 15px;
+			-webkit-border-top-right-radius: 15px;
+			-moz-border-radius-topleft: 15px;
+			-moz-border-radius-topright: 15px;
+			border-top-left-radius: 15px;
+			border-top-right-radius: 15px;
 			text-align:center;
-			border-bottom:1px dashed #fff;
+			border-bottom:5px solid #fff;
 		}
-		#content .center{
+		#content-container .center{
 			text-align:center;
 			font-size:36px;
 		}
-		#content label{
+		#content{
+			padding:10px;
+		}
+		#content-container label{
 			font-size:20px;
 		}
 	</style>
 </head>
 <body>
-	<div id="content" class="">
+	<div id="content-container" class="">
 		{% block 'content' %}
 		
 		{% endblock %}

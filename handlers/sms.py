@@ -16,12 +16,58 @@
 #
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
-from helpers import response,parameters,sid
+from google.appengine.api.labs import taskqueue
+
+from helpers import response,parameters,sid,authorization
+from decorators import authorization
 import random
 import string
+
+from models import accounts,messages
+
 class MessageList(webapp.RequestHandler):
+#	@authorization.authorize_request
 	def get(self, API_VERSION, ACCOUNT_SID, *args):
-		MessageList.post(self,API_VERSION,ACCOUNT_SID)
+		format = response.response_format(self.request.path.split('/')[-1])
+		Messages = messages.Message.all()
+		if self.request.get('To',None) is not None:
+			Messages.filter('To = ',self.request.get('To'))
+		if self.request.get('From',None) is not None:
+			Messages.filter('From = ',self.request.get('From'))
+		if self.request.get('DateSent',None) is not None:
+			pass
+			#To be implimented later
+		#This should be put into a helper or something to automatically populate,
+		#or be a subclass of a list handler and just do Messagy things for messages
+		Page = 0
+		PageSize = 50
+		if self.request.get('Page',None) is not None:
+			try:
+				Page = int(self.request.get('Page'))
+			except Exception, e:
+				Page = 0
+		if Page < 0:
+			Page = 0
+		if self.request.get('PageSize',None) is not None:
+			try:
+				PageSize = int(self.request.get('PageSize'))
+			except Exception, e:
+				PageSize = 50
+		if PageSize > 1000:
+			PageSize = 1000
+		if PageSize < 0:
+			PageSize = 1
+		smsCount = Messages.count()
+		SmsMessages = Messages.fetch(PageSize,(Page*PageSize))
+		response_data = {
+						"start":(Page*PageSize),
+						"total":smsCount,
+						'SmsMessages':[]
+						}
+		for sms in Message:
+			response_data['SmsMessages'].append(sms)
+		self.response.out.write(response.format_response(response_data,format))
+		pass
 	"""
 	{
 	    "account_sid": "AC5ef872f6da5a21de157d80997a64bd33", 
@@ -40,35 +86,38 @@ class MessageList(webapp.RequestHandler):
 	}
 	"""
 
+	@authorization.authorize_request
 	def post(self, API_VERSION, ACCOUNT_SID, *args):
 		if parameters.required(['From','To','Body'],self.request):
-			import datetime
-			#time is hardcoded -8 hours from UTC, will fix this later with other date things abstracted away
-			now_time = datetime.datetime.now()+datetime.timedelta(hours=-8)
-			now_formatted = now_time.strftime('%a, %d %b %Y %H:%M:%S %z')
-			response_data = {
-			    "account_sid": ACCOUNT_SID, 
-			    "api_version": API_VERSION, 
-			    "body": self.request.get('Body'), 
-			    "date_created": now_formatted, 
-			    "date_sent": None, 
-			    "date_updated": now_formatted, 
-			    "direction": "outbound-api", 
-			    "from": self.request.get('From'), 
-			    "price": None, 
-			    "status": "queued", 
-			    "to": self.request.get('To'), 
-			    "uri": self.request.path			
-			}
-			SMSSid = 'SM'+ sid.compute_sid(response_data)
-			response_data['sid'] = SMSSid
+			Message = messages.Message.new(
+										To = self.request.get('To'),
+										From = self.request.get('From'),
+										Body = self.request.get('Body'),
+										AccountSid = ACCOUNT_SID,
+										Direction = 'outbound-api',
+										Status = 'queued'
+									)
 			if self.request.get('StatusCallback',None) is not None:
-				response_data['StatusCallback'] = self.request.get('StatusCallback')
-			format = 'JSON'
+				Message.StatusCallback = self.request.get('StatusCallback')
+
+			format = response.response_format(self.request.path.split('/')[-1])
+
+			response_data = Message.get_dict()
+			if format == 'XML':
+				response_data = {
+						'TwilioResponse':
+							{
+							'SMSMessage':response_data
+							}
+						}
 			self.response.out.write(response.format_response(response_data,format))
+			Message.put()
+			#make sure put happens before callback happens
+			if Message.StatusCallback is not None:
+				taskqueue.Queue('StatusCallbacks').add(taskqueue.Task(url='/Callbacks/SMS', params = {'SmsSid':Message.Sid}))
 		else:
 			self.error(400)
-		
+
 	def put(self, API_VERSION, ACCOUNT_SID, *args):
 		self.error(405)
 	def delete(self, API_VERSION, ACCOUNT_SID, *args):
@@ -90,32 +139,26 @@ class MessageInstanceResource(webapp.RequestHandler):
 	ApiVersion	The version of the Twilio API used to process the SMS message.
 	Uri	The URI for this resource, relative to https://api.twilio.com
 	"""
+	@authorization.authorize_request
 	def get(self,API_VERSION,ACCOUNT_SID, *args):
 		SMSMessageSid = args[0]
 		format = response.response_format(SMSMessageSid)
-		data = {
-		'Sid':'',
-		'DateCreated':'',
-		'DateUpdated':'',
-		'DateSent':'',
-		'AccountSid':ACCOUNT_SID,
-		'From':'',
-		'To':'',
-		'Body':'',
-		'Status':'',
-		'Direction':'',
-		'Price':'',
-		'ApiVersion':API_VERSION,
-		'Uri':self.request.path
-		}
-		if format == 'XML':
-			data = {
-					'TwilioResponse':
-						{
-						'SMSMessage':data
+		SMSMessageSid = args[0].split('.')[0]
+		Message = messages.Message.all().filter('Sid =',SMSMessageSid).get()
+		if Message is not None and True or Message.AccountSid == ACCOUNT_SID:
+			response_data = Message.get_dict()
+			response_data['ApiVersion'] = API_VERSION
+			response_data['Uri'] = self.request.path
+			if format == 'XML':
+				response_data = {
+						'TwilioResponse':
+							{
+							'SMSMessage':response_data
+							}
 						}
-					}
-		self.response.out.write(response.format_response(data,format))
+			self.response.out.write(response.format_response(response_data,format))
+		else:
+			self.error(400)
 
 	def post(self, API_VERSION, ACCOUNT_SID, *args):
 		self.error(405)
@@ -128,9 +171,9 @@ class MessageInstanceResource(webapp.RequestHandler):
 		
 def main():
 	application = webapp.WSGIApplication([
-											('/(.*)/accounts/(.*)/SMS/Messages', MessageList),
-											('/(.*)/accounts/(.*)/SMS/Messages.json', MessageList),
-											('/(.*)/accounts/(.*)/SMS/Messages/(.*)', MessageInstanceResource)
+											('/(.*)/Accounts/(.*)/SMS/Messages', MessageList),
+											('/(.*)/Accounts/(.*)/SMS/Messages.json', MessageList),
+											('/(.*)/Accounts/(.*)/SMS/Messages/(.*)', MessageInstanceResource)
 										],
 										 debug=True)
 	util.run_wsgi_app(application)
