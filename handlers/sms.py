@@ -18,7 +18,7 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 from google.appengine.api.labs import taskqueue
 
-from helpers import response,parameters,sid,authorization
+from helpers import response, parameters, sid, authorization, xml
 from decorators import authorization
 import random
 import string
@@ -67,7 +67,6 @@ class MessageList(webapp.RequestHandler):
 		for sms in Message:
 			response_data['SmsMessages'].append(sms)
 		self.response.out.write(response.format_response(response_data,format))
-		pass
 	"""
 	{
 	    "account_sid": "AC5ef872f6da5a21de157d80997a64bd33", 
@@ -103,13 +102,8 @@ class MessageList(webapp.RequestHandler):
 			format = response.response_format(self.request.path.split('/')[-1])
 
 			response_data = Message.get_dict()
-			if format == 'XML':
-				response_data = {
-						'TwilioResponse':
-							{
-							'SMSMessage':response_data
-							}
-						}
+			if format == 'XML' or format == 'HTML':
+				response_data = xml.add_nodes(response_data,'SMSMessage')
 			self.response.out.write(response.format_response(response_data,format))
 			Message.put()
 			#make sure put happens before callback happens
@@ -144,18 +138,13 @@ class MessageInstanceResource(webapp.RequestHandler):
 		SMSMessageSid = args[0]
 		format = response.response_format(SMSMessageSid)
 		SMSMessageSid = args[0].split('.')[0]
-		Message = messages.Message.all().filter('Sid =',SMSMessageSid).get()
-		if Message is not None and True or Message.AccountSid == ACCOUNT_SID:
+		Message = messages.Message.all().filter('Sid =',SMSMessageSid).filter('AccountSid = ',ACCOUNT_SID).get()
+		if Message is not None and True:
 			response_data = Message.get_dict()
 			response_data['ApiVersion'] = API_VERSION
 			response_data['Uri'] = self.request.path
-			if format == 'XML':
-				response_data = {
-						'TwilioResponse':
-							{
-							'SMSMessage':response_data
-							}
-						}
+			if format == 'XML' or format == 'HTML':
+				response_data = xml.add_nodes(response_data,'SMSMessage')
 			self.response.out.write(response.format_response(response_data,format))
 		else:
 			self.error(400)

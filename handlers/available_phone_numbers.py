@@ -26,12 +26,13 @@ class AvailablePhoneNumbersLocal(webapp.RequestHandler):
 	def get(self, API_VERSION,ACCOUNT_SID, IsoCountryCode, *args):
 		AllowedCountries = ['US']
 		if IsoCountryCode in AllowedCountries:
+			pass
 		response_data = {
 		
 		}
 		phone_number = '+1'
 		if self.request.get('AreaCode',None) is not None:
-			area_code = #farts
+			area_code = self.request.get('AreaCode')#farts
 		
 	def post(self):
 		self.error(404)

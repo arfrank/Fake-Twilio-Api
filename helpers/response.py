@@ -1,5 +1,5 @@
 from django.utils import simplejson
-from helpers import xml
+from helpers import xml,html
 
 def response_format(last_argument):
 	split = last_argument.split('.')
@@ -17,4 +17,4 @@ def format_response(response_data,format):
 	elif format == 'CSV':
 		pass
 	elif format == 'HTML':
-		return 'RENDER TEMPLATE FOR HTML'
+		return html.to_html(response_data)

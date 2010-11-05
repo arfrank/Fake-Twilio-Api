@@ -12,4 +12,12 @@ def to_xml(dictionary):
 			string += "<"+item+">"+to_xml(dictionary[item])+"</"+item+">"
 		else:
 			string +='<'+item+'>'+str(dictionary[item])+"</"+item+">"
-	return string	
+	return string
+	
+def add_nodes(dictionary,resource_name):
+	return {
+			'TwilioResponse':
+				{
+				str(resource_name) : dictionary
+				}
+			}
