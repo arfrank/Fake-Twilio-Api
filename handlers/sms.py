@@ -26,7 +26,7 @@ import string
 from models import accounts,messages
 
 class MessageList(webapp.RequestHandler):
-#	@authorization.authorize_request
+	@authorization.authorize_request
 	def get(self, API_VERSION, ACCOUNT_SID, *args):
 		format = response.response_format(self.request.path.split('/')[-1])
 		Messages = messages.Message.all()
@@ -112,12 +112,18 @@ class MessageList(webapp.RequestHandler):
 		else:
 			self.error(400)
 
+	@authorization.authorize_request
 	def put(self, API_VERSION, ACCOUNT_SID, *args):
 		self.error(405)
+
+	@authorization.authorize_request
 	def delete(self, API_VERSION, ACCOUNT_SID, *args):
 		self.error(405)
 		
 class MessageInstanceResource(webapp.RequestHandler):
+	def __init__(self):
+		self.ModelInstance = messages.Message.all()
+		
 	"""
 	Sid	A 34 character string that uniquely identifies this resource.
 	DateCreated	The date that this resource was created, given in RFC 2822 format.
@@ -149,12 +155,15 @@ class MessageInstanceResource(webapp.RequestHandler):
 		else:
 			self.error(400)
 
+	@authorization.authorize_request
 	def post(self, API_VERSION, ACCOUNT_SID, *args):
 		self.error(405)
 		
+	@authorization.authorize_request
 	def put(self, API_VERSION, ACCOUNT_SID, *args):
 		self.error(405)
 
+	@authorization.authorize_request
 	def delete(self, API_VERSION, ACCOUNT_SID, *args):
 		self.error(405)
 		
