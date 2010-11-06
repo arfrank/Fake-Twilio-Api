@@ -18,6 +18,7 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 from google.appengine.api.labs import taskqueue
 
+from handlers import base_handlers
 from helpers import response, parameters, sid, authorization, xml
 from decorators import authorization
 import random
@@ -25,8 +26,8 @@ import string
 
 from models import accounts,messages
 
-class MessageList(webapp.RequestHandler):
-#	@authorization.authorize_request
+class MessageList(base_handlers.ListHandler):
+	@authorization.authorize_request
 	def get(self, API_VERSION, ACCOUNT_SID, *args):
 		format = response.response_format(self.request.path.split('/')[-1])
 		Messages = messages.Message.all()
@@ -64,7 +65,7 @@ class MessageList(webapp.RequestHandler):
 						"total":smsCount,
 						'SmsMessages':[]
 						}
-		for sms in Message:
+		for sms in SmsMessages:
 			response_data['SmsMessages'].append(sms)
 		self.response.out.write(response.format_response(response_data,format))
 	"""
@@ -112,51 +113,18 @@ class MessageList(webapp.RequestHandler):
 		else:
 			self.error(400)
 
-	def put(self, API_VERSION, ACCOUNT_SID, *args):
-		self.error(405)
-	def delete(self, API_VERSION, ACCOUNT_SID, *args):
-		self.error(405)
-		
-class MessageInstanceResource(webapp.RequestHandler):
-	"""
-	Sid	A 34 character string that uniquely identifies this resource.
-	DateCreated	The date that this resource was created, given in RFC 2822 format.
-	DateUpdated	The date that this resource was last updated, given in RFC 2822 format.
-	DateSent	The date that the SMS was sent, given in RFC 2822 format.
-	AccountSid	The unique id of the Account that sent this SMS message.
-	From	The phone number that initiated the message in E.164 format. For incoming messages, this will be the remote phone. For outgoing messages, this will be one of your Twilio phone numbers.
-	To	The phone number that received the message in E.164 format. For incoming messages, this will be one of your Twilio phone numbers. For outgoing messages, this will be the remote phone.
-	Body	The text body of the SMS message. Up to 160 characters long.
-	Status	The status of this SMS message. Either queued, sending, sent, or failed.
-	Direction	The direction of this SMS message. incoming for incoming messages, outbound-api for messages initiated via the REST API, outbound-call for messages initiated during a call or outbound-reply for messages initiated in response to an incoming SMS.
-	Price	The amount billed for the message.
-	ApiVersion	The version of the Twilio API used to process the SMS message.
-	Uri	The URI for this resource, relative to https://api.twilio.com
-	"""
 	@authorization.authorize_request
-	def get(self,API_VERSION,ACCOUNT_SID, *args):
-		SMSMessageSid = args[0]
-		format = response.response_format(SMSMessageSid)
-		SMSMessageSid = args[0].split('.')[0]
-		Message = messages.Message.all().filter('Sid =',SMSMessageSid).filter('AccountSid = ',ACCOUNT_SID).get()
-		if Message is not None and True:
-			response_data = Message.get_dict()
-			response_data['ApiVersion'] = API_VERSION
-			response_data['Uri'] = self.request.path
-			if format == 'XML' or format == 'HTML':
-				response_data = xml.add_nodes(response_data,'SMSMessage')
-			self.response.out.write(response.format_response(response_data,format))
-		else:
-			self.error(400)
-
-	def post(self, API_VERSION, ACCOUNT_SID, *args):
-		self.error(405)
-		
 	def put(self, API_VERSION, ACCOUNT_SID, *args):
 		self.error(405)
 
+	@authorization.authorize_request
 	def delete(self, API_VERSION, ACCOUNT_SID, *args):
 		self.error(405)
+		
+class MessageInstanceResource(base_handlers.InstanceHandler):
+	def __init__(self):
+		self.ModelInstance = messages.Message.all()
+		self.AllowedMethods = ['GET']
 		
 def main():
 	application = webapp.WSGIApplication([
