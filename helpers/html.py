@@ -1,17 +1,15 @@
 def to_html(dictionary):
-	string = """
-<html> 
-<head>
-	<title>200</title>
-</head>"""
+	string = ""
 	for item in dictionary:
 		if item.lower() == 'twilioresponse' and type(dictionary[item]) is dict:
-			string += "<body class=\"twilioresponse\">"+to_html(dictionary[item])+"</body>"
+			string += "<html><head><title>200</title></head>"+"<body class=\"twilioresponse\">"+to_html(dictionary[item])+"</body></html>"
 		if type(dictionary[item]) is dict:
 			string += "<div class=\""+item.lower()+"\">"+to_html(dictionary[item])+"</div>"
+		elif type(dictionary[item]) is list:
+			for element in dictionary[item]:
+				string+="<dic class=\""+item+"\">"+to_html(element)+"</div>"
 		else:
 			string +='<div class="'+item.lower()+'">'+str(dictionary[item])+"</div>"
-	string += '</html>'
 	return string
 
 

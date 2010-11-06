@@ -10,6 +10,4 @@ class Recording(base.CommonModel):
 	@classmethod
 	def new(cls, key_name, email, password):
 		Sid = 'RE'+sha256(email).hexdigest()
-		return cls(key_name=email,Email = email, FriendlyName = email,
-					Sid=Sid,Status='Active',Salt=Salt,
-					Password=Password,AuthToken=AuthToken)
+		return cls(Sid=Sid)
