@@ -22,20 +22,15 @@ from google.appengine.ext import db
 from random import randint
 
 from helpers import response, parameters, xml
-
+from handlers import base_handlers
 from models import phone_numbers
 
 from decorators import authorization
 
-class IncomingPhoneNumberInstance(webapp.RequestHandler):
-	@authorization.authorize_request
-	def get(self, API_VERSION, ACCOUNT_SID, *args):
-		format = response.response_format(args[0])
-		PNSid = args[0].split('.')[0]
-		Phone_Number = phone_numbers.Phone_Number.all().filter('Sid =',PNSid).filter('AccountSid = ',ACCOUNT_SID).get()
-		response_data = Phone_Number.get_dict()
-		
-		self.response.out.write(response.format_response(response_data,format))
+class IncomingPhoneNumberInstance(base_handlers.InstanceHandler):
+	def __init__(self):
+		self.ModelInstance = phone_numbers.Phone_Number.all()
+		self.Allowed_Methods = ['GET','POST','PUT','DELETE']
 
 	@authorization.authorize_request
 	def post(self,API_VERSION,ACCOUNT_SID, *args):

@@ -2,12 +2,12 @@ from google.appengine.ext import webapp
 
 from helpers import response, parameters, sid, authorization, xml
 from decorators import authorization
+import logging
 
 class InstanceHandler(webapp.RequestHandler):
 	@authorization.authorize_request
 	def get(self,API_VERSION,ACCOUNT_SID, *args):
-		InstanceSid = args[0]
-		format = response.response_format(InstanceSid)
+		format = response.response_format( args[0] )
 		InstanceSid = args[0].split('.')[0]
 		Instance = self.ModelInstance.filter('Sid =',InstanceSid).filter('AccountSid = ',ACCOUNT_SID).get()
 		if Instance is not None and True:
@@ -22,15 +22,31 @@ class InstanceHandler(webapp.RequestHandler):
 
 	@authorization.authorize_request
 	def post(self, API_VERSION, ACCOUNT_SID, *args):
-		self.error(405)
+		if 'POST' in self.Allowed_Methods:
+			pass
+		else:
+			self.error(405)
 		
 	@authorization.authorize_request
 	def put(self, API_VERSION, ACCOUNT_SID, *args):
-		self.error(405)
+		if 'PUT' in self.Allowed_Methods:
+			pass
+		else:
+			self.error(405)
 
 	@authorization.authorize_request
 	def delete(self, API_VERSION, ACCOUNT_SID, *args):
-		self.error(405)
+		if 'DELETE' in self.Allowed_Methods:
+			format = response.response_format( args[0] )
+			InstanceSid = args[0].split('.')[0]
+			Instance = self.ModelInstance.filter('Sid = ',InstanceSid).get()
+			if Instance is not None:
+				db.delete(Instance)
+				self.response.set_status(204)
+			else:
+				self.error(400)
+		else:
+			self.error(405)
 
 
 class ListHandler(webapp.RequestHandler):
