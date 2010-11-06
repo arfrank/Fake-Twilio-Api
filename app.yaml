@@ -4,6 +4,8 @@ runtime: python
 api_version: 1
 
 handlers:
+    
+#Handler for all callbacks as of right now.
 - url: /Callbacks/.*
   script: handlers/callbacks.py
   login: admin
@@ -30,7 +32,6 @@ handlers:
 # /2010-04-01/Accounts/{AccountSid}/Calls
 - url: /(.*)/Accounts/(.*)/Calls/.*
   script: handlers/calls.py
-
 - url: /(.*)/Accounts/(.*)/Calls
   script: handlers/calls.py
 
@@ -56,7 +57,11 @@ handlers:
 - url: /(.*)/Accounts/(.*)/Notifications/.*
   script: handlers/notifications.py
 
+# /2010-04-01/Accounts/{YourAccountSid}/Sandbox
+- url: /(.*)/Accounts/(.*)/Sandbox
+  script: handlers/sandbox.py
 
+# Application URL
 - url: .*
   script: handlers/main.py
   secure: always
