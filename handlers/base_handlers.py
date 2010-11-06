@@ -22,21 +22,21 @@ class InstanceHandler(webapp.RequestHandler):
 
 	@authorization.authorize_request
 	def post(self, API_VERSION, ACCOUNT_SID, *args):
-		if 'POST' in self.Allowed_Methods:
+		if 'POST' in self.AllowedMethods:
 			pass
 		else:
 			self.error(405)
 		
 	@authorization.authorize_request
 	def put(self, API_VERSION, ACCOUNT_SID, *args):
-		if 'PUT' in self.Allowed_Methods:
+		if 'PUT' in self.AllowedMethods:
 			pass
 		else:
 			self.error(405)
 
 	@authorization.authorize_request
 	def delete(self, API_VERSION, ACCOUNT_SID, *args):
-		if 'DELETE' in self.Allowed_Methods:
+		if 'DELETE' in self.AllowedMethods:
 			format = response.response_format( args[0] )
 			InstanceSid = args[0].split('.')[0]
 			Instance = self.ModelInstance.filter('Sid = ',InstanceSid).get()

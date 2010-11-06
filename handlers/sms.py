@@ -26,7 +26,7 @@ import string
 
 from models import accounts,messages
 
-class MessageList(webapp.RequestHandler):
+class MessageList(base_handlers.ListHandler):
 	@authorization.authorize_request
 	def get(self, API_VERSION, ACCOUNT_SID, *args):
 		format = response.response_format(self.request.path.split('/')[-1])
@@ -124,7 +124,7 @@ class MessageList(webapp.RequestHandler):
 class MessageInstanceResource(base_handlers.InstanceHandler):
 	def __init__(self):
 		self.ModelInstance = messages.Message.all()
-		self.Allowed_Methods = ['GET']
+		self.AllowedMethods = ['GET']
 		
 def main():
 	application = webapp.WSGIApplication([

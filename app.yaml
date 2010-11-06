@@ -8,8 +8,9 @@ handlers:
   script: handlers/callbacks.py
   login: admin
 
-- url: /(.*)/Accounts/(.*)/SMS/.*
-  script: handlers/sms.py
+# /2010-04-01/Accounts/{YourAccountSid}
+- url: /(.*)/Accounts/.*
+  script: handlers/accounts.py
 
 #/2010-04-01/Accounts/{AccountSid}/AvailablePhoneNumbers/{IsoCountryCode}/Local
 - url: /(.*)/Accounts/(.*)/AvailablePhoneNumbers/(.*)/Local
@@ -25,9 +26,36 @@ handlers:
 - url: /(.*)/Accounts/(.*)/IncomingPhoneNumbers/.*
   script: handlers/incoming_phone_numbers.py
 
+# /2010-04-01/Accounts/{AccountSid}/Calls/{CallSid}
+# /2010-04-01/Accounts/{AccountSid}/Calls
+- url: /(.*)/Accounts/(.*)/Calls/.*
+  script: handlers/calls.py
 
-- url: /(.*)/Accounts/.*
-  script: handlers/accounts.py
+- url: /(.*)/Accounts/(.*)/Calls
+  script: handlers/calls.py
+
+# /2010-04-01/Accounts/{AccountSid}/Conferences/{ConferenceSid}
+- url: /(.*)/Accounts/(.*)/Conferences/.*
+  script: handlers/conferences.py
+- url: /(.*)/Accounts/(.*)/Conferences
+  script: handlers/conferences.py
+
+# /2010-04-01/Accounts/{AccountSid}/SMS/Messages/{SMSMessageSid}
+- url: /(.*)/Accounts/(.*)/SMS/.*
+  script: handlers/sms.py
+
+# /2010-04-01/Accounts/{AccountSid}/Recordings/{RecordingSid}
+- url: /(.*)/Accounts/(.*)/Recordings/.*
+  script: handlers/recordings.py
+
+# /2010-04-01/Accounts/{AccountSid}/Transcriptions/{TranscriptionSid}
+- url: /(.*)/Accounts/(.*)/Transcriptions/.*
+  script: handlers/transcriptions.py
+
+# /2010-04-01/Accounts/{AccountSid}/Notifications/{NotificationSid}
+- url: /(.*)/Accounts/(.*)/Notifications/.*
+  script: handlers/notifications.py
+
 
 - url: .*
   script: handlers/main.py

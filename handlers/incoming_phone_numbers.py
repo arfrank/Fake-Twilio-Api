@@ -30,12 +30,12 @@ from decorators import authorization
 class IncomingPhoneNumberInstance(base_handlers.InstanceHandler):
 	def __init__(self):
 		self.ModelInstance = phone_numbers.Phone_Number.all()
-		self.Allowed_Methods = ['GET','POST','PUT','DELETE']
+		self.AllowedMethods = ['GET','POST','PUT','DELETE']
 
 	@authorization.authorize_request
 	def post(self,API_VERSION,ACCOUNT_SID, *args):
 		IncomingPhoneNumberInstance.get(self,API_VERSION,ACCOUNT_SID,*args)	
-
+	"""
 	@authorization.authorize_request
 	def delete(self,API_VERSION,ACCOUNT_SID, *args):
 		format = response.response_format(args[0])
@@ -46,7 +46,7 @@ class IncomingPhoneNumberInstance(base_handlers.InstanceHandler):
 			self.response.set_status(204)
 		else:
 			self.error(400)
-
+	"""
 class IncomingPhoneNumberList(webapp.RequestHandler):
 	@authorization.authorize_request
 	def get(self, API_VERSION, ACCOUNT_SID, *args):
