@@ -21,7 +21,7 @@ from google.appengine.ext.webapp import util
 from google.appengine.ext import db
 from random import randint
 
-from helpers import response, parameters, xml
+from helpers import response, parameters, xml,errors
 from handlers import base_handlers
 from models import phone_numbers
 
@@ -90,14 +90,9 @@ class IncomingPhoneNumberList(base_handlers.ListHandler):
 				response_data = Phone_Number.get_dict()
 				self.response.out.write(response.format_response(response.add_nodes(self,response_data,format),format))
 			else:
-				self.error(400)
+				self.response.out.write(response.format_response(errors.rest_error_response(400,"Missing Parameters",format),format))
 		else:
-			self.error(400)
-
-	def put(self):
-		self.error(404)
-	def delete(self):
-		self.error(404)
+			self.response.out.write(response.format_response(errors.rest_error_response(400,"Missing Parameters",format),format))
 
 def main():
 	application = webapp.WSGIApplication([
