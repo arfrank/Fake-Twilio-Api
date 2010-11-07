@@ -21,7 +21,6 @@ from helpers import authorization
 
 from google.appengine.api import urlfetch
 
-from hashlib import sha1
 import urllib
 
 from models import messages,accounts
@@ -47,8 +46,15 @@ class SMSCallback(webapp.RequestHandler):
 				Twilio_Signature = authorization.create_twilio_authorization_hash(Account,Message.StatusCallback, payload)
 				urlfetch.fetch(url = Message.StatusCallback,payload = urllib.urlencode(payload) ,method = urlfetch.POST, headers = {'X-Twilio-Signature':Twilio_Signature})
 
+class CallCallback(webapp.RequestHandler):
+	def post(self):
+		pass
+
 def main():
-    application = webapp.WSGIApplication([('/Callbacks/SMS', SMSCallback)],
+    application = webapp.WSGIApplication([
+											('/Callbacks/SMS', SMSCallback)
+											('/Callbacks/Call', CallCallback)
+										],
                                          debug=True)
     util.run_wsgi_app(application)
 

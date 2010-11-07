@@ -6,10 +6,13 @@ from google.appengine.api import memcache
 from google.appengine.ext import db
 from google.appengine.datastore import entity_pb
 
+from helpers import errors,response
+
 import logging
 
 def authorize_request(method):
 	def authorized_method(self,API_VERSION,ACCOUNT_SID,*args):
+		format = response.response_format(self.request.path.split('/')[-1])
 		#Memcache the account to speed things up alittle
 		#PREMATURE OPTIMIZATION!
 		Account = memcache.get('ACCOUNT_SID')
@@ -30,11 +33,13 @@ def authorize_request(method):
 					return method(self,API_VERSION,ACCOUNT_SID,*args)
 				else:
 					logging.info('Basic Authorization Failed')
-					return self.error(401)
+					self.response.out.write(response.format_response(errors.rest_error_response(401,"Unauthorized",format),format))
+					
 			else:
 				logging.info('No authorization header')
-				return self.error(401)
+				self.response.out.write(response.format_response(errors.rest_error_response(401,"Authorization Required",format,20004),format))
 		else:
 			logging.info('No account exists')
-			return self.error(400)
+			self.response.out.write(response.format_response(errors.rest_error_response(400,"No Account Found",format),format))
+			
 	return authorized_method

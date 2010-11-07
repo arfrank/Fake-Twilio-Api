@@ -19,75 +19,24 @@ from google.appengine.ext.webapp import util
 from google.appengine.api.labs import taskqueue
 
 from handlers import base_handlers
-from helpers import response, parameters, sid, authorization, xml
+from helpers import response, parameters, sid, authorization, xml, errors
 from decorators import authorization
-import random
-import string
-
 from models import accounts,messages
 
 class MessageList(base_handlers.ListHandler):
-	@authorization.authorize_request
-	def get(self, API_VERSION, ACCOUNT_SID, *args):
-		format = response.response_format(self.request.path.split('/')[-1])
-		Messages = messages.Message.all()
-		if self.request.get('To',None) is not None:
-			Messages.filter('To = ',self.request.get('To'))
-		if self.request.get('From',None) is not None:
-			Messages.filter('From = ',self.request.get('From'))
-		if self.request.get('DateSent',None) is not None:
-			pass
-			#To be implimented later
-		#This should be put into a helper or something to automatically populate,
-		#or be a subclass of a list handler and just do Messagy things for messages
-		Page = 0
-		PageSize = 50
-		if self.request.get('Page',None) is not None:
-			try:
-				Page = int(self.request.get('Page'))
-			except Exception, e:
-				Page = 0
-		if Page < 0:
-			Page = 0
-		if self.request.get('PageSize',None) is not None:
-			try:
-				PageSize = int(self.request.get('PageSize'))
-			except Exception, e:
-				PageSize = 50
-		if PageSize > 1000:
-			PageSize = 1000
-		if PageSize < 0:
-			PageSize = 1
-		smsCount = Messages.count()
-		SmsMessages = Messages.fetch(PageSize,(Page*PageSize))
-		response_data = {
-						"start":(Page*PageSize),
-						"total":smsCount,
-						'SmsMessages':[]
-						}
-		for sms in SmsMessages:
-			response_data['SmsMessages'].append(sms)
-		self.response.out.write(response.format_response(response_data,format))
-	"""
-	{
-	    "account_sid": "AC5ef872f6da5a21de157d80997a64bd33", 
-	    "api_version": "2010-04-01", 
-	    "body": "Jenny please?! I love you <3", 
-	    "date_created": "Wed, 18 Aug 2010 20:01:40 +0000", 
-	    "date_sent": null, 
-	    "date_updated": "Wed, 18 Aug 2010 20:01:40 +0000", 
-	    "direction": "outbound-api", 
-	    "from": "+14158141829", 
-	    "price": null, 
-	    "sid": "SM90c6fc909d8504d45ecdb3a3d5b3556e", 
-	    "status": "queued", 
-	    "to": "+14159352345", 
-	    "uri": "/2010-04-01/Accounts/AC5ef872f6da5a21de157d80997a64bd33/SMS/Messages/SM90c6fc909d8504d45ecdb3a3d5b3556e.json"
-	}
-	"""
+	def __init__(self):
+		self.ModelInstance = messages.Message.all()
+		self.AllowedMethods = ['GET']
+		self.AllowedFilters = {
+			'GET':[['To','='],['From','='],['DateSent','=']]
+		}
+		self.ListName = 'SmsMessages'
+		self.InstanceModelName = 'SmsMessage'
 
+#OVERLOAD THE post method to a local version cause thats going to be necessary for each one		
 	@authorization.authorize_request
 	def post(self, API_VERSION, ACCOUNT_SID, *args):
+		format = response.response_format(self.request.path.split('/')[-1])
 		if parameters.required(['From','To','Body'],self.request):
 			Message = messages.Message.new(
 										To = self.request.get('To'),
@@ -99,38 +48,31 @@ class MessageList(base_handlers.ListHandler):
 									)
 			if self.request.get('StatusCallback',None) is not None:
 				Message.StatusCallback = self.request.get('StatusCallback')
-
-			format = response.response_format(self.request.path.split('/')[-1])
-
 			response_data = Message.get_dict()
-			if format == 'XML' or format == 'HTML':
-				response_data = xml.add_nodes(response_data,'SMSMessage')
-			self.response.out.write(response.format_response(response_data,format))
+			self.response.out.write(response.format_response(response.add_nodes(self,response_data,format),format))
 			Message.put()
+			#DO SOME THINGS DEPENDING ON ACCOUNT SETTINGS
+			#DEFAULT WILL BE TO SEND MESSAGE, CHARGE FOR IT AND UPDATE WHEN SENT
+			Message.send()
 			#make sure put happens before callback happens
 			if Message.StatusCallback is not None:
 				taskqueue.Queue('StatusCallbacks').add(taskqueue.Task(url='/Callbacks/SMS', params = {'SmsSid':Message.Sid}))
 		else:
-			self.error(400)
+			#This should either specify a twilio code either 21603 or 21604
+			self.response.out.write(response.format_response(errors.rest_error_response(400,"Missing Parameters",format),format))
 
-	@authorization.authorize_request
-	def put(self, API_VERSION, ACCOUNT_SID, *args):
-		self.error(405)
-
-	@authorization.authorize_request
-	def delete(self, API_VERSION, ACCOUNT_SID, *args):
-		self.error(405)
 		
 class MessageInstanceResource(base_handlers.InstanceHandler):
 	def __init__(self):
 		self.ModelInstance = messages.Message.all()
 		self.AllowedMethods = ['GET']
+		self.InstanceModelName = 'SmsMessage'
 		
 def main():
 	application = webapp.WSGIApplication([
+											('/(.*)/Accounts/(.*)/SMS/Messages/(.*)', MessageInstanceResource),
 											('/(.*)/Accounts/(.*)/SMS/Messages', MessageList),
-											('/(.*)/Accounts/(.*)/SMS/Messages.json', MessageList),
-											('/(.*)/Accounts/(.*)/SMS/Messages/(.*)', MessageInstanceResource)
+											('/(.*)/Accounts/(.*)/SMS/Messages.json', MessageList)
 										],
 										 debug=True)
 	util.run_wsgi_app(application)

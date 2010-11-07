@@ -18,3 +18,12 @@ def format_response(response_data,format):
 		pass
 	elif format == 'HTML':
 		return html.to_html(response_data)
+
+def add_nodes(self,response_data, format):
+	if format == 'XML' or format == 'HTML':
+		response_data = {
+			'TwilioResponse' : {
+				self.InstanceModelName : response_data
+				}
+		}
+	return response_data

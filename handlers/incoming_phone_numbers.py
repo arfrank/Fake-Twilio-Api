@@ -21,7 +21,7 @@ from google.appengine.ext.webapp import util
 from google.appengine.ext import db
 from random import randint
 
-from helpers import response, parameters, xml
+from helpers import response, parameters, xml,errors
 from handlers import base_handlers
 from models import phone_numbers
 
@@ -32,10 +32,10 @@ class IncomingPhoneNumberInstance(base_handlers.InstanceHandler):
 		self.ModelInstance = phone_numbers.Phone_Number.all()
 		self.AllowedMethods = ['GET','POST','PUT','DELETE']
 
+	"""
 	@authorization.authorize_request
 	def post(self,API_VERSION,ACCOUNT_SID, *args):
 		IncomingPhoneNumberInstance.get(self,API_VERSION,ACCOUNT_SID,*args)	
-	"""
 	@authorization.authorize_request
 	def delete(self,API_VERSION,ACCOUNT_SID, *args):
 		format = response.response_format(args[0])
@@ -47,11 +47,15 @@ class IncomingPhoneNumberInstance(base_handlers.InstanceHandler):
 		else:
 			self.error(400)
 	"""
-class IncomingPhoneNumberList(webapp.RequestHandler):
-	@authorization.authorize_request
-	def get(self, API_VERSION, ACCOUNT_SID, *args):
-		#PAGING INFORMATION  will do this later
-		pass
+class IncomingPhoneNumberList(base_handlers.ListHandler):
+	def __init__(self):
+		self.ModelInstance = phone_numbers.Phone_Number.all()
+		self.AllowedMethods = ['GET']
+		self.AllowedFilters = {
+			'GET':[['To','='],['From','='],['DateSent','=']]
+		}
+		self.ListName = 'IncomingPhoneNumbers'
+		self.InstanceModelName = 'IncomingPhoneNumber'
 
 	@authorization.authorize_request
 	def post(self,API_VERSION, ACCOUNT_SID, *args):
@@ -84,18 +88,11 @@ class IncomingPhoneNumberList(webapp.RequestHandler):
 				)
 				Phone_Number.put()
 				response_data = Phone_Number.get_dict()
-				if format == 'XML' or format == 'HTML':
-					response_data = xml.add_nodes(response_data,'IncomingPhoneNumber')
-				self.response.out.write(response.format_response(response_data,format))
+				self.response.out.write(response.format_response(response.add_nodes(self,response_data,format),format))
 			else:
-				self.error(400)
+				self.response.out.write(response.format_response(errors.rest_error_response(400,"Missing Parameters",format),format))
 		else:
-			self.error(400)
-
-	def put(self):
-		self.error(404)
-	def delete(self):
-		self.error(404)
+			self.response.out.write(response.format_response(errors.rest_error_response(400,"Missing Parameters",format),format))
 
 def main():
 	application = webapp.WSGIApplication([
