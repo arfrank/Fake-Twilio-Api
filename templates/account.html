@@ -1,0 +1,18 @@
+{% extends "../templates/base.html" %}
+{% block 'content' %}
+	<h1 id="account_information">Account Information</h1>
+	<div id="content">
+		<h2>Account Information</h2>
+		<p>
+			Account Sid: {{data.account.Sid}}<br />
+			Account Token: {{data.account.AuthToken}}<br />
+			Email: {{data.account.Email}}<br />
+			Friendly Name: {{data.account.FriendlyName}}<br />
+		</p>
+		<h2>Links</h2>
+		<p>
+			<a href="/phone-numbers">Phone Numbers</a><br>
+			<a href="/logout">Logout</a>
+		</p>
+	</div>
+{% endblock %}

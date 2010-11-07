@@ -1,0 +1,4 @@
+queue:
+-   name: StatusCallbacks
+    rate: 1/s
+    bucket_size: 50
