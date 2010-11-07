@@ -16,7 +16,7 @@ class InstanceHandler(webapp.RequestHandler):
 				response_data['ApiVersion'] = API_VERSION
 				response_data['Uri'] = self.request.path
 				if format == 'XML' or format == 'HTML':
-					response_data = xml.add_nodes(response_data,'')
+					response_data = xml.add_nodes(response_data,self.InstanceModelName)
 				self.response.out.write(response.format_response(response_data,format))
 			else:
 				self.response.out.write(response.format_response(errors.rest_error_response(400,"The requested resource was not found",format),format))
@@ -97,7 +97,7 @@ class ListHandler(webapp.RequestHandler):
 							self.ListName:[]
 							}
 			for instance in ListInstance:
-				response_data[self.ListName].append({self.ListModelName : instance.get_dict()})
+				response_data[self.ListName].append({self.InstanceModelName : instance.get_dict()})
 			self.response.out.write(response.format_response(response_data,format))
 		else:
 			self.response.out.write(response.format_response(errors.rest_error_response(405,"The requested method is not allowed",format,20004,'http://www.twilio.com/docs/errors/20004'),format))

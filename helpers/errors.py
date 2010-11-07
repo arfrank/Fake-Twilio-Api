@@ -1,3 +1,4 @@
+from helpers import xml
 def rest_error_response(Status,Message,Format = 'XML',TwilioCode = None,TwilioMessage = None):
 	response = {
 	"Status" : Status,
@@ -8,10 +9,6 @@ def rest_error_response(Status,Message,Format = 'XML',TwilioCode = None,TwilioMe
 	if TwilioMessage is not None:
 		response['MoreInfo'] = TwilioMessage
 	if format == 'XML' or format == 'HTML':
-		response = {
-			"TwilioResponse": {
-				"RestException": response
-			}
-		}
+		response = xml.add_nodes(response,'RestException')
 	return response
 	

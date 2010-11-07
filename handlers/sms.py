@@ -19,7 +19,7 @@ from google.appengine.ext.webapp import util
 from google.appengine.api.labs import taskqueue
 
 from handlers import base_handlers
-from helpers import response, parameters, sid, authorization, xml
+from helpers import response, parameters, sid, authorization, xml, errors
 from decorators import authorization
 import random
 import string
@@ -34,7 +34,7 @@ class MessageList(base_handlers.ListHandler):
 			'GET':[['To','='],['From','='],['DateSent','=']]
 		}
 		self.ListName = 'SmsMessages'
-		self.ListModelName = 'SmsMessage'
+		self.InstanceModelName = 'SmsMessage'
 		
 	"""
 	{
@@ -92,6 +92,7 @@ class MessageInstanceResource(base_handlers.InstanceHandler):
 	def __init__(self):
 		self.ModelInstance = messages.Message.all()
 		self.AllowedMethods = ['GET']
+		self.InstanceModelName = 'SmsMessage'
 		
 def main():
 	application = webapp.WSGIApplication([
