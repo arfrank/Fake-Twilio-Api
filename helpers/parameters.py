@@ -12,3 +12,17 @@ def methods(parameter_name,request, default = 'POST'):
 #Boolean of the above
 def allowed_methods(parameter,METHOD_TYPES = ['GET','POST']):
 	return parameter.upper() in METHOD_TYPES
+	
+def standard_urls():
+	pass
+
+def fallback_urls(StandardUrl,FallbackUrl,Instance):
+	pass
+	
+def allowed_boolean(parameter):
+	TRUE_BOOLS = [True,1,'true','True','TRUE']
+	FALSE_BOOLS = [False,0,'false','False','FALSE']
+	if parameter in TRUE_BOOLS or parameter in FALSE_BOOLS:
+		return True
+	else:
+		return False

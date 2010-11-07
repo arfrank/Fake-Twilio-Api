@@ -2,11 +2,11 @@ from helpers import parameters
 
 #Phone Number Helper
 
-def validate(self,arg_name, arg_value):
+def validate(self, phone_number, arg_name, arg_value):
 	validators = {
 		'FriendlyName' : self.request.get('FriendlyName',None),
-		'VoiceCallerIdLookup' : self.request.get('VoiceCallerIdLookup',None),
-		'VoiceUrl' : self.request.get('VoiceUrl',None),
+		'VoiceCallerIdLookup' : parameters.allowed_boolean(self.request.get('VoiceCallerIdLookup',None)),
+		'VoiceUrl' : parameters.standard_urls(self.request.get('VoiceUrl',None))
 		'VoiceMethod' : parameters.allowed_methods(arg_value,['GET','POST']),
 		'VoiceFallbackUrl' : self.request.get('VoiceFallbackUrl',None),
 		'VoiceFallbackMethod' : parameters.allowed_methods(arg_value,['GET','POST']),
@@ -20,7 +20,7 @@ def validate(self,arg_name, arg_value):
 	
 	return validators[arg_name](arg_value)
 	
-def sanitize(self, arg_name, arg_value):
+def sanitize(self, phone_number, arg_name, arg_value):
 	santizers = {
 		'FriendlyName' : self.request.get('FriendlyName',None),
 		'VoiceCallerIdLookup' : self.request.get('VoiceCallerIdLookup',None),

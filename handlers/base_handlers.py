@@ -51,9 +51,9 @@ class InstanceHandler(webapp.RequestHandler):
 					#if we are allowed to alter that argument
 					if argument in self.AllowedProperties['Post']:
 						#validate that a valid value was passed in
-						if self.InstanceHelper.validate(self,argument,self.request.get(argument)):
+						if self.InstanceHelper.validate(self,Instance, argument,self.request.get(argument)):
 							#set it to a valid argument value
-							setattr(Instance,argument,self.InstanceHelper.sanitize(self,argument,self.request.get(argument)))
+							setattr(Instance,argument,self.InstanceHelper.sanitize(self, Instance, argument, self.request.get(argument)))
 				Instance.put()
 				InstanceHandler.get(self,API_VERSION,ACCOUNT_SID,*args)
 		else:
