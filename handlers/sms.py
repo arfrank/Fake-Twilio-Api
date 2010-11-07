@@ -55,9 +55,7 @@ class MessageList(base_handlers.ListHandler):
 			Message.put()
 			#DO SOME THINGS DEPENDING ON ACCOUNT SETTINGS
 			#DEFAULT WILL BE TO SEND MESSAGE, CHARGE FOR IT AND UPDATE WHEN SENT
-			#SHOUTING DONE
 			Message.send()
-			#Message.put()
 			#make sure put happens before callback happens
 			if Message.StatusCallback is not None:
 				taskqueue.Queue('StatusCallbacks').add(taskqueue.Task(url='/Callbacks/SMS', params = {'SmsSid':Message.Sid}))
