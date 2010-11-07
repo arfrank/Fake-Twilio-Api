@@ -21,7 +21,7 @@ from google.appengine.ext.webapp import util
 from google.appengine.ext import db
 from random import randint
 
-from helpers import response, parameters, xml,errors
+from helpers import response, parameters, xml, errors, phone_number_helper
 from handlers import base_handlers
 from models import phone_numbers
 
@@ -29,27 +29,18 @@ from decorators import authorization
 
 class IncomingPhoneNumberInstance(base_handlers.InstanceHandler):
 	def __init__(self):
-		self.ModelInstance = phone_numbers.Phone_Number.all()
+		self.InstanceModel = phone_numbers.Phone_Number.all()
 		self.AllowedMethods = ['GET','POST','PUT','DELETE']
+		self.InstanceModelName = 'IncomingPhoneNumber'
+		self.InstanceHelper = phone_number_helper
+		self.AllowedProperties = {
+			'POST' : ['FriendlyName','ApiVersion','VoiceUrl','VoiceMethod','VoiceFallbackUrl','VoiceFallbackMethod','StatusCallback','StatusCallbackMethod','SmsUrl','SmsMethod','SmsFallbackUrl','SmsFallbackMethod','VoiceCallerIdLookup'],
+			'PUT' : ['FriendlyName','ApiVersion','VoiceUrl','VoiceMethod','VoiceFallbackUrl','VoiceFallbackMethod','StatusCallback','StatusCallbackMethod','SmsUrl','SmsMethod','SmsFallbackUrl','SmsFallbackMethod','VoiceCallerIdLookup'],
+		}
 
-	"""
-	@authorization.authorize_request
-	def post(self,API_VERSION,ACCOUNT_SID, *args):
-		IncomingPhoneNumberInstance.get(self,API_VERSION,ACCOUNT_SID,*args)	
-	@authorization.authorize_request
-	def delete(self,API_VERSION,ACCOUNT_SID, *args):
-		format = response.response_format(args[0])
-		PNSid = args[0].split('.')[0]
-		phone_number = phone_numbers.Phone_Number.all().filter('Sid = ',PNSid).get()
-		if phone_number is not None:
-			db.delete(phone_number)
-			self.response.set_status(204)
-		else:
-			self.error(400)
-	"""
 class IncomingPhoneNumberList(base_handlers.ListHandler):
 	def __init__(self):
-		self.ModelInstance = phone_numbers.Phone_Number.all()
+		self.InstanceModel = phone_numbers.Phone_Number.all()
 		self.AllowedMethods = ['GET']
 		self.AllowedFilters = {
 			'GET':[['To','='],['From','='],['DateSent','=']]
@@ -71,7 +62,7 @@ class IncomingPhoneNumberList(base_handlers.ListHandler):
 					phone_number = PhoneNumber
 				METHOD_TYPES = ['GET','POST']
 				Phone_Number = phone_numbers.Phone_Number.new(
-					FriendFriendlyName = self.request.get('FriendlyName',None)
+					FriendlyName = self.request.get('FriendlyName',None)
 					AccountSid = ACCOUNT_SID,
 					PhoneNumber = phone_number,
 					VoiceCallerIdLookup = self.request.get('VoiceCallerIdLookup',None)

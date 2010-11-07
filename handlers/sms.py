@@ -19,19 +19,23 @@ from google.appengine.ext.webapp import util
 from google.appengine.api.labs import taskqueue
 
 from handlers import base_handlers
-from helpers import response, parameters, sid, authorization, xml, errors
+from helpers import response, parameters, sid, authorization, errors, message_helper
 from decorators import authorization
 from models import accounts,messages
 
 class MessageList(base_handlers.ListHandler):
 	def __init__(self):
-		self.ModelInstance = messages.Message.all()
+		self.InstanceModel = messages.Message.all()
 		self.AllowedMethods = ['GET']
 		self.AllowedFilters = {
 			'GET':[['To','='],['From','='],['DateSent','=']]
 		}
 		self.ListName = 'SmsMessages'
 		self.InstanceModelName = 'SmsMessage'
+		#Only for Put and Post
+		self.InstanceHelper = message_helper
+		self.AllowedProperties = {
+		}
 
 #OVERLOAD THE post method to a local version cause thats going to be necessary for each one		
 	@authorization.authorize_request
@@ -64,7 +68,7 @@ class MessageList(base_handlers.ListHandler):
 		
 class MessageInstanceResource(base_handlers.InstanceHandler):
 	def __init__(self):
-		self.ModelInstance = messages.Message.all()
+		self.InstanceModel = messages.Message.all()
 		self.AllowedMethods = ['GET']
 		self.InstanceModelName = 'SmsMessage'
 		

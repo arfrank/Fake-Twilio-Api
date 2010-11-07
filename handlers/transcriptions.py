@@ -27,12 +27,12 @@ from models import transcriptions
 class TranscriptionInstance(base_handlers.InstanceHandler):
 	def __init__(self):
 		self.AllowedMethods = ['GET']
-		self.ModelInstance = transcriptions.Transcription.all()
+		self.InstanceModel = transcriptions.Transcription.all()
 
 class TranscriptionList(base_handlers.ListHandler):
 	def __init__(self):
 		self.AllowedMethods = ['GET']
-		self.ModelInstance = transcriptions.Transcription.all()
+		self.InstanceModel = transcriptions.Transcription.all()
 
 
 def main():

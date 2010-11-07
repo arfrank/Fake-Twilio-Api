@@ -38,7 +38,7 @@ import urllib
 class CallInstance(base_handlers.InstanceHandler):
 	def __init__(self):
 		self.AllowedMethods = ['GET']
-		self.ModelInstance = calls.Call.all()
+		self.InstanceModel = calls.Call.all()
 		self.InstanceModelName = 'Call'
 
 # Initiates a call redirect or terminates a call. See Modifying Live Calls for details.
@@ -49,14 +49,14 @@ class CallInstance(base_handlers.InstanceHandler):
 class CallInstanceRecordings(base_handlers.InstanceHandler):
 	def __init__(self):
 		self.AllowedMethods = ['GET']
-		self.ModelInstance = calls.Call.all()
+		self.InstanceModel = calls.Call.all()
 		self.InstanceModelName = 'Recording'
 
 # Represents a list of notifications generated during the call identified by {CallSid}. See the Notifications section for resource properties and response formats.
 class CallInstanceNotifications(base_handlers.InstanceHandler):
 	def __init__(self):
 		self.AllowedMethods = ['GET']
-		self.ModelInstance = calls.Call.all()
+		self.InstanceModel = calls.Call.all()
 		self.InstanceModelName = 'Notification'
 
 # GET gets a list of calls
@@ -70,7 +70,7 @@ class CallList(base_handlers.ListHandler):
 		StartTime	Only show calls that started on this date, given as YYYY-MM-DD. Also supports inequalities, such as StartTime<=YYYY-MM-DD for calls that started at or before midnight on a date, and StartTime>=YYYY-MM-DD for calls that started at or after midnight on a date.
 		EndTime	Only show calls that ended on this date, given as YYYY-MM-DD. Also supports inequalities, such as EndTime<=YYYY-MM-DD for calls that ended at or before midnight on a date, and EndTime>=YYYY-MM-DD for calls that end at or after midnight on a date.
 		"""
-		self.ModelInstance = calls.Call.all()
+		self.InstanceModel = calls.Call.all()
 		self.AllowedMethods = ['GET']
 		self.AllowedFilters = {
 			'GET':[['To','='],['From','='],['Status','='],['StartTime','='],['EndTime','=']]

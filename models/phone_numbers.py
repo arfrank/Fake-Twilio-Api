@@ -28,6 +28,7 @@ class Phone_Number(base.CommonModel):
 	FriendlyName = db.StringProperty()
 	AccountSid = db.StringProperty()
 	PhoneNumber = db.StringProperty()
+	ApiVersion = db.StringProperty()
 	VoiceCallerIdLookup = db.BooleanProperty(default = False)
 	VoiceUrl = db.StringProperty()
 	VoiceMethod = db.StringProperty(default = 'POST')

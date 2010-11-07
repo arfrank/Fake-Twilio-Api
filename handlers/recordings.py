@@ -26,7 +26,7 @@ from models import recordings
 # /2010-04-01/Accounts/{AccountSid}/Recordings/{RecordingSid}
 class RecordingInstance(base_handlers.InstanceHandler):
 	def __init__(self):
-		self.ModelInstance = recordings.Recording.all()
+		self.InstanceModel = recordings.Recording.all()
 		self.AllowedMethods = ['GET','DELETE']
 
 #OVERRIDE THE DEFAULT BECAUSE THESE ARENT BLOCKED BY DEFAULT
@@ -35,12 +35,12 @@ class RecordingInstance(base_handlers.InstanceHandler):
 
 class RecordingInstanceTranscription(base_handlers.InstanceHandler):
 	def __init__(self):
-		self.ModelInstance = recordings.Recording.all()
+		self.InstanceModel = recordings.Recording.all()
 		self.AllowedMethods = ['GET','DELETE']
 
 class RecordingList(webapp.RequestHandler):
 	def __init__(self):
-		self.ModelInstance = recordings.Recording.all()
+		self.InstanceModel = recordings.Recording.all()
 		self.AllowedMethods = ['GET']
 		
 def main():

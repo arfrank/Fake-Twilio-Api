@@ -25,7 +25,7 @@ from models import conferences
 class ConferenceInstance(base_handlers.InstanceHandler):
 	def __init__(self):
 		self.AllowedMethods = ['GET']
-		self.ModelInstance = conferences.Conference.all()
+		self.InstanceModel = conferences.Conference.all()
 		
 class ConferenceList(webapp.RequestHandler):
 	def get(self,*args):
@@ -35,12 +35,12 @@ class ConferenceList(webapp.RequestHandler):
 class ParticipantInstance(base_handlers.InstanceHandler):
 	def __init__(self):
 		self.AllowedMethods = ['GET']
-		self.ModelInstance = conferences.Conference.all()
+		self.InstanceModel = conferences.Conference.all()
 
 class ParticipantList(base_handlers.ListHandler):
 	def __init__(self):
 		self.AllowedMethods = ['GET']
-		self.ModelInstance = conferences.Conference.all()
+		self.InstanceModel = conferences.Conference.all()
 
 def main():
 	application = webapp.WSGIApplication([

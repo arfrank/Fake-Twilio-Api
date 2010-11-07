@@ -29,7 +29,7 @@ from decorators import authorization
 class OutgoingCallerId(base_handlers.InstanceHandler):
 	def __init__(self):
 		self.AllowedMethods = ['GET','PUT','POST','DELETE']
-		self.ModelInstance = phone_numbers.Phone_Number.all()
+		self.InstanceModel = phone_numbers.Phone_Number.all()
 		
 
 def main():

@@ -27,12 +27,12 @@ from models import notifications
 class NotificationInstance(base_handlers.InstanceHandler):
 	def __init__(self):
 		self.AllowedMethods = ['GET','DELETE']
-		self.ModelInstance = notifications.Notification.all()
+		self.InstanceModel = notifications.Notification.all()
 
 class NotificationList(base_handlers.ListHandler):
 	def __init__(self):
 		self.AllowedMethods = ['GET']
-		self.ModelInstance = notifications.Notification.all()
+		self.InstanceModel = notifications.Notification.all()
 
 
 def main():
