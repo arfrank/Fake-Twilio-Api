@@ -67,9 +67,7 @@ class MessageList(base_handlers.ListHandler):
 									)
 			if self.request.get('StatusCallback',None) is not None:
 				Message.StatusCallback = self.request.get('StatusCallback')
-
 			format = response.response_format(self.request.path.split('/')[-1])
-
 			response_data = Message.get_dict()
 			if format == 'XML' or format == 'HTML':
 				response_data = xml.add_nodes(response_data,'SMSMessage')
@@ -79,7 +77,8 @@ class MessageList(base_handlers.ListHandler):
 			if Message.StatusCallback is not None:
 				taskqueue.Queue('StatusCallbacks').add(taskqueue.Task(url='/Callbacks/SMS', params = {'SmsSid':Message.Sid}))
 		else:
-			self.error(400)
+			#This should either specify a twilio code either 21603 or 21604
+			self.response.out.write(response.format_response(errors.rest_error_response(400,"Missing Parameters",format),format))
 
 	@authorization.authorize_request
 	def put(self, API_VERSION, ACCOUNT_SID, *args):
