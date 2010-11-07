@@ -27,6 +27,10 @@ import string
 from models import accounts,messages
 
 class MessageList(base_handlers.ListHandler):
+	def __init__(self):
+		self.ModelInstance = messages.Message.all()
+		self.AllowedMethods = ['GET']
+		
 	@authorization.authorize_request
 	def get(self, API_VERSION, ACCOUNT_SID, *args):
 		format = response.response_format(self.request.path.split('/')[-1])

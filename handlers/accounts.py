@@ -17,12 +17,15 @@
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 
-from decorators import authorization
+from handlers import base_handlers
 
-class Accounts(webapp.RequestHandler):
-	@authorization.authorize_request
-	def get(self, API_VERSION, *args):
-		self.response.out.write('Hello world!'+args[0])
+from decorators import authorization
+from models import accounts
+
+class Accounts(base_handlers.InstanceHandler):
+	def __init__(self):
+		self.AllowedMethods = ['GET','PUT','POST']
+		self.ModelInstance = accounts.Account.all()
 
 
 def main():

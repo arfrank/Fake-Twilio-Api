@@ -32,10 +32,10 @@ class IncomingPhoneNumberInstance(base_handlers.InstanceHandler):
 		self.ModelInstance = phone_numbers.Phone_Number.all()
 		self.AllowedMethods = ['GET','POST','PUT','DELETE']
 
+	"""
 	@authorization.authorize_request
 	def post(self,API_VERSION,ACCOUNT_SID, *args):
 		IncomingPhoneNumberInstance.get(self,API_VERSION,ACCOUNT_SID,*args)	
-	"""
 	@authorization.authorize_request
 	def delete(self,API_VERSION,ACCOUNT_SID, *args):
 		format = response.response_format(args[0])
