@@ -21,9 +21,6 @@ from google.appengine.api.labs import taskqueue
 from handlers import base_handlers
 from helpers import response, parameters, sid, authorization, xml, errors
 from decorators import authorization
-import random
-import string
-
 from models import accounts,messages
 
 class MessageList(base_handlers.ListHandler):
@@ -35,25 +32,8 @@ class MessageList(base_handlers.ListHandler):
 		}
 		self.ListName = 'SmsMessages'
 		self.InstanceModelName = 'SmsMessage'
-		
-	"""
-	{
-	    "account_sid": "AC5ef872f6da5a21de157d80997a64bd33", 
-	    "api_version": "2010-04-01", 
-	    "body": "Jenny please?! I love you <3", 
-	    "date_created": "Wed, 18 Aug 2010 20:01:40 +0000", 
-	    "date_sent": null, 
-	    "date_updated": "Wed, 18 Aug 2010 20:01:40 +0000", 
-	    "direction": "outbound-api", 
-	    "from": "+14158141829", 
-	    "price": null, 
-	    "sid": "SM90c6fc909d8504d45ecdb3a3d5b3556e", 
-	    "status": "queued", 
-	    "to": "+14159352345", 
-	    "uri": "/2010-04-01/Accounts/AC5ef872f6da5a21de157d80997a64bd33/SMS/Messages/SM90c6fc909d8504d45ecdb3a3d5b3556e.json"
-	}
-	"""
 
+#OVERLOAD THE post method to a local version cause thats going to be necessary for each one		
 	@authorization.authorize_request
 	def post(self, API_VERSION, ACCOUNT_SID, *args):
 		if parameters.required(['From','To','Body'],self.request):
@@ -73,6 +53,11 @@ class MessageList(base_handlers.ListHandler):
 				response_data = xml.add_nodes(response_data,'SMSMessage')
 			self.response.out.write(response.format_response(response_data,format))
 			Message.put()
+			#DO SOME THINGS DEPENDING ON ACCOUNT SETTINGS
+			#DEFAULT WILL BE TO SEND MESSAGE, CHARGE FOR IT AND UPDATE WHEN SENT
+			#SHOUTING DONE
+			Message.send()
+			#Message.put()
 			#make sure put happens before callback happens
 			if Message.StatusCallback is not None:
 				taskqueue.Queue('StatusCallbacks').add(taskqueue.Task(url='/Callbacks/SMS', params = {'SmsSid':Message.Sid}))
@@ -80,13 +65,6 @@ class MessageList(base_handlers.ListHandler):
 			#This should either specify a twilio code either 21603 or 21604
 			self.response.out.write(response.format_response(errors.rest_error_response(400,"Missing Parameters",format),format))
 
-	@authorization.authorize_request
-	def put(self, API_VERSION, ACCOUNT_SID, *args):
-		self.error(405)
-
-	@authorization.authorize_request
-	def delete(self, API_VERSION, ACCOUNT_SID, *args):
-		self.error(405)
 		
 class MessageInstanceResource(base_handlers.InstanceHandler):
 	def __init__(self):
