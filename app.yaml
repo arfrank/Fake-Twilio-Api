@@ -10,10 +10,6 @@ handlers:
   script: handlers/callbacks.py
   login: admin
 
-# /2010-04-01/Accounts/{YourAccountSid}
-- url: /(.*)/Accounts/.*
-  script: handlers/accounts.py
-
 #/2010-04-01/Accounts/{AccountSid}/AvailablePhoneNumbers/{IsoCountryCode}/Local
 - url: /(.*)/Accounts/(.*)/AvailablePhoneNumbers/(.*)/Local
   script: handlers/available_phone_numbers.py
@@ -60,6 +56,11 @@ handlers:
 # /2010-04-01/Accounts/{YourAccountSid}/Sandbox
 - url: /(.*)/Accounts/(.*)/Sandbox
   script: handlers/sandbox.py
+
+# /2010-04-01/Accounts/{YourAccountSid}
+- url: /(.*)/Accounts/.*
+  script: handlers/accounts.py
+
 
 # Application URL
 - url: .*

@@ -30,48 +30,12 @@ class MessageList(base_handlers.ListHandler):
 	def __init__(self):
 		self.ModelInstance = messages.Message.all()
 		self.AllowedMethods = ['GET']
+		self.AllowedFilters = {
+			'GET':[['To','='],['From','='],['DateSent','=']]
+		}
+		self.ListName = 'SmsMessages'
+		self.ListModelName = 'SmsMessage'
 		
-	@authorization.authorize_request
-	def get(self, API_VERSION, ACCOUNT_SID, *args):
-		format = response.response_format(self.request.path.split('/')[-1])
-		Messages = messages.Message.all()
-		if self.request.get('To',None) is not None:
-			Messages.filter('To = ',self.request.get('To'))
-		if self.request.get('From',None) is not None:
-			Messages.filter('From = ',self.request.get('From'))
-		if self.request.get('DateSent',None) is not None:
-			pass
-			#To be implimented later
-		#This should be put into a helper or something to automatically populate,
-		#or be a subclass of a list handler and just do Messagy things for messages
-		Page = 0
-		PageSize = 50
-		if self.request.get('Page',None) is not None:
-			try:
-				Page = int(self.request.get('Page'))
-			except Exception, e:
-				Page = 0
-		if Page < 0:
-			Page = 0
-		if self.request.get('PageSize',None) is not None:
-			try:
-				PageSize = int(self.request.get('PageSize'))
-			except Exception, e:
-				PageSize = 50
-		if PageSize > 1000:
-			PageSize = 1000
-		if PageSize < 0:
-			PageSize = 1
-		smsCount = Messages.count()
-		SmsMessages = Messages.fetch(PageSize,(Page*PageSize))
-		response_data = {
-						"start":(Page*PageSize),
-						"total":smsCount,
-						'SmsMessages':[]
-						}
-		for sms in SmsMessages:
-			response_data['SmsMessages'].append(sms)
-		self.response.out.write(response.format_response(response_data,format))
 	"""
 	{
 	    "account_sid": "AC5ef872f6da5a21de157d80997a64bd33", 
@@ -132,9 +96,9 @@ class MessageInstanceResource(base_handlers.InstanceHandler):
 		
 def main():
 	application = webapp.WSGIApplication([
+											('/(.*)/Accounts/(.*)/SMS/Messages/(.*)', MessageInstanceResource),
 											('/(.*)/Accounts/(.*)/SMS/Messages', MessageList),
-											('/(.*)/Accounts/(.*)/SMS/Messages.json', MessageList),
-											('/(.*)/Accounts/(.*)/SMS/Messages/(.*)', MessageInstanceResource)
+											('/(.*)/Accounts/(.*)/SMS/Messages.json', MessageList)
 										],
 										 debug=True)
 	util.run_wsgi_app(application)
