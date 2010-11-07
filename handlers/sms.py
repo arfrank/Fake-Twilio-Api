@@ -36,6 +36,7 @@ class MessageList(base_handlers.ListHandler):
 #OVERLOAD THE post method to a local version cause thats going to be necessary for each one		
 	@authorization.authorize_request
 	def post(self, API_VERSION, ACCOUNT_SID, *args):
+		format = response.response_format(self.request.path.split('/')[-1])
 		if parameters.required(['From','To','Body'],self.request):
 			Message = messages.Message.new(
 										To = self.request.get('To'),
@@ -47,7 +48,6 @@ class MessageList(base_handlers.ListHandler):
 									)
 			if self.request.get('StatusCallback',None) is not None:
 				Message.StatusCallback = self.request.get('StatusCallback')
-			format = response.response_format(self.request.path.split('/')[-1])
 			response_data = Message.get_dict()
 			if format == 'XML' or format == 'HTML':
 				response_data = xml.add_nodes(response_data,'SMSMessage')

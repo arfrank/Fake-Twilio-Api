@@ -47,8 +47,15 @@ class SMSCallback(webapp.RequestHandler):
 				Twilio_Signature = authorization.create_twilio_authorization_hash(Account,Message.StatusCallback, payload)
 				urlfetch.fetch(url = Message.StatusCallback,payload = urllib.urlencode(payload) ,method = urlfetch.POST, headers = {'X-Twilio-Signature':Twilio_Signature})
 
+class CallCallback(webapp.RequestHandler):
+	def post(self):
+		pass
+
 def main():
-    application = webapp.WSGIApplication([('/Callbacks/SMS', SMSCallback)],
+    application = webapp.WSGIApplication([
+											('/Callbacks/SMS', SMSCallback)
+											('/Callbacks/Call', CallCallback)
+										],
                                          debug=True)
     util.run_wsgi_app(application)
 
