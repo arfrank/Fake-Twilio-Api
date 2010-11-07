@@ -21,20 +21,25 @@
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 
+from google.appengine.api import urlfetch
 from google.appengine.api.labs import taskqueue
 
 
 from handlers import base_handlers
 
-from helpers import parameters,response,errors
+from helpers import parameters,response,errors, authorization,xml
 
 from decorators import authorization
-from models import calls
+from models import calls,phone_numbers
+
+import urllib
+
 
 class CallInstance(base_handlers.InstanceHandler):
 	def __init__(self):
 		self.AllowedMethods = ['GET']
 		self.ModelInstance = calls.Call.all()
+		self.InstanceModelName = 'Call'
 
 # Initiates a call redirect or terminates a call. See Modifying Live Calls for details.
 	def post(self):
@@ -45,12 +50,14 @@ class CallInstanceRecordings(base_handlers.InstanceHandler):
 	def __init__(self):
 		self.AllowedMethods = ['GET']
 		self.ModelInstance = calls.Call.all()
+		self.InstanceModelName = 'Recording'
 
 # Represents a list of notifications generated during the call identified by {CallSid}. See the Notifications section for resource properties and response formats.
 class CallInstanceNotifications(base_handlers.InstanceHandler):
 	def __init__(self):
 		self.AllowedMethods = ['GET']
 		self.ModelInstance = calls.Call.all()
+		self.InstanceModelName = 'Notification'
 
 # GET gets a list of calls
 # POST initiates a new call
@@ -89,13 +96,30 @@ class CallList(base_handlers.ListHandler):
 		"""
 		format = response.response_format(self.request.path.split('/')[-1])
 		if parameters.required(['From','To','Url'],self.request):
-			Call = calls.Call.new()
-			Call.put()
-			if self.request.get('StatusCallback',None) is not None:
-				method = self.request.get('StatusCallbackMethod','POST').upper()
-				if method not in ['GET','POST']:
-					method = 'POST'
-				taskqueue.Queue('StatusCallbacks').add(taskqueue.Task(url='/Callbacks/Call', method = method, params = {'CallSid':Call.Sid}))
+			Phone_Number = phone_numbers.Phone_Number.all().filter('PhoneNumber = ',self.request.get('From')).filter('AccountSid =',ACCOUNT_SID).get()
+			if Phone_Number is not None:
+				Call = calls.Call.new(From = self.request.get('From'),To = self.request.get('To'),PhoneNumberSid = Phone_Number.Sid, AccountSid = ACCOUNT_SID,Status = 'queued',Direction = 'outgoing-api')
+				Call.put()
+				response_data = Call.get_dict()
+				#has been queueud so lets ring
+				Call.ring()
+				#ringing, what should we do? connect and read twiml and parse, fail, busy signal or no answer
+				#default is to connect, read twiml and do some things i guess
+				Call.connect()
+
+				if self.request.get('StatusCallback',None) is not None:
+					StatusCallback = self.request.get('StatusCallback')
+					StatusCallbackMethod = self.request.get('StatusCallbackMethod','POST').upper()
+					if StatusCallbackMethod not in ['GET','POST']:
+						StatusCallbackMethod = 'POST'
+				elif Phone_Number.StatusCallback is not None:
+					StatusCallback = Phone_Number.StatusCallback
+					StatusCallbackMethod = Phone_Number.StatusCallbackMethod
+				if self.request.get('StatusCallback',None) is not None or Phone_Number.StatusCallback is not None:
+					Call.disconnect(StatusCallback,StatusCallbackMethod)
+				self.response.out.write(response.format_response(response.add_nodes(self,response_data,format),format))
+			else:
+				self.response.out.write(response.format_response(errors.rest_error_response(404,"Resource not found",format),format))				
 		else:
 			self.response.out.write(response.format_response(errors.rest_error_response(400,"Missing Parameters",format),format))
 			

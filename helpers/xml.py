@@ -17,6 +17,7 @@ def to_xml(dictionary):
 			string +="<"+item+">"+str(dictionary[item])+"</"+item+">"
 	return string
 	
+# depreciated
 def add_nodes(dictionary,resource_name):
 	return {
 			"TwilioResponse":

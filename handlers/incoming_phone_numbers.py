@@ -47,11 +47,15 @@ class IncomingPhoneNumberInstance(base_handlers.InstanceHandler):
 		else:
 			self.error(400)
 	"""
-class IncomingPhoneNumberList(webapp.RequestHandler):
-	@authorization.authorize_request
-	def get(self, API_VERSION, ACCOUNT_SID, *args):
-		#PAGING INFORMATION  will do this later
-		pass
+class IncomingPhoneNumberList(base_handlers.ListHandler):
+	def __init__(self):
+		self.ModelInstance = phone_numbers.Phone_Number.all()
+		self.AllowedMethods = ['GET']
+		self.AllowedFilters = {
+			'GET':[['To','='],['From','='],['DateSent','=']]
+		}
+		self.ListName = 'IncomingPhoneNumbers'
+		self.InstanceModelName = 'IncomingPhoneNumber'
 
 	@authorization.authorize_request
 	def post(self,API_VERSION, ACCOUNT_SID, *args):
@@ -84,9 +88,7 @@ class IncomingPhoneNumberList(webapp.RequestHandler):
 				)
 				Phone_Number.put()
 				response_data = Phone_Number.get_dict()
-				if format == 'XML' or format == 'HTML':
-					response_data = xml.add_nodes(response_data,'IncomingPhoneNumber')
-				self.response.out.write(response.format_response(response_data,format))
+				self.response.out.write(response.format_response(response.add_nodes(self,response_data,format),format))
 			else:
 				self.error(400)
 		else:

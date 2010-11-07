@@ -15,9 +15,7 @@ class InstanceHandler(webapp.RequestHandler):
 				response_data = Instance.get_dict()
 				response_data['ApiVersion'] = API_VERSION
 				response_data['Uri'] = self.request.path
-				if format == 'XML' or format == 'HTML':
-					response_data = xml.add_nodes(response_data,self.InstanceModelName)
-				self.response.out.write(response.format_response(response_data,format))
+				self.response.out.write(response.format_response(response.add_nodes(self,response_data,format),format))
 			else:
 				self.response.out.write(response.format_response(errors.rest_error_response(400,"The requested resource was not found",format),format))
 		else:

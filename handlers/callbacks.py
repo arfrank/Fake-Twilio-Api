@@ -21,7 +21,6 @@ from helpers import authorization
 
 from google.appengine.api import urlfetch
 
-from hashlib import sha1
 import urllib
 
 from models import messages,accounts

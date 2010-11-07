@@ -49,9 +49,7 @@ class MessageList(base_handlers.ListHandler):
 			if self.request.get('StatusCallback',None) is not None:
 				Message.StatusCallback = self.request.get('StatusCallback')
 			response_data = Message.get_dict()
-			if format == 'XML' or format == 'HTML':
-				response_data = xml.add_nodes(response_data,'SMSMessage')
-			self.response.out.write(response.format_response(response_data,format))
+			self.response.out.write(response.format_response(response.add_nodes(self,response_data,format),format))
 			Message.put()
 			#DO SOME THINGS DEPENDING ON ACCOUNT SETTINGS
 			#DEFAULT WILL BE TO SEND MESSAGE, CHARGE FOR IT AND UPDATE WHEN SENT
