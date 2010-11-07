@@ -7,7 +7,7 @@ from google.appengine.ext import db
 from google.appengine.datastore import entity_pb
 
 from helpers import errors,response
-
+import urlparse
 import logging
 
 def authorize_request(method):
@@ -34,10 +34,22 @@ def authorize_request(method):
 				else:
 					logging.info('Basic Authorization Failed')
 					self.response.out.write(response.format_response(errors.rest_error_response(401,"Unauthorized",format),format))
-					
 			else:
-				logging.info('No authorization header')
-				self.response.out.write(response.format_response(errors.rest_error_response(401,"Authorization Required",format,20004),format))
+				#should return a tuple of components, but documentation doesnt explain how to retrieve username & password
+				parsed_url = urlparse.urlparse(self.request.url)
+				netloc = parsed_url.netloc
+				net_split = netloc.rsplit('@',1)
+				if len(net_split) == 2:
+					auth_info = net_split[0]
+					auth_split = auth_info.split(':')
+					if auth_split[0] == ACCOUNT_SID and auth_split[1] == Account.AuthToken:
+						self.data = {'Account' : Account}
+						return method(self,API_VERSION,ACCOUNT_SID,*args)
+					else:
+						self.response.out.write(response.format_response(errors.rest_error_response(401,"Authorization Required",format,20004),format))
+				else:
+					self.response.out.write(response.format_response(errors.rest_error_response(401,"Authorization Required",format,20004),format))
+					
 		else:
 			logging.info('No account exists')
 			self.response.out.write(response.format_response(errors.rest_error_response(400,"No Account Found",format),format))
