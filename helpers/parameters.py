@@ -10,21 +10,28 @@ def required(required_list,request):
 	else:
 		return Valid, 
 	
-def methods(parameter_name,request, default = 'POST'):
+#depreciated, moving to more individualized helpers
+def methods(parameter_name, request, default = 'POST'):
 	#returns method type in either get or post, defaults to default post, but that can be changed.
 	METHOD_TYPES = ['GET','POST']
 	return request.get(parameter_name).upper() if (request.get(parameter_name,None) is not None and request.get(parameter_name).upper() in METHOD_TYPES) else default
 
 #Boolean of the above
 def phone_allowed_methods(parameter,METHOD_TYPES = ['GET','POST']):
-	if parameter.upper() in METHOD_TYPES:
-		return True, 0, ''
+	if parameter is not None:
+		if parameter.upper() in METHOD_TYPES:
+			return True, 0, ''
+		else:
+			return False, 21403, 'http://www.twilio.com/docs/errors/21403'
 	else:
 		return False, 21403, 'http://www.twilio.com/docs/errors/21403'
 
 def sms_allowed_methods(parameter,METHOD_TYPES = ['GET','POST']):
-	if parameter.upper() in METHOD_TYPES:
-		return True, 0, ''
+	if parameter is not None:
+		if parameter.upper() in METHOD_TYPES:
+			return True, 0, ''
+		else:
+			return False, 14104, 'http://www.twilio.com/docs/errors/14104'
 	else:
 		#this is not right, think its actually 21403
 		return False, 14104, 'http://www.twilio.com/docs/errors/14104'
@@ -44,9 +51,9 @@ def fallback_urls(request, FallbackArgName, StandardArgName, Instance, method = 
 			return True, 0, ''
 		else:
 			#Hack to check for sms fallback missing or not.
-			if method = 'SMS'
+			if method == 'SMS':
 				return False, 21406,'http://www.twilio.com/docs/errors/21406'
-			elif method = 'Voice':
+			elif method == 'Voice':
 				return False, 21405,'http://www.twilio.com/docs/errors/21405'
 				
 	else:

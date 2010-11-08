@@ -57,10 +57,10 @@ class InstanceHandler(webapp.RequestHandler):
 					#if we are allowed to alter that argument
 					if arg_list[index] in self.AllowedProperties['Post']:
 						#validate that a valid value was passed in
-						Valid,TwilioCode,TwilioMsg self.InstanceHelper.validate(self,Instance, arg_list[index],self.request.get(arg_list[index])):
+						Valid,TwilioCode,TwilioMsg =  Instance.validate(self.request, arg_list[index], self.request.get( arg_list[index] ))
 							#set it to a valid argument value
-							if Valid:
-								setattr(Instance,arg_list[index],self.InstanceHelper.sanitize(self, Instance, arg_list[index], self.request.get(arg_list[index])))
+						if Valid:
+							setattr(Instance, arg_list[index], Instance.sanitize( self.request, arg_list[index], self.request.get( arg_list[index] )))
 				if Valid:
 					Instance.put()
 					InstanceHandler.get(self,API_VERSION,ACCOUNT_SID,*args)

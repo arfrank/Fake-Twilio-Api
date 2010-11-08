@@ -1,1 +1,7 @@
 *.pyc
+
+models/*.pyc
+helpers/*.pyc
+libraries/*.pyc
+handlers/*.pyc
+decorators/*.pyc

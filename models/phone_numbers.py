@@ -3,6 +3,8 @@ from models import base
 from random import random
 from hashlib import sha256
 
+import logging
+
 from helpers import parameters
 
 """
@@ -45,62 +47,64 @@ class Phone_Number(base.CommonModel):
 	SmsFallbackMethod = db.StringProperty(default = 'POST')
 
 	@classmethod
-	def new(cls,
-			FriendlyName = None,AccountSid = None,PhoneNumber = None,VoiceCallerIdLookup = False,
-			VoiceUrl = None,VoiceMethod = 'POST',VoiceFallbackUrl = None,VoiceFallbackMethod = 'POST',
-			StatusCallback = None, StatusCallbackMethod = 'POST', SmsUrl = None, SmsMethod = 'POST',
-			SmsFallbackUrl = None, SmsFallbackMethod = 'POST'
-		):
-		Sid = 'PN'+sha256(To+str(random())+From).hexdigest()
-		return cls(
-					Sid = Sid,
-					FriendlyName = FriendlyName,
-					AccountSid = AccountSid,
-					PhoneNumber = PhoneNumber,
-					VoiceCallerIdLookup = VoiceCallerIdLookup,
-					VoiceUrl = VoiceUrl,
-					VoiceMethod = VoiceMethod,
-					VoiceFallbackUrl = VoiceFallbackUrl,
-					VoiceFallbackMethod = VoiceFallbackMethod
-					StatusCallback = StatusCallback,
-					StatusCallbackMethod = StatusCallbackMethod,
-					SmsUrl = SmsUrl,
-					SmsMethod = SmsMethod,
-					SmsFallbackUrl = SmsFallbackUrl,
-					SmsFallbackMethod = SmsFallbackMethod
-				)
+	#FriendlyName = None,AccountSid = None,PhoneNumber = None,VoiceCallerIdLookup = False,
+	#VoiceUrl = None,VoiceMethod = 'POST',VoiceFallbackUrl = None,VoiceFallbackMethod = 'POST',
+	#StatusCallback = None, StatusCallbackMethod = 'POST', SmsUrl = None, SmsMethod = 'POST',
+	#SmsFallbackUrl = None, SmsFallbackMethod = 'POST'
+	def new(cls, request, AccountSid, PhoneNumber, **kwargs):
+		property_dictionary = {}
+		Valid = True
+		arg_length = len(kwargs)
+		for keyword in kwargs:
+			logging.info(keyword)
+			if hasattr(cls,keyword) and kwargs[keyword] is not None:
+				Valid,TwilioCode,TwilioMsg = Phone_Number().validate( request, keyword, kwargs[keyword] )
+				if not Valid:
+					break
+				else:
+					property_dictionary[keyword] = Phone_Number().sanitize(request, keyword, kwargs[keyword])
+		if Valid:
+			Sid = 'PN'+sha256(str(random())).hexdigest()
+			return cls(
+						Sid = Sid,
+						AccountSid = AccountSid,
+						PhoneNumber = PhoneNumber,
+						**property_dictionary
+					), True, 0, ''
+		else:
+			return '', False, TwilioCode, TwilioMsg
 	
-	def validate(self, phone_number, arg_name, arg_value):
+	def validate(self, request, arg_name, arg_value):
 		validators = {
-			'FriendlyName' : parameters.FriendlyName_length(self.request.get('FriendlyName','')),
-			'VoiceCallerIdLookup' : parameters.allowed_boolean(self.request.get('VoiceCallerIdLookup',None)),
-			'VoiceUrl' : parameters.standard_urls(self.request,'VoiceUrl')
+			'FriendlyName' : parameters.FriendlyName_length(request.get('FriendlyName','')),
+			'VoiceCallerIdLookup' : parameters.allowed_boolean(request.get('VoiceCallerIdLookup',None)),
+			'VoiceUrl' : parameters.standard_urls(request,'VoiceUrl'),
 			'VoiceMethod' : parameters.phone_allowed_methods(arg_value,['GET','POST']),
-			'VoiceFallbackUrl' : parameters.fallback_urls(self.request, 'VoiceFallbackUrl', 'VoiceUrl', self, 'Voice'),
+			'VoiceFallbackUrl' : parameters.fallback_urls(request, 'VoiceFallbackUrl', 'VoiceUrl', self, 'Voice'),
 			'VoiceFallbackMethod' : parameters.phone_allowed_methods(arg_value,['GET','POST']),
-			'StatusCallback' : parameters.standard_urls(self.request,'StatusCallback'),
+			'StatusCallback' : parameters.standard_urls(request,'StatusCallback'),
 			'StatusCallbackMethod' : parameters.phone_allowed_methods(arg_value,['GET','POST']),
-			'SmsUrl' : parameters.standard_urls(self.request,'SmsUrl'),
+			'SmsUrl' : parameters.standard_urls(request,'SmsUrl'),
 			'SmsMethod' : parameters.sms_allowed_methods(arg_value,['GET','POST']),
-			'SmsFallbackUrl' : parameters.fallback_urls(self.request, 'SmsFallbackUrl', 'SmsUrl', self, 'SMS'),
+			'SmsFallbackUrl' : parameters.fallback_urls(request, 'SmsFallbackUrl', 'SmsUrl', self, 'SMS'),
 			'SmsFallbackMethod' : parameters.sms_allowed_methods(arg_value,['GET','POST'])
 		}
 
-		return validators[arg_name](arg_value)
+		return validators[arg_name]
 
-	def sanitize(self, phone_number, arg_name, arg_value):
+	def sanitize(self, request, arg_name, arg_value):
 		santizers = {
-			'FriendlyName' : self.request.get('FriendlyName',None),
-			'VoiceCallerIdLookup' : self.request.get('VoiceCallerIdLookup',None),
-			'VoiceUrl' : self.request.get('VoiceUrl',None),
-			'VoiceMethod' : self.request.get('VoiceMethod','POST'),
-			'VoiceFallbackUrl' : self.request.get('VoiceFallbackUrl',None),
-			'VoiceFallbackMethod' : self.request.get('VoiceFallbackMethod','POST'),
-			'StatusCallback' : self.request.get('StatusCallback',None),
-			'StatusCallbackMethod' : self.request.get('StatusCallbackMethod','POST'),
-			'SmsUrl' : self.request.get('SmsUrl',None),
-			'SmsMethod' : self.request.get('SmsMethod','POST'),
-			'SmsFallbackUrl' : self.request.get('SmsFallbackUrl',None),
-			'SmsFallbackMethod' : self.request.get('SmsFallbackMethod','POST')
+			'FriendlyName' : request.get('FriendlyName',None),
+			'VoiceCallerIdLookup' : request.get('VoiceCallerIdLookup',None),
+			'VoiceUrl' : request.get('VoiceUrl',None),
+			'VoiceMethod' : request.get('VoiceMethod','POST'),
+			'VoiceFallbackUrl' : request.get('VoiceFallbackUrl',None),
+			'VoiceFallbackMethod' : request.get('VoiceFallbackMethod','POST'),
+			'StatusCallback' : request.get('StatusCallback',None),
+			'StatusCallbackMethod' : request.get('StatusCallbackMethod','POST'),
+			'SmsUrl' : request.get('SmsUrl',None),
+			'SmsMethod' : request.get('SmsMethod','POST'),
+			'SmsFallbackUrl' : request.get('SmsFallbackUrl',None),
+			'SmsFallbackMethod' : request.get('SmsFallbackMethod','POST')
 		}
-		return sanitizers[arg_name](arg_value)
+		return santizers[arg_name]

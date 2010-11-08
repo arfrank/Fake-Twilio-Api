@@ -39,7 +39,7 @@ class Message(base.CommonModel):
 		validators = {
 			'FriendlyName' : request.get('FriendlyName',None),
 			'VoiceCallerIdLookup' : parameters.allowed_boolean(request.get('VoiceCallerIdLookup',None)),
-			'VoiceUrl' : parameters.standard_urls(request.get('VoiceUrl',None))
+			'VoiceUrl' : parameters.standard_urls(request.get('VoiceUrl',None)),
 			'VoiceMethod' : parameters.allowed_methods(arg_value,['GET','POST']),
 			'VoiceFallbackUrl' : request.get('VoiceFallbackUrl',None),
 			'VoiceFallbackMethod' : parameters.allowed_methods(arg_value,['GET','POST']),

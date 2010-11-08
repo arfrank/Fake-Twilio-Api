@@ -19,7 +19,7 @@ from google.appengine.ext.webapp import util
 from google.appengine.api.labs import taskqueue
 
 from handlers import base_handlers
-from helpers import response, parameters, sid, authorization, errors, message_helper
+from helpers import response, parameters, sid, authorization, errors
 from decorators import authorization
 from models import accounts,messages
 
@@ -33,7 +33,6 @@ class MessageList(base_handlers.ListHandler):
 		self.ListName = 'SmsMessages'
 		self.InstanceModelName = 'SmsMessage'
 		#Only for Put and Post
-		self.InstanceHelper = message_helper
 		self.AllowedProperties = {
 		}
 
