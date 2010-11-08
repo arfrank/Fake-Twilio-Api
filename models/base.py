@@ -16,3 +16,10 @@ class CommonModel(db.Expando):
 			else:
 				object_dict[key] = getattr(self,key)	
 		return object_dict
+
+# Base functions to be overloaded to ensure that they exist
+	def sanitize(self, request, arg_name, arg_value):
+		return arg_value
+
+	def validate(self, request, arg_name, arg_value):
+		return True

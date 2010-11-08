@@ -2,6 +2,9 @@ from google.appengine.ext import db
 from models import base
 from random import random
 from hashlib import sha256
+
+from helpers import parameters
+
 """
 Sid	A 34 character string that uniquely idetifies this resource.
 DateCreated	The date that this resource was created, given as GMT RFC 2822 format.
@@ -66,3 +69,38 @@ class Phone_Number(base.CommonModel):
 					SmsFallbackUrl = SmsFallbackUrl,
 					SmsFallbackMethod = SmsFallbackMethod
 				)
+	
+	def validate(self, phone_number, arg_name, arg_value):
+		validators = {
+			'FriendlyName' : parameters.FriendlyName_length(self.request.get('FriendlyName','')),
+			'VoiceCallerIdLookup' : parameters.allowed_boolean(self.request.get('VoiceCallerIdLookup',None)),
+			'VoiceUrl' : parameters.standard_urls(self.request,'VoiceUrl')
+			'VoiceMethod' : parameters.phone_allowed_methods(arg_value,['GET','POST']),
+			'VoiceFallbackUrl' : parameters.fallback_urls(self.request, 'VoiceFallbackUrl', 'VoiceUrl', self, 'Voice'),
+			'VoiceFallbackMethod' : parameters.phone_allowed_methods(arg_value,['GET','POST']),
+			'StatusCallback' : parameters.standard_urls(self.request,'StatusCallback'),
+			'StatusCallbackMethod' : parameters.phone_allowed_methods(arg_value,['GET','POST']),
+			'SmsUrl' : parameters.standard_urls(self.request,'SmsUrl'),
+			'SmsMethod' : parameters.sms_allowed_methods(arg_value,['GET','POST']),
+			'SmsFallbackUrl' : parameters.fallback_urls(self.request, 'SmsFallbackUrl', 'SmsUrl', self, 'SMS'),
+			'SmsFallbackMethod' : parameters.sms_allowed_methods(arg_value,['GET','POST'])
+		}
+
+		return validators[arg_name](arg_value)
+
+	def sanitize(self, phone_number, arg_name, arg_value):
+		santizers = {
+			'FriendlyName' : self.request.get('FriendlyName',None),
+			'VoiceCallerIdLookup' : self.request.get('VoiceCallerIdLookup',None),
+			'VoiceUrl' : self.request.get('VoiceUrl',None),
+			'VoiceMethod' : self.request.get('VoiceMethod','POST'),
+			'VoiceFallbackUrl' : self.request.get('VoiceFallbackUrl',None),
+			'VoiceFallbackMethod' : self.request.get('VoiceFallbackMethod','POST'),
+			'StatusCallback' : self.request.get('StatusCallback',None),
+			'StatusCallbackMethod' : self.request.get('StatusCallbackMethod','POST'),
+			'SmsUrl' : self.request.get('SmsUrl',None),
+			'SmsMethod' : self.request.get('SmsMethod','POST'),
+			'SmsFallbackUrl' : self.request.get('SmsFallbackUrl',None),
+			'SmsFallbackMethod' : self.request.get('SmsFallbackMethod','POST')
+		}
+		return sanitizers[arg_name](arg_value)
