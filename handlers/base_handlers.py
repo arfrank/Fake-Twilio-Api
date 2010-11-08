@@ -130,7 +130,7 @@ class ListHandler(webapp.RequestHandler):
 		else:
 			self.response.out.write(response.format_response(errors.rest_error_response(405,"The requested method is not allowed",format,20004,'http://www.twilio.com/docs/errors/20004'),format))
 
-	#Unlikely this will be used ever
+	#Unlikely this will be used ever, or can I generalize this to allow for reuse.
 	@authorization.authorize_request
 	def post(self, API_VERSION, ACCOUNT_SID, *args):
 		format = response.response_format(self.request.path.split('/')[-1])
