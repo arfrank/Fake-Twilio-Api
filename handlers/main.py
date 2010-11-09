@@ -19,9 +19,12 @@ from google.appengine.ext.webapp import util
 from google.appengine.ext.webapp import template
 import os
 
+import urllib
 from libraries.gaesessions import get_current_session
-from models import accounts
+from models import accounts,phone_numbers
 from helpers import application
+
+from decorators import webapp_decorator
 
 class MainHandler(webapp.RequestHandler):
 	def get(self):
@@ -39,11 +42,11 @@ class Register(webapp.RequestHandler):
 		if application.required(required,self.request) and self.request.get('password') == self.request.get('password_confirm'):
 			exist_account = accounts.Account.get_by_key_name(self.request.get('email'))
 			if exist_account is None:
-				account = accounts.Account.new(key_name = self.request.get('email'), email=self.request.get('email'),password=self.request.get('password'))
+				account = accounts.Account.new(key_name = self.request.get('email').lower(), email=self.request.get('email').lower(),password=self.request.get('password'))
 				account.put()
 				session = get_current_session()
 				session.regenerate_id()
-				session['account'] = account
+				session['Account'] = account
 				self.redirect('/account')
 			else:
 				Register.get(self)
@@ -59,23 +62,38 @@ class Login(webapp.RequestHandler):
 	def post(self):
 		required = ['email','password']
 		if application.required(required,self.request):
-			account = accounts.Account.get_by_key_name(self.request.get('email'))
-			if account is not None and account.check_password(self.request.get('password')):
+			Account = accounts.Account.get_by_key_name(self.request.get('email'))
+			if Account is not None and Account.check_password(self.request.get('password')):
 				session = get_current_session()
 				session.regenerate_id()
-				session['account'] = account
+				session['Account'] = Account
 				self.redirect('/account')
 			else:
 				Login.get(self)
-class Account(webapp.RequestHandler):
-	def get(self):
-		session = get_current_session()
-		if session['account'] is None:
-			self.redirect('/login')
-		else:
-			path = os.path.join(os.path.dirname(__file__), '../templates/account.html')
-			self.response.out.write(template.render(path,{'data':{'account':session['account']}}))
 
+class Account(webapp.RequestHandler):
+	@webapp_decorator.check_logged_in
+	def get(self):
+		path = os.path.join(os.path.dirname(__file__), '../templates/account.html')
+		self.response.out.write(template.render(path,{'data':self.data}))
+
+class PhoneNumbers(webapp.RequestHandler):
+	@webapp_decorator.check_logged_in
+	def get(self):
+		self.data['PhoneNumbers'] = phone_numbers.Phone_Number.all().filter('AccountSid =',self.data['Account'].Sid)
+		path = os.path.join(os.path.dirname(__file__), '../templates/phone-numbers.html')
+		self.response.out.write(template.render(path,{'data':self.data}))
+
+class PhoneNumber(webapp.RequestHandler):
+	@webapp_decorator.check_logged_in
+	def get(self,phone_number):
+		phone_number = urllib.unquote(phone_number)
+		self.data['PhoneNumber'] = phone_numbers.Phone_Number.all().filter('AccountSid = ',self.data['Account'].Sid).filter('PhoneNumber = ',phone_number).get()
+		if self.data['PhoneNumber'] is not None:
+			path = os.path.join(os.path.dirname(__file__), '../templates/phone-number.html')
+			self.response.out.write(template.render(path,{'data':self.data}))
+		else:
+			self.redirect('/phone-numbers')
 
 class Logout(webapp.RequestHandler):
 	def get(self):
@@ -88,8 +106,9 @@ def main():
 											('/register',Register),
 											('/login',Login),
 											('/logout',Logout),
-											('/account',Account)
-											
+											('/account',Account),
+											('/phone-numbers',PhoneNumbers),
+											('/phone-numbers/(.*)',PhoneNumber)
 										],
 										 debug=True)
 	util.run_wsgi_app(application)

@@ -26,7 +26,11 @@ class Accounts(base_handlers.InstanceHandler):
 	def __init__(self):
 		self.AllowedMethods = ['GET','PUT','POST']
 		self.InstanceModel = accounts.Account.all()
-
+		self.InstanceModelName = 'IncomingPhoneNumber'
+		self.AllowedProperties = {
+			'POST' : ['FriendlyName'],
+			'PUT' : ['FriendlyName']
+		}
 
 def main():
 	application = webapp.WSGIApplication([('/(.*)/Accounts/(.*)', Accounts)],

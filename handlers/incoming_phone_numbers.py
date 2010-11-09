@@ -36,7 +36,7 @@ class IncomingPhoneNumberInstance(base_handlers.InstanceHandler):
 		self.InstanceModelName = 'IncomingPhoneNumber'
 		self.AllowedProperties = {
 			'POST' : ['FriendlyName','ApiVersion','VoiceUrl','VoiceMethod','VoiceFallbackUrl','VoiceFallbackMethod','StatusCallback','StatusCallbackMethod','SmsUrl','SmsMethod','SmsFallbackUrl','SmsFallbackMethod','VoiceCallerIdLookup'],
-			'PUT' : ['FriendlyName','ApiVersion','VoiceUrl','VoiceMethod','VoiceFallbackUrl','VoiceFallbackMethod','StatusCallback','StatusCallbackMethod','SmsUrl','SmsMethod','SmsFallbackUrl','SmsFallbackMethod','VoiceCallerIdLookup'],
+			'PUT' : ['FriendlyName','ApiVersion','VoiceUrl','VoiceMethod','VoiceFallbackUrl','VoiceFallbackMethod','StatusCallback','StatusCallbackMethod','SmsUrl','SmsMethod','SmsFallbackUrl','SmsFallbackMethod','VoiceCallerIdLookup']
 		}
 
 class IncomingPhoneNumberList(base_handlers.ListHandler):

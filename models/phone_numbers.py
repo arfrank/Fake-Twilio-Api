@@ -37,7 +37,7 @@ class Phone_Number(base.CommonModel):
 	VoiceMethod = db.StringProperty(default = 'POST')
 	VoiceFallbackUrl = db.StringProperty()
 	VoiceFallbackMethod = db.StringProperty(default = 'POST')
-	StatusCallback = db.StringProperty
+	StatusCallback = db.StringProperty()
 	StatusCallbackMethod = db.StringProperty()
 	SmsUrl = db.StringProperty()
 	SmsMethod = db.StringProperty(default = 'POST')
@@ -72,7 +72,8 @@ class Phone_Number(base.CommonModel):
 	@classmethod
 	def new_Sid(self):
 		return 'PN'+sha256(str(random())).hexdigest()
-	
+
+	#Validators for all properties that are user-editable.
 	def validate(self, request, arg_name, arg_value):
 		validators = {
 			'FriendlyName' : parameters.friendlyname_length(request.get('FriendlyName','')),
@@ -93,21 +94,21 @@ class Phone_Number(base.CommonModel):
 			return validators[arg_name]
 		else:
 			return True, 0, ''
-
+	#to be used, but for now will leave as is, minus standardizing how I do method saving
 	def sanitize(self, request, arg_name, arg_value):
 		sanitizers = {
 			'FriendlyName' : request.get('FriendlyName',None),
 			'VoiceCallerIdLookup' : request.get('VoiceCallerIdLookup',None),
 			'VoiceUrl' : request.get('VoiceUrl',None),
-			'VoiceMethod' : request.get('VoiceMethod','POST'),
+			'VoiceMethod' : request.get('VoiceMethod','POST').upper(),
 			'VoiceFallbackUrl' : request.get('VoiceFallbackUrl',None),
-			'VoiceFallbackMethod' : request.get('VoiceFallbackMethod','POST'),
+			'VoiceFallbackMethod' : request.get('VoiceFallbackMethod','POST').upper(),
 			'StatusCallback' : request.get('StatusCallback',None),
-			'StatusCallbackMethod' : request.get('StatusCallbackMethod','POST'),
+			'StatusCallbackMethod' : request.get('StatusCallbackMethod','POST').upper(),
 			'SmsUrl' : request.get('SmsUrl',None),
-			'SmsMethod' : request.get('SmsMethod','POST'),
+			'SmsMethod' : request.get('SmsMethod','POST').upper(),
 			'SmsFallbackUrl' : request.get('SmsFallbackUrl',None),
-			'SmsFallbackMethod' : request.get('SmsFallbackMethod','POST')
+			'SmsFallbackMethod' : request.get('SmsFallbackMethod','POST').upper()
 		}
 		if arg_name in sanitizers:
 			return sanitizers[arg_name]

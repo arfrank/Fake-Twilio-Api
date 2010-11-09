@@ -1,0 +1,69 @@
+{% extends "../templates/base.html" %}
+{% block 'content' %}
+	<h1 id="account_information">Phone Number - {{ data.PhoneNumber.PhoneNumber }}</h1>
+	<div id="content">
+		<form action="/phone-number/{{data.PhoneNumber.PhoneNumber}}" method="get" accept-charset="utf-8">
+			<p>
+				<label for="FriendlyName">Friendly Name</label> <input name="FriendlyName" value="{% if data.PhoneNumber.FriendlyName %}{{data.PhoneNumber.FriendlyName}}{% endif %}">
+			</p>
+			<p>
+				<label for="VoiceUrl">Voice Callback URL</label> <input type="tet" name="VoiceUrl" value="{% if data.PhoneNumber.VoiceUrl %}{{data.PhoneNumber.VoiceUrl}}{% endif %}" id="some_name"> Method: <select name="VoiceMethod" id="VoiceMethod">
+					<option {% ifequal data.PhoneNumber.VoiceMethod 'GET'  %}
+						selected
+					{% endifequal %} value="GET">GET</option>
+					<option {% ifequal data.PhoneNumber.VoiceMethod 'POST'  %}
+						selected
+					{% endifequal %} value="POST">POST</option>
+				</select>
+			</p>
+			<p>
+				<label for="VoiceFallbackUrl">Voice Fallback Callback URL</label> <input type="tet" name="VoiceFallbackUrl" value="{% if data.PhoneNumber.VoiceFallbackUrl %}{{data.PhoneNumber.VoiceFallbackUrl}}{% endif %}" id="some_name"> Method: <select name="VoiceFallbackMethod" id="VoiceFallbackMethod">
+					<option {% ifequal data.PhoneNumber.VoiceFallbackMethod 'GET'  %}
+						selected
+					{% endifequal %} value="GET">GET</option>
+					<option {% ifequal data.PhoneNumber.VoiceFallbackMethod 'POST'  %}
+						selected
+					{% endifequal %} value="POST">POST</option>
+				</select>
+			</p>
+			<p>
+				<label for="StatusCallback">Status Callback URL</label> <input type="tet" name="StatusCallback" value="{% if data.PhoneNumber.StatusCallback %}{{data.PhoneNumber.StatusCallback}}{% endif %}" id="some_name"> Method: <select name="StatusCallbackMethod" id="StatusCallbackMethod">
+					<option {% ifequal data.PhoneNumber.StatusCallbackMethod 'GET'  %}
+						selected
+					{% endifequal %} value="GET">GET</option>
+					<option {% ifequal data.PhoneNumber.StatusCallbackMethod 'POST'  %}
+						selected
+					{% endifequal %} value="POST">POST</option>
+				</select>
+			</p>
+			<p>
+				<label for="SmsUrl">Sms URL</label> <input type="tet" name="SmsUrl" value="{% if data.PhoneNumber.SmsUrl %}{{data.PhoneNumber.SmsUrl}}{% endif %}"> Method: <select name="SmsMethod" id="SmsMethod">
+					<option {% ifequal data.PhoneNumber.SmsMethod 'GET'  %}
+						selected
+					{% endifequal %} value="GET">GET</option>
+					<option {% ifequal data.PhoneNumber.SmsMethod 'POST'  %}
+						selected
+					{% endifequal %} value="POST">POST</option>
+				</select>
+				
+			</p>
+			<p>
+				<label for="SmsFallbackUrl">Sms Fallback URL</label> <input type="tet" name="SmsFallbackUrl" value="{% if data.PhoneNumber.SmsFallbackUrl %}{{ data.PhoneNumber.SmsFallbackUrl }}{% endif %}" id="some_name"> Method: <select name="SmsFallbackMethod" id="SmsFallbackMethod">
+					<option {% ifequal data.PhoneNumber.SmsFallbackMethod 'GET'  %}
+						selected
+					{% endifequal %} value="GET">GET</option>
+					<option {% ifequal data.PhoneNumber.SmsFallbackMethod 'POST'  %}
+						selected
+					{% endifequal %} value="POST">POST</option>
+				</select>
+			</p>
+			<p>
+				<h3>Additional Parameters</h3>
+				<span>There parameters allow you to easily have the system respond with fake errors without having to pass in extra variables.</span>
+				<h4>Errors</h4>
+				<input type="radio" name="error" value="">: To be determined 
+			</p>
+			<input type="submit" name="Submit" value="Save">
+		</form>
+	</div>
+{% endblock %}

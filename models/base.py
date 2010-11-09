@@ -18,7 +18,7 @@ class CommonModel(db.Model):
 		return object_dict
 
 	@classmethod
-	def new(cls, request, AccountSid, **kwargs):
+	def new(cls, request, AccountSid = None, **kwargs):
 		property_dictionary = {}
 		Valid = True
 		arg_length = len(kwargs)
@@ -29,11 +29,12 @@ class CommonModel(db.Model):
 					break
 				else:
 					property_dictionary[keyword] = cls().sanitize(request, keyword, kwargs[keyword])
+		if hasattr(cls,'AccountSid') and AccountSid is not None:
+			property_dictionary['AccountSid'] = AccountSid
 		if Valid:
 			Sid = cls().new_Sid()
 			return cls(
 						Sid = Sid,
-						AccountSid = AccountSid,
 						**property_dictionary
 					), True, 0, ''
 		else:
