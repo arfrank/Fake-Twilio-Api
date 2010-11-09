@@ -24,10 +24,17 @@ class InstanceHandler(webapp.RequestHandler):
 	"""
 	@authorization.authorize_request
 	def get(self,API_VERSION,ACCOUNT_SID, *args):
+		if not len(args):
+			args = [ACCOUNT_SID]
 		format = response.response_format( args[0] )
 		if 'GET' in self.AllowedMethods:
 			InstanceSid = args[0].split('.')[0]
-			Instance = self.InstanceModel.filter('Sid =',InstanceSid).filter('AccountSid = ',ACCOUNT_SID).get()
+			if self.InstanceModelName == 'Account':
+				#HACK
+				Instance = self.InstanceModel.filter('Sid =',InstanceSid).get()
+			else:
+				logging.info('here')
+				Instance = self.InstanceModel.filter('Sid =',InstanceSid).filter('AccountSid = ',ACCOUNT_SID).get()
 			if Instance is not None:
 				response_data = Instance.get_dict()
 				response_data['ApiVersion'] = API_VERSION
