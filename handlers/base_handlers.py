@@ -34,7 +34,7 @@ class InstanceHandler(webapp.RequestHandler):
 				response_data['Uri'] = self.request.path
 				self.response.out.write(response.format_response(response.add_nodes(self,response_data,format),format))
 			else:
-				self.response.out.write(response.format_response(errors.rest_error_response(400,"The requested resource was not found",format),format))
+				self.response.out.write(response.format_response(errors.rest_error_response(404,"The requested resource was not found",format),format))
 		else:
 			self.response.out.write(response.format_response(errors.rest_error_response(405,"The requested method is not allowed",format,20004,'http://www.twilio.com/docs/errors/20004'),format))
 
@@ -67,7 +67,7 @@ class InstanceHandler(webapp.RequestHandler):
 				else:
 					self.response.out.write(response.format_response(errors.rest_error_response(400,"You have made a bad request",format,TwilioCode,TwilioMsg),format))					
 			else:
-				self.response.out.write(response.format_response(errors.rest_error_response(400,"The requested resource was not found",format),format))
+				self.response.out.write(response.format_response(errors.rest_error_response(404,"The requested resource was not found",format),format))
 		else:
 			self.response.out.write(response.format_response(errors.rest_error_response(405,"The requested method is not allowed",format,20004,'http://www.twilio.com/docs/errors/20004'),format))
 		
