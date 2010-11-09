@@ -96,38 +96,36 @@ class CallList(base_handlers.ListHandler):
 		"""
 		format = response.response_format(self.request.path.split('/')[-1])
 		if parameters.required(['From','To','Url'],self.request):
-			Phone_Number = phone_numbers.Phone_Number.all().filter('PhoneNumber = ',self.request.get('From')).get() #.filter('AccountSid =',ACCOUNT_SID).get()
+			Phone_Number = phone_numbers.Phone_Number.all().filter('PhoneNumber = ',self.request.get('From')).filter('AccountSid =',ACCOUNT_SID).get()
 			if Phone_Number is not None:
-				if Phone_Number.AccountSid == ACCOUNT_SID:
-					Call = calls.Call.new(
-							From = self.request.get('From'),
-							To = self.request.get('To'),
-							PhoneNumberSid = Phone_Number.Sid, 
-							AccountSid = ACCOUNT_SID,
-							Status = 'queued',
-							Direction = 'outgoing-api'
-						)
-					Call.put()
-					response_data = Call.get_dict()
-					#has been queueud so lets ring
-					Call.ring()
-					#ringing, what should we do? connect and read twiml and parse, fail, busy signal or no answer
-					#default is to connect, read twiml and do some things i guess
-					Call.connect()
+				Call = calls.Call.new(
+						From = self.request.get('From'),
+						To = self.request.get('To'),
+						PhoneNumberSid = Phone_Number.Sid, 
+						AccountSid = ACCOUNT_SID,
+						Status = 'queued',
+						Direction = 'outgoing-api'
+					)
+				Call.put()
+				response_data = Call.get_dict()
+				#has been queueud so lets ring
+				Call.ring()
+				#ringing, what should we do? connect and read twiml and parse, fail, busy signal or no answer
+				#default is to connect, read twiml and do some things i guess
 
-					if self.request.get('StatusCallback',None) is not None:
-						StatusCallback = self.request.get('StatusCallback')
-						StatusCallbackMethod = self.request.get('StatusCallbackMethod','POST').upper()
-						if StatusCallbackMethod not in ['GET','POST']:
-							StatusCallbackMethod = 'POST'
-					elif Phone_Number.StatusCallback is not None:
-						StatusCallback = Phone_Number.StatusCallback
-						StatusCallbackMethod = Phone_Number.StatusCallbackMethod
-					if self.request.get('StatusCallback',None) is not None or Phone_Number.StatusCallback is not None:
-						Call.disconnect(StatusCallback,StatusCallbackMethod)
-					self.response.out.write(response.format_response(response.add_nodes(self,response_data,format),format))
-				else:
-					self.response.out.write(response.format_response(errors.rest_error_response(400,"Request not allowed",format),format))									
+				Call.connect(Phone_Number, self.request)
+
+				if self.request.get('StatusCallback',None) is not None:
+					StatusCallback = self.request.get('StatusCallback')
+					StatusCallbackMethod = self.request.get('StatusCallbackMethod','POST').upper()
+					if StatusCallbackMethod not in ['GET','POST']:
+						StatusCallbackMethod = 'POST'
+				elif Phone_Number.StatusCallback is not None:
+					StatusCallback = Phone_Number.StatusCallback
+					StatusCallbackMethod = Phone_Number.StatusCallbackMethod
+				if self.request.get('StatusCallback',None) is not None or Phone_Number.StatusCallback is not None:
+					Call.disconnect(StatusCallback,StatusCallbackMethod)
+				self.response.out.write(response.format_response(response.add_nodes(self,response_data,format),format))
 			else:
 				self.response.out.write(response.format_response(errors.rest_error_response(404,"Resource not found",format),format))				
 		else:

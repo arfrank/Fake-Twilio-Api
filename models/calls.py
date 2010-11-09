@@ -6,6 +6,7 @@ import string
 import datetime
 
 from google.appengine.api.labs import taskqueue
+from google.appengine.api import urlfetch
 
 
 """
@@ -72,9 +73,14 @@ class Calls(base.CommonModel):
 		self.Status = 'ringing'
 		self.put()
 
-	def connect(self):
+	def connect(self, Instance, request):
 		self.Status = 'in-progress'
 		self.StartTime = datetime.datetime.now()
+		#get url of twiml
+		#twiml = urlfetch.urlfetch(request.get('Url'),method = urlfetch.POST)
+		#if that fails, fallback, if not fallback goto phone number url?
+		
+		#parse twiml and do things according to that
 		self.put()
 
 	def failed(self):
