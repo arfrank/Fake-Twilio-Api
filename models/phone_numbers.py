@@ -75,7 +75,7 @@ class Phone_Number(base.CommonModel):
 	
 	def validate(self, request, arg_name, arg_value):
 		validators = {
-			'FriendlyName' : parameters.FriendlyName_length(request.get('FriendlyName','')),
+			'FriendlyName' : parameters.friendlyname_length(request.get('FriendlyName','')),
 			'VoiceCallerIdLookup' : parameters.allowed_boolean(request.get('VoiceCallerIdLookup',None)),
 			'VoiceUrl' : parameters.standard_urls(request,'VoiceUrl'),
 			'VoiceMethod' : parameters.phone_allowed_methods(arg_value,['GET','POST']),

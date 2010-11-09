@@ -67,13 +67,21 @@ def sms_allowed_methods(parameter,METHOD_TYPES = ['GET','POST']):
 		#this is not right, think its actually 21403
 		return False, 14104, 'http://www.twilio.com/docs/errors/14104'
 
+#Does a basic check of url validity for netlocation and scheme being used
+def check_url(URL):
+	parse_result = urlparse.urlparse(URL.lower())
+	return (parse_result.scheme == 'http' and parse_result.netloc != '')
+
+# Checks for the normal callback url to make sure they are valid
 def standard_urls(request,StandardArgName):
 	if check_url(request.get(StandardArgName,'')):
 		return True, 0, ''
 	else:
 		return False, 21502, 'http://www.twilio.com/docs/errors/21502'
+
 #What should this pass back?
 #Passed,Twilio error code, Twilio error message
+#Checks fallback urls for validity, normal callback being created (cant have fallback without normal callback)
 def fallback_urls(request, FallbackArgName, StandardArgName, Instance, method = 'Voice'):
 	# need to check that its a valid url,
 	if check_url(request.get('FallbackArgName')):
@@ -83,6 +91,7 @@ def fallback_urls(request, FallbackArgName, StandardArgName, Instance, method = 
 		else:
 			#Hack to check for sms fallback missing or not.
 			if method == 'SMS':
+				#11100
 				return False, 21406,'http://www.twilio.com/docs/errors/21406'
 			elif method == 'Voice':
 				return False, 21405,'http://www.twilio.com/docs/errors/21405'
@@ -90,16 +99,14 @@ def fallback_urls(request, FallbackArgName, StandardArgName, Instance, method = 
 	else:
 		return False, 21502, 'http://www.twilio.com/docs/errors/21502'
 
-def check_url(URL):
-	parse_result = urlparse.urlparse(URL.lower())
-	return (parse_result.scheme == 'http' and parse_result.netloc != '')
-
-def FriendlyName_length(parameter,min_length=1, max_length = 64):
+def friendlyname_length(parameter,min_length=1, max_length = 64):
 	if min_length <= len(parameter) <= max_length:
 		return True, 0 , ''
 	else:
 		return False, 20002, 'http://www.twilio.com/docs/errors/20002'
+
 #NEED TO TWILIOIZE THIS
+#need to better twilioize this
 def allowed_boolean(parameter):
 	TRUE_BOOLS = [True,1,'true','True','TRUE']
 	FALSE_BOOLS = [False,0,'false','False','FALSE']
