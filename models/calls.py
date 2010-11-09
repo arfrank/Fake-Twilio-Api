@@ -41,7 +41,8 @@ class Calls(base.CommonModel):
 	AnsweredBy = db.StringProperty()
 	ForwardedFrom = db.StringProperty()
 	CallerName = db.StringProperty()
-
+	"""
+	#No longer needed!
 	@classmethod
 	def new(cls, ParentCallSid, AccountSid,To,From,PhoneNumberSid,Status,StartTime = None,EndTime = None,Duration = None,Price = None,Direction,AnsweredBy = None,ForwardedFrom = None,CallerName = None):
 		Sid = 'CA'+sha256(email).hexdigest()
@@ -61,7 +62,7 @@ class Calls(base.CommonModel):
 					ForwardedFrom = ForwardedFrom,
 					CallerName = CallerName
 				)
-	
+	"""
 	@classmethod
 	def new_Sid(self):
 		return 'CA'+sha256(str(random())).hexdigest()
@@ -106,3 +107,9 @@ class Calls(base.CommonModel):
 				taskqueue.Queue('StatusCallbacks').add(taskqueue.Task(url='/Callbacks/Call', params = {'CallSid':self.Sid,'StatusCallback':StatusCallback,'StatusCallbackMethod':StatusCallbackMethod}))
 			except Exception, e:
 				pass
+				
+	def sanitize():
+		pass
+		
+	def validate():
+		pass
