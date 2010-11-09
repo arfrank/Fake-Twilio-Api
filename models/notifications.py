@@ -11,3 +11,7 @@ class Notification(base.CommonModel):
 	def new(cls, key_name, email, password):
 		Sid = 'NO'+sha256(email).hexdigest()
 		return cls(Sid = Sid)
+
+	@classmethod
+	def new_Sid(self):
+		return 'NO'+sha256(str(random())).hexdigest()

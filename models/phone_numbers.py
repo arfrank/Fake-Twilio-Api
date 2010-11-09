@@ -2,6 +2,9 @@ from google.appengine.ext import db
 from models import base
 from random import random
 from hashlib import sha256
+
+from helpers import parameters
+
 """
 Sid	A 34 character string that uniquely idetifies this resource.
 DateCreated	The date that this resource was created, given as GMT RFC 2822 format.
@@ -34,35 +37,80 @@ class Phone_Number(base.CommonModel):
 	VoiceMethod = db.StringProperty(default = 'POST')
 	VoiceFallbackUrl = db.StringProperty()
 	VoiceFallbackMethod = db.StringProperty(default = 'POST')
-	StatusCallback = db.StringProperty
+	StatusCallback = db.StringProperty()
 	StatusCallbackMethod = db.StringProperty()
 	SmsUrl = db.StringProperty()
 	SmsMethod = db.StringProperty(default = 'POST')
 	SmsFallbackUrl = db.StringProperty()
 	SmsFallbackMethod = db.StringProperty(default = 'POST')
-
+	"""
 	@classmethod
-	def new(cls,
-			FriendlyName = None,AccountSid = None,PhoneNumber = None,VoiceCallerIdLookup = False,
-			VoiceUrl = None,VoiceMethod = 'POST',VoiceFallbackUrl = None,VoiceFallbackMethod = 'POST',
-			StatusCallback = None, StatusCallbackMethod = 'POST', SmsUrl = None, SmsMethod = 'POST',
-			SmsFallbackUrl = None, SmsFallbackMethod = 'POST'
-		):
-		Sid = 'PN'+sha256(To+str(random())+From).hexdigest()
-		return cls(
-					Sid = Sid,
-					FriendlyName = FriendlyName,
-					AccountSid = AccountSid,
-					PhoneNumber = PhoneNumber,
-					VoiceCallerIdLookup = VoiceCallerIdLookup,
-					VoiceUrl = VoiceUrl,
-					VoiceMethod = VoiceMethod,
-					VoiceFallbackUrl = VoiceFallbackUrl,
-					VoiceFallbackMethod = VoiceFallbackMethod
-					StatusCallback = StatusCallback,
-					StatusCallbackMethod = StatusCallbackMethod,
-					SmsUrl = SmsUrl,
-					SmsMethod = SmsMethod,
-					SmsFallbackUrl = SmsFallbackUrl,
-					SmsFallbackMethod = SmsFallbackMethod
-				)
+	#FriendlyName = None,AccountSid = None,PhoneNumber = None,VoiceCallerIdLookup = False,
+	#VoiceUrl = None,VoiceMethod = 'POST',VoiceFallbackUrl = None,VoiceFallbackMethod = 'POST',
+	#StatusCallback = None, StatusCallbackMethod = 'POST', SmsUrl = None, SmsMethod = 'POST',
+	#SmsFallbackUrl = None, SmsFallbackMethod = 'POST'
+	def new(cls, request, AccountSid, PhoneNumber, **kwargs):
+		property_dictionary = {}
+		Valid = True
+		for keyword in kwargs:
+			if hasattr(cls,keyword) and kwargs[keyword] is not None:
+				Valid,TwilioCode,TwilioMsg = Phone_Number().validate( request, keyword, kwargs[keyword] )
+				if not Valid:
+					break
+				else:
+					property_dictionary[keyword] = Phone_Number().sanitize(request, keyword, kwargs[keyword])
+		if Valid:
+			Sid = 'PN'+sha256(str(random())).hexdigest()
+			return cls(
+						Sid = Sid,
+						AccountSid = AccountSid,
+						**property_dictionary
+					), True, 0, ''
+		else:
+			return '', False, TwilioCode, TwilioMsg
+	"""
+	@classmethod
+	def new_Sid(self):
+		return 'PN'+sha256(str(random())).hexdigest()
+
+	#Validators for all properties that are user-editable.
+	def validate(self, request, arg_name, arg_value):
+		validators = {
+			'FriendlyName' : parameters.friendlyname_length(request.get('FriendlyName','')),
+			'VoiceCallerIdLookup' : parameters.allowed_boolean(request.get('VoiceCallerIdLookup',None)),
+			'VoiceUrl' : parameters.standard_urls(request,'VoiceUrl'),
+			'VoiceMethod' : parameters.phone_allowed_methods(arg_value,['GET','POST']),
+			'VoiceFallbackUrl' : parameters.fallback_urls(request, 'VoiceFallbackUrl', 'VoiceUrl', self, 'Voice'),
+			'VoiceFallbackMethod' : parameters.phone_allowed_methods(arg_value,['GET','POST']),
+			'StatusCallback' : parameters.standard_urls(request,'StatusCallback'),
+			'StatusCallbackMethod' : parameters.phone_allowed_methods(arg_value,['GET','POST']),
+			'SmsUrl' : parameters.standard_urls(request,'SmsUrl'),
+			'SmsMethod' : parameters.sms_allowed_methods(arg_value,['GET','POST']),
+			'SmsFallbackUrl' : parameters.fallback_urls(request, 'SmsFallbackUrl', 'SmsUrl', self, 'SMS'),
+			'SmsFallbackMethod' : parameters.sms_allowed_methods(arg_value,['GET','POST'])
+		}
+
+		if arg_name in validators:
+			return validators[arg_name]
+		else:
+			return True, 0, ''
+	#to be used, but for now will leave as is, minus standardizing how I do method saving
+	def sanitize(self, request, arg_name, arg_value):
+		sanitizers = {
+			'FriendlyName' : request.get('FriendlyName',None),
+			'VoiceCallerIdLookup' : request.get('VoiceCallerIdLookup',None),
+			'VoiceUrl' : request.get('VoiceUrl',None),
+			'VoiceMethod' : request.get('VoiceMethod','POST').upper(),
+			'VoiceFallbackUrl' : request.get('VoiceFallbackUrl',None),
+			'VoiceFallbackMethod' : request.get('VoiceFallbackMethod','POST').upper(),
+			'StatusCallback' : request.get('StatusCallback',None),
+			'StatusCallbackMethod' : request.get('StatusCallbackMethod','POST').upper(),
+			'SmsUrl' : request.get('SmsUrl',None),
+			'SmsMethod' : request.get('SmsMethod','POST').upper(),
+			'SmsFallbackUrl' : request.get('SmsFallbackUrl',None),
+			'SmsFallbackMethod' : request.get('SmsFallbackMethod','POST').upper()
+		}
+		if arg_name in sanitizers:
+			return sanitizers[arg_name]
+		else:
+			return arg_value

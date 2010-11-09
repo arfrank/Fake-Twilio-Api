@@ -5,9 +5,10 @@ import random
 import string
 class Transcription(base.CommonModel):
 	Sid = db.StringProperty()
+	Text = db.TextProperty()
+	CallSid = db.StringProperty()
+	RecordingSid = db.StringProperty()
 
-	
 	@classmethod
-	def new(cls, key_name, email, password):
-		Sid = 'TR'+sha256(email).hexdigest()
-		return cls(Sid=Sid)
+	def new_Sid(self):
+		return 'TR'+sha256(str(random())).hexdigest()

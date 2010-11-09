@@ -34,12 +34,16 @@ class InstanceHandler(webapp.RequestHandler):
 				response_data['Uri'] = self.request.path
 				self.response.out.write(response.format_response(response.add_nodes(self,response_data,format),format))
 			else:
-				self.response.out.write(response.format_response(errors.rest_error_response(400,"The requested resource was not found",format),format))
+				self.response.out.write(response.format_response(errors.rest_error_response(404,"The requested resource was not found",format),format))
 		else:
 			self.response.out.write(response.format_response(errors.rest_error_response(405,"The requested method is not allowed",format,20004,'http://www.twilio.com/docs/errors/20004'),format))
 
 	@authorization.authorize_request
-	def post(self, API_VERSION, ACCOUNT_SID, *args):
+	def post(self, API_VERSION, ACCOUNT_SID, *args, **kwargs):
+		if 'request' in kwargs:
+			request = kwargs['request']
+		else:
+			request = self.request
 		format = response.response_format( args[0] )
 		if 'POST' in self.AllowedMethods:
 			InstanceSid = args[0].split('.')[0]
@@ -47,15 +51,27 @@ class InstanceHandler(webapp.RequestHandler):
 			if Instance is not None:
 				#update stuff according to allowed rules
 				#get all arguments passed in
-				for argument in self.request.arguments():
+				Valid = True
+				TwilioCode = 0
+				TwilioMsg = ''
+				index = 0
+				arg_length = len(request.arguments())
+				arg_list = request.arguments()
+				while Valid and index < arg_length:
 					#if we are allowed to alter that argument
-					if argument in self.AllowedProperties['Post']:
+					if arg_list[index] in self.AllowedProperties['POST']:
 						#validate that a valid value was passed in
-						if self.InstanceHelper.validate(self,Instance, argument,self.request.get(argument)):
+						Valid,TwilioCode,TwilioMsg =  Instance.validate(request, arg_list[index], request.get( arg_list[index] ))
 							#set it to a valid argument value
-							setattr(Instance,argument,self.InstanceHelper.sanitize(self, Instance, argument, self.request.get(argument)))
-				Instance.put()
-				InstanceHandler.get(self,API_VERSION,ACCOUNT_SID,*args)
+						if Valid:
+							setattr(Instance, arg_list[index], Instance.sanitize( request, arg_list[index], request.get( arg_list[index] )))
+				if Valid:
+					Instance.put()
+					InstanceHandler.get(self,API_VERSION,ACCOUNT_SID,*args)
+				else:
+					self.response.out.write(response.format_response(errors.rest_error_response(400,"You have made a bad request",format,TwilioCode,TwilioMsg),format))					
+			else:
+				self.response.out.write(response.format_response(errors.rest_error_response(404,"The requested resource was not found",format),format))
 		else:
 			self.response.out.write(response.format_response(errors.rest_error_response(405,"The requested method is not allowed",format,20004,'http://www.twilio.com/docs/errors/20004'),format))
 		
@@ -63,7 +79,7 @@ class InstanceHandler(webapp.RequestHandler):
 	def put(self, API_VERSION, ACCOUNT_SID, *args):
 		format = response.response_format( args[0] )
 		if 'PUT' in self.AllowedMethods:
-			pass
+			InstanceHandler.post(self,API_VERSION,ACCOUNT_SID,*args)
 		else:
 			self.response.out.write(response.format_response(errors.rest_error_response(405,"The requested method is not allowed",format,20004,'http://www.twilio.com/docs/errors/20004'),format))
 

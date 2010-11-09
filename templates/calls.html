@@ -1,0 +1,96 @@
+{% extends "../templates/base.html" %}
+{% block 'content' %}
+	<h1 id="account_information">Phone Numbers</h1>
+	<div id="content">
+		<h2>All Calls</h2>
+		<h3>Queued Calls</h3>
+		{% if data.QueuedCalls.count %}
+			{% for call in data.QueuedCalls  %}
+				<div id="" class="QueuedCalls">
+					<a href="/calls/{{call.Sid}}">From: {{call.From}} - To: {{call.To}}</a>
+				</div>
+			{%endfor%}
+		{% else %}
+		None
+		{% endif %}
+
+		<h3>Ringing Calls</h3>
+		{% if data.RingingCalls.count %}
+			{% for call in data.RingingCalls  %}
+				<div id="" class="RingingCalls">
+					<a href="/calls/{{call.Sid}}">From: {{call.From}} - To: {{call.To}}</a>
+				</div>
+			{%endfor%}
+		{% else %}
+		None
+		{% endif %}
+
+		<h3>InProgress Calls</h3>
+		{% if data.InProgressCalls.count %}
+			{% for call in data.InProgressCalls  %}
+				<div id="" class="InProgressCalls">
+					<a href="/calls/{{call.Sid}}">From: {{call.From}} - To: {{call.To}}</a>
+				</div>
+			{%endfor%}
+		{% else %}
+		None
+		{% endif %}
+
+		<h3>Completed Calls</h3>
+		{% if data.CompletedCalls.count %}
+			{% for call in data.CompletedCalls  %}
+				<div id="" class="CompletedCalls">
+					<a href="/calls/{{call.Sid}}">From: {{call.From}} - To: {{call.To}}</a>
+				</div>
+			{%endfor%}
+		{% else %}
+		None
+		{% endif %}
+
+		<h3>Busy Calls</h3>
+		{% if data.BusyCalls.count %}
+			{% for call in data.BusyCalls  %}
+				<div id="" class="BusyCalls">
+					<a href="/calls/{{call.Sid}}">From: {{call.From}} - To: {{call.To}}</a>
+				</div>
+			{%endfor%}
+		{% else %}
+		None
+		{% endif %}
+
+		<h3>Failed Calls</h3>
+		{% if data.FailedCalls.count %}
+			{% for call in data.FailedCalls  %}
+				<div id="" class="FailedCalls">
+					<a href="/calls/{{call.Sid}}">From: {{call.From}} - To: {{call.To}}</a>
+				</div>
+			{%endfor%}
+		{% else %}
+		None
+		{% endif %}
+
+		<h3>NoAnswer Calls</h3>
+		{% if data.NoAnswerCalls.count %}
+			{% for call in data.NoAnswerCalls  %}
+				<div id="" class="NoAnswerCalls">
+					<a href="/calls/{{call.Sid}}">From: {{call.From}} - To: {{call.To}}</a>
+				</div>
+			{%endfor%}
+		{% else %}
+		None
+		{% endif %}
+
+		<h3>Canceled Calls</h3>
+		{% if data.CanceledCalls.count %}
+			{% for call in data.CanceledCalls  %}
+				<div id="" class="CanceledCalls">
+					<a href="/calls/{{call.Sid}}">From: {{call.From}} - To: {{call.To}}</a>
+				</div>
+			{%endfor%}
+		{% else %}
+		None
+		{% endif %}
+
+
+	</div>
+{% endblock %}

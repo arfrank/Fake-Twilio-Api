@@ -73,7 +73,7 @@ class CallList(base_handlers.ListHandler):
 		self.InstanceModel = calls.Call.all()
 		self.AllowedMethods = ['GET']
 		self.AllowedFilters = {
-			'GET':[['To','='],['From','='],['Status','='],['StartTime','='],['EndTime','=']]
+			'GET':[['To','='],['From','='],['Status','=']]#,['StartTime','='],['EndTime','=']]#Times are not implemented yet
 		}
 		self.ListName = 'Calls'
 		self.InstanceModelName = 'Call'
@@ -98,14 +98,22 @@ class CallList(base_handlers.ListHandler):
 		if parameters.required(['From','To','Url'],self.request):
 			Phone_Number = phone_numbers.Phone_Number.all().filter('PhoneNumber = ',self.request.get('From')).filter('AccountSid =',ACCOUNT_SID).get()
 			if Phone_Number is not None:
-				Call = calls.Call.new(From = self.request.get('From'),To = self.request.get('To'),PhoneNumberSid = Phone_Number.Sid, AccountSid = ACCOUNT_SID,Status = 'queued',Direction = 'outgoing-api')
+				Call = calls.Call.new(
+						From = self.request.get('From'),
+						To = self.request.get('To'),
+						PhoneNumberSid = Phone_Number.Sid, 
+						AccountSid = ACCOUNT_SID,
+						Status = 'queued',
+						Direction = 'outgoing-api'
+					)
 				Call.put()
 				response_data = Call.get_dict()
 				#has been queueud so lets ring
 				Call.ring()
 				#ringing, what should we do? connect and read twiml and parse, fail, busy signal or no answer
 				#default is to connect, read twiml and do some things i guess
-				Call.connect()
+
+				Call.connect(Phone_Number, self.request)
 
 				if self.request.get('StatusCallback',None) is not None:
 					StatusCallback = self.request.get('StatusCallback')
@@ -128,7 +136,7 @@ def main():
 									('/(.*)/Accounts/(.*)/Calls/(.*)/Recordings', CallInstanceRecordings),
 									('/(.*)/Accounts/(.*)/Calls/(.*)/Notifications', CallInstanceNotifications),
 									('/(.*)/Accounts/(.*)/Calls/(.*)', CallInstance),
-									('/(.*)/Accounts/(.*)/Calls', CallList)
+									('/(.*)/Accounts/(.*)/Calls.*', CallList)
 									],
 										 debug=True)
 	util.run_wsgi_app(application)

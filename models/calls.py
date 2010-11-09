@@ -6,6 +6,7 @@ import string
 import datetime
 
 from google.appengine.api.labs import taskqueue
+from google.appengine.api import urlfetch
 
 
 """
@@ -41,7 +42,8 @@ class Calls(base.CommonModel):
 	AnsweredBy = db.StringProperty()
 	ForwardedFrom = db.StringProperty()
 	CallerName = db.StringProperty()
-
+	"""
+	#No longer needed!
 	@classmethod
 	def new(cls, ParentCallSid, AccountSid,To,From,PhoneNumberSid,Status,StartTime = None,EndTime = None,Duration = None,Price = None,Direction,AnsweredBy = None,ForwardedFrom = None,CallerName = None):
 		Sid = 'CA'+sha256(email).hexdigest()
@@ -61,14 +63,24 @@ class Calls(base.CommonModel):
 					ForwardedFrom = ForwardedFrom,
 					CallerName = CallerName
 				)
+	"""
+	@classmethod
+	def new_Sid(self):
+		return 'CA'+sha256(str(random())).hexdigest()
+
 	
 	def ring(self):
 		self.Status = 'ringing'
 		self.put()
 
-	def connect(self):
+	def connect(self, Instance, request):
 		self.Status = 'in-progress'
 		self.StartTime = datetime.datetime.now()
+		#get url of twiml
+		#twiml = urlfetch.urlfetch(request.get('Url'),method = urlfetch.POST)
+		#if that fails, fallback, if not fallback goto phone number url?
+		
+		#parse twiml and do things according to that
 		self.put()
 
 	def failed(self):
@@ -81,7 +93,7 @@ class Calls(base.CommonModel):
 		self.Price = 0.00
 		self.put()
 
-	def no-answer(self):
+	def no_answer(self):
 		self.Status = 'no-answer'
 		self.Price = 0.00
 		self.put()
@@ -101,3 +113,9 @@ class Calls(base.CommonModel):
 				taskqueue.Queue('StatusCallbacks').add(taskqueue.Task(url='/Callbacks/Call', params = {'CallSid':self.Sid,'StatusCallback':StatusCallback,'StatusCallbackMethod':StatusCallbackMethod}))
 			except Exception, e:
 				pass
+				
+	def sanitize():
+		pass
+		
+	def validate():
+		pass

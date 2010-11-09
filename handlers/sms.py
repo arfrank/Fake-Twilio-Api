@@ -19,7 +19,7 @@ from google.appengine.ext.webapp import util
 from google.appengine.api.labs import taskqueue
 
 from handlers import base_handlers
-from helpers import response, parameters, sid, authorization, errors, message_helper
+from helpers import response, parameters, sid, authorization, errors
 from decorators import authorization
 from models import accounts,messages
 
@@ -33,7 +33,6 @@ class MessageList(base_handlers.ListHandler):
 		self.ListName = 'SmsMessages'
 		self.InstanceModelName = 'SmsMessage'
 		#Only for Put and Post
-		self.InstanceHelper = message_helper
 		self.AllowedProperties = {
 		}
 
@@ -41,17 +40,19 @@ class MessageList(base_handlers.ListHandler):
 	@authorization.authorize_request
 	def post(self, API_VERSION, ACCOUNT_SID, *args):
 		format = response.response_format(self.request.path.split('/')[-1])
-		if parameters.required(['From','To','Body'],self.request):
-			Message = messages.Message.new(
-										To = self.request.get('To'),
-										From = self.request.get('From'),
-										Body = self.request.get('Body'),
-										AccountSid = ACCOUNT_SID,
-										Direction = 'outbound-api',
-										Status = 'queued'
-									)
-			if self.request.get('StatusCallback',None) is not None:
-				Message.StatusCallback = self.request.get('StatusCallback')
+		#if parameters.required(['From','To','Body'],self.request):
+
+		Message, Valid, TwilioCode,TwilioMsg = messages.Message.new(
+									To = self.request.get('To'),
+									From = self.request.get('From'),
+									Body = self.request.get('Body'),
+									StatusCallback = self.request.get('StatusCallback',None),
+									request = self.request,
+									AccountSid = ACCOUNT_SID,
+									Direction = 'outbound-api',
+									Status = 'queued'
+								)
+		if Valid:
 			response_data = Message.get_dict()
 			self.response.out.write(response.format_response(response.add_nodes(self,response_data,format),format))
 			Message.put()
@@ -62,8 +63,12 @@ class MessageList(base_handlers.ListHandler):
 			if Message.StatusCallback is not None:
 				taskqueue.Queue('StatusCallbacks').add(taskqueue.Task(url='/Callbacks/SMS', params = {'SmsSid':Message.Sid}))
 		else:
-			#This should either specify a twilio code either 21603 or 21604
-			self.response.out.write(response.format_response(errors.rest_error_response(400,"Missing Parameters",format),format))
+			self.response.out.write(response.format_response(errors.rest_error_response(400,"You have passed incorrect paremeters",format,TwilioCode,TwilioMsg),format))
+			
+
+		#else:
+		#	#This should either specify a twilio code either 21603 or 21604
+		#	self.response.out.write(response.format_response(errors.rest_error_response(400,"Missing Parameters",format),format))
 
 		
 class MessageInstanceResource(base_handlers.InstanceHandler):

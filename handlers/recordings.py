@@ -30,8 +30,22 @@ class RecordingInstance(base_handlers.InstanceHandler):
 		self.AllowedMethods = ['GET','DELETE']
 
 #OVERRIDE THE DEFAULT BECAUSE THESE ARENT BLOCKED BY DEFAULT
-	def get(self, API_VERSION, *args):
-		self.response.out.write('Hello world!'+args[0])
+#Actually exact same functionality, just not blocked, plus expanded feature set
+	def get(self, API_VERSION, *args):		
+		format = response.response_format( args[0] )
+		InstanceSid = args[0].split('.')[0]
+		Instance = self.InstanceModel.filter('Sid =',InstanceSid).filter('AccountSid = ',ACCOUNT_SID).get()
+		if Instance is not None:
+			response_data = Instance.get_dict()
+			response_data['ApiVersion'] = API_VERSION
+			response_data['Uri'] = self.request.path
+			if format == '':
+				self.response.headers['Content-Type'] = 'audio/wav'
+			elif format == 'MP3':
+				self.response.headers['Content-Type'] = 'audio/mp3'				
+			self.response.out.write(response.recording_format_response(self,response_data,format))
+		else:
+			self.response.out.write(response.format_response(errors.rest_error_response(404,"The requested resource was not found",format),format))
 
 class RecordingInstanceTranscription(base_handlers.InstanceHandler):
 	def __init__(self):
@@ -42,7 +56,15 @@ class RecordingList(webapp.RequestHandler):
 	def __init__(self):
 		self.InstanceModel = recordings.Recording.all()
 		self.AllowedMethods = ['GET']
-		
+		self.AllowedFilters = {
+			'GET':[['CallSid','='],['DateCreated','=']
+		}
+		self.ListName = 'Recordings'
+		self.InstanceModelName = 'Recordings'
+		#Only for Put and Post
+		self.AllowedProperties = {
+		}
+
 def main():
 	application = webapp.WSGIApplication([
 											('/(.*)/Accounts/(.*)/Recordings/(.*)/Transcriptions', Transcriptions),
