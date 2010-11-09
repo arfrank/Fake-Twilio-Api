@@ -52,7 +52,7 @@ class CallCallback(webapp.RequestHandler):
 
 def main():
     application = webapp.WSGIApplication([
-											('/Callbacks/SMS', SMSCallback)
+											('/Callbacks/SMS', SMSCallback),
 											('/Callbacks/Call', CallCallback)
 										],
                                          debug=True)
