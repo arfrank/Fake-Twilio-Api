@@ -90,10 +90,12 @@ class Phone_Number(base.CommonModel):
 			'SmsFallbackMethod' : parameters.sms_allowed_methods(arg_value,['GET','POST'])
 		}
 
-		return validators[arg_name]
-
+		if arg_name in validators:
+			return validators[arg_name]
+		else:
+			return True, 0, ''
 	def sanitize(self, request, arg_name, arg_value):
-		santizers = {
+		sanitizers = {
 			'FriendlyName' : request.get('FriendlyName',None),
 			'VoiceCallerIdLookup' : request.get('VoiceCallerIdLookup',None),
 			'VoiceUrl' : request.get('VoiceUrl',None),
@@ -107,4 +109,7 @@ class Phone_Number(base.CommonModel):
 			'SmsFallbackUrl' : request.get('SmsFallbackUrl',None),
 			'SmsFallbackMethod' : request.get('SmsFallbackMethod','POST')
 		}
-		return santizers[arg_name]
+		if arg_name in sanitizers:
+			return sanitizers[arg_name]
+		else:
+			return arg_value

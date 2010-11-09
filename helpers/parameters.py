@@ -1,4 +1,35 @@
 import urlparse
+import re
+#Parses the given phone number, and then makes sure that it can be put into a valid twilio format.
+#Returns the twilio formatted phone_number and whether or not it went well, Valid or not
+def parse_phone_number(phone_number):
+	return phone_number, True
+
+def valid_to_phone_number(phone_number,required = False):
+	if phone_number is None:
+		return False, 21604, 'http://www.twilio.com/docs/errors/21604'
+	else:
+		number_parsed, Valid = parse_phone_number(phone_number)
+		if Valid:
+			return True, 0, ''
+		else:
+			return False, 21401, 'http://www.twilio.com/docs/errors/21401'
+
+def valid_from_phone_number(phone_number,required = False):
+	if phone_number is None and required:
+		return False, 21603, 'http://www.twilio.com/docs/errors/21603'
+	else:
+		number_parsed, Valid = parse_phone_number(phone_number)
+		if Valid:
+			return True, 0, ''
+		else:
+			return False, 21401, 'http://www.twilio.com/docs/errors/21401'
+
+def valid_body(body, required=True):
+	if body is None and required:
+		return False, 14103, 'http://www.twilio.com/docs/errors/14103'
+	else:
+		pass
 
 def required(required_list,request):
 	Valid = True
@@ -8,7 +39,7 @@ def required(required_list,request):
 	if Valid:
 		return Valid, 0, ''
 	else:
-		return Valid, 
+		return Valid, 666, 'Need a parameter'
 	
 #depreciated, moving to more individualized helpers
 def methods(parameter_name, request, default = 'POST'):

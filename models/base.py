@@ -2,7 +2,7 @@ from google.appengine.ext import db
 import datetime
 import logging
 
-class CommonModel(db.Expando):
+class CommonModel(db.Model):
 	DateCreated = db.DateTimeProperty(auto_now_add = True)
 	DateUpdated = db.DateTimeProperty(auto_now = True)
 	
