@@ -39,7 +39,11 @@ class RecordingInstance(base_handlers.InstanceHandler):
 			response_data = Instance.get_dict()
 			response_data['ApiVersion'] = API_VERSION
 			response_data['Uri'] = self.request.path
-			self.response.out.write(response.format_response(response.add_nodes(self,response_data,format),format))
+			if format == '':
+				self.response.headers['Content-Type'] = 'audio/wav'
+			elif format == 'MP3':
+				self.response.headers['Content-Type'] = 'audio/mp3'				
+			self.response.out.write(response.recording_format_response(self,response_data,format))
 		else:
 			self.response.out.write(response.format_response(errors.rest_error_response(404,"The requested resource was not found",format),format))
 

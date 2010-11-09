@@ -7,7 +7,7 @@ def rest_error_response(Status,Message,Format = 'XML',TwilioCode = None,TwilioMe
 		response['Code'] = TwilioCode
 	if TwilioMessage is not None:
 		response['MoreInfo'] = TwilioMessage
-	if Format == 'XML' or Format == 'HTML':
+	if Format == '' or Format == 'XML' or Format == 'HTML':
 		response = {
 					'TwilioResponse' : {
 						'RestException' : response
