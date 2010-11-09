@@ -24,3 +24,7 @@ class Account(base.CommonModel):
 	
 	def check_password(self,password):
 		return self.Password == sha256(self.Sid+password+self.Salt).hexdigest()
+		
+	@classmethod
+	def new_Sid(self):
+		return 'AC'+sha256(str(random())).hexdigest()

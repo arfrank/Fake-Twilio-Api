@@ -5,9 +5,10 @@ import random
 import string
 class Recording(base.CommonModel):
 	Sid = db.StringProperty()
-
+	AccountSid = db.StringProperty()
+	CallSid = db.StringProperty()
 	
+
 	@classmethod
-	def new(cls, key_name, email, password):
-		Sid = 'RE'+sha256(email).hexdigest()
-		return cls(Sid=Sid)
+	def new_Sid(self):
+		return 'RE'+sha256(str(random())).hexdigest()

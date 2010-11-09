@@ -62,6 +62,11 @@ class Calls(base.CommonModel):
 					CallerName = CallerName
 				)
 	
+	@classmethod
+	def new_Sid(self):
+		return 'CA'+sha256(str(random())).hexdigest()
+
+	
 	def ring(self):
 		self.Status = 'ringing'
 		self.put()

@@ -11,3 +11,8 @@ class Conference(base.CommonModel):
 	def new(cls, key_name, email, password):
 		Sid = 'CF'+sha256(email).hexdigest()
 		return cls(Sid=Sid)
+
+
+	@classmethod
+	def new_Sid(self):
+		return 'CF'+sha256(str(random())).hexdigest()

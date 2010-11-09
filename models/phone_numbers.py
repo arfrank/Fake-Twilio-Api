@@ -43,7 +43,7 @@ class Phone_Number(base.CommonModel):
 	SmsMethod = db.StringProperty(default = 'POST')
 	SmsFallbackUrl = db.StringProperty()
 	SmsFallbackMethod = db.StringProperty(default = 'POST')
-
+	"""
 	@classmethod
 	#FriendlyName = None,AccountSid = None,PhoneNumber = None,VoiceCallerIdLookup = False,
 	#VoiceUrl = None,VoiceMethod = 'POST',VoiceFallbackUrl = None,VoiceFallbackMethod = 'POST',
@@ -64,12 +64,11 @@ class Phone_Number(base.CommonModel):
 			return cls(
 						Sid = Sid,
 						AccountSid = AccountSid,
-						PhoneNumber = PhoneNumber,
 						**property_dictionary
 					), True, 0, ''
 		else:
 			return '', False, TwilioCode, TwilioMsg
-	
+	"""
 	@classmethod
 	def new_Sid(self):
 		return 'PN'+sha256(str(random())).hexdigest()
