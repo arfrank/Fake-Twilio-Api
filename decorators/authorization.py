@@ -17,15 +17,18 @@ def authorize_request(method):
 
 		if 'response' in kwargs:
 			self.response = kwargs['response']
-
+		if not len(args):
+			args = [ACCOUNT_SID]
+			ACCOUNT_SID = ACCOUNT_SID.split('.')[0]
+		logging.info('args = '+ACCOUNT_SID)
 		format = response.response_format(self.request.path.split('/')[-1])
 		logging.info(format)
 		#Memcache the account to speed things up alittle
 		#PREMATURE OPTIMIZATION!
 		Account = memcache.get(ACCOUNT_SID)
-		logging.info(ACCOUNT_SID)
 		if Account is None:
 			Account = accounts.Account.all().filter('Sid = ',ACCOUNT_SID).get()
+			logging.info(Account)
 			if Account is not None:
 				memcache.set(ACCOUNT_SID,db.model_to_protobuf(Account).Encode())
 		else:
