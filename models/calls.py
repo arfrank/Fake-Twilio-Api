@@ -42,6 +42,7 @@ class Calls(base.CommonModel):
 	AnsweredBy = db.StringProperty()
 	ForwardedFrom = db.StringProperty()
 	CallerName = db.StringProperty()
+	
 	"""
 	#No longer needed!
 	@classmethod

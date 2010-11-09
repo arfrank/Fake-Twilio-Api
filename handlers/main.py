@@ -17,11 +17,16 @@
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 from google.appengine.ext.webapp import template
+from google.appengine.api import urlfetch
+
 import os
 import urllib, urllib2, base64, hmac
 import logging
+
 from libraries.gaesessions import get_current_session
+
 from models import accounts, phone_numbers, calls
+
 from helpers import application
 
 from decorators import webapp_decorator
@@ -163,9 +168,9 @@ class FakeVoice(webapp.RequestHandler):
 			self.redirect('/phone-numbers')
 
 	@webapp_decorator.check_logged_in
-	def post(self,Sid):
-		pass
-
+	def post(self,Sid):		
+		ALLOWED_PARAMETERS = ['From','FromCity','FromState','FromZip','FromCounty','ToCity','ToState','ToZip','ToCounty']
+		
 class Calls(webapp.RequestHandler):
 	@webapp_decorator.check_logged_in
 	def get(self):
