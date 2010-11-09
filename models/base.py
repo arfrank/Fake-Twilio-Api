@@ -17,6 +17,29 @@ class CommonModel(db.Model):
 				object_dict[key] = getattr(self,key)	
 		return object_dict
 
+	@classmethod
+	def new(cls, request, AccountSid, **kwargs):
+		property_dictionary = {}
+		Valid = True
+		arg_length = len(kwargs)
+		for keyword in kwargs:
+			if hasattr(cls,keyword) and kwargs[keyword] is not None:
+				Valid, TwilioCode, TwilioMsg = cls().validate( request, keyword, kwargs[keyword] )
+				if not Valid:
+					break
+				else:
+					property_dictionary[keyword] = cls().sanitize(request, keyword, kwargs[keyword])
+		if Valid:
+			Sid = cls().new_Sid()
+			return cls(
+						Sid = Sid,
+						AccountSid = AccountSid,
+						**property_dictionary
+					), True, 0, ''
+		else:
+			return '', False, TwilioCode, TwilioMsg
+
+
 # Base functions to be overloaded to ensure that they exist
 	def sanitize(self, request, arg_name, arg_value):
 		return arg_value

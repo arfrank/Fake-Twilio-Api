@@ -26,11 +26,11 @@ class Message(base.CommonModel):
 		arg_length = len(kwargs)
 		for keyword in kwargs:
 			if hasattr(cls,keyword) and kwargs[keyword] is not None:
-				Valid, TwilioCode, TwilioMsg = Message().validate( request, keyword, kwargs[keyword] )
+				Valid, TwilioCode, TwilioMsg = cls().validate( request, keyword, kwargs[keyword] )
 				if not Valid:
 					break
 				else:
-					property_dictionary[keyword] = Message().sanitize(request, keyword, kwargs[keyword])
+					property_dictionary[keyword] = cls().sanitize(request, keyword, kwargs[keyword])
 		if Valid:
 			Sid = 'SM'+sha256(str(random())).hexdigest()
 			return cls(
@@ -40,6 +40,10 @@ class Message(base.CommonModel):
 					), True, 0, ''
 		else:
 			return '', False, TwilioCode, TwilioMsg
+	
+	@classmethod
+	def new_Sid(self):
+		return 'SM'+sha256(str(random())).hexdigest()
 
 	def send(self):
 		self.Status = 'sent'

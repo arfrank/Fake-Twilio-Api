@@ -70,6 +70,10 @@ class Phone_Number(base.CommonModel):
 		else:
 			return '', False, TwilioCode, TwilioMsg
 	
+	@classmethod
+	def new_Sid(self):
+		return 'PN'+sha256(str(random())).hexdigest()
+	
 	def validate(self, request, arg_name, arg_value):
 		validators = {
 			'FriendlyName' : parameters.FriendlyName_length(request.get('FriendlyName','')),
@@ -90,6 +94,7 @@ class Phone_Number(base.CommonModel):
 			return validators[arg_name]
 		else:
 			return True, 0, ''
+
 	def sanitize(self, request, arg_name, arg_value):
 		sanitizers = {
 			'FriendlyName' : request.get('FriendlyName',None),
