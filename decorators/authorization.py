@@ -11,7 +11,13 @@ import urlparse
 import logging
 
 def authorize_request(method):
-	def authorized_method(self,API_VERSION,ACCOUNT_SID,*args):
+	def authorized_method(self, API_VERSION, ACCOUNT_SID, *args, **kwargs):
+		if 'request' in kwargs:
+			self.request = kwargs['request']
+
+		if 'response' in kwargs:
+			self.response = kwargs['response']
+
 		format = response.response_format(self.request.path.split('/')[-1])
 		logging.info(format)
 		#Memcache the account to speed things up alittle
@@ -32,7 +38,7 @@ def authorize_request(method):
 				request_auth = self.request.headers['Authorization'].split(' ')
 				if request_auth[0] == 'Basic' and request_auth[1]==authstring:
 					self.data = {'Account' : Account}
-					return method(self,API_VERSION,ACCOUNT_SID,*args)
+					return method(self,API_VERSION,ACCOUNT_SID,*args,**kwargs)
 				else:
 					logging.info('Basic Authorization Failed')
 					self.response.out.write(response.format_response(errors.rest_error_response(401,"Unauthorized",format),format))

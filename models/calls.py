@@ -93,7 +93,7 @@ class Calls(base.CommonModel):
 		self.Price = 0.00
 		self.put()
 
-	def no-answer(self):
+	def no_answer(self):
 		self.Status = 'no-answer'
 		self.Price = 0.00
 		self.put()

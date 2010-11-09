@@ -2,7 +2,13 @@
 {% block 'content' %}
 	<h1 id="account_information">Phone Number - {{ data.PhoneNumber.PhoneNumber }}</h1>
 	<div id="content">
-		<form action="/phone-number/{{data.PhoneNumber.PhoneNumber}}" method="get" accept-charset="utf-8">
+		<form action="/phone-numbers/{{data.PhoneNumber.Sid}}" method="post" accept-charset="utf-8">
+			{% if data.Error %}
+				<p class='error'>
+					An error has occurred.<br>
+					<span class="TwilioCode">Twilio Code: {{data.TwilioCode}}</span><br><span class="TwilioMsg">Twilio Url: {{data.TwilioMsg}}</span>
+				</p>
+			{% endif %}
 			<p>
 				<label for="FriendlyName">Friendly Name</label> <input name="FriendlyName" value="{% if data.PhoneNumber.FriendlyName %}{{data.PhoneNumber.FriendlyName}}{% endif %}">
 			</p>
@@ -56,6 +62,11 @@
 						selected
 					{% endifequal %} value="POST">POST</option>
 				</select>
+			</p>
+			<p>
+				<h2>Fake Inbound Calls/Sms</h2>
+				<a href="/phone-numbers/voice/{{data.PhoneNumber.Sid}}">Voice</a><br>
+				<a href="/phone-numbers/sms/{{data.PhoneNumber.Sid}}">SMS</a>
 			</p>
 			<p>
 				<h3>Additional Parameters</h3>

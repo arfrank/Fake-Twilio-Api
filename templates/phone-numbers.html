@@ -5,7 +5,7 @@
 		<h2>Select a Phone Number</h2>
 		{% for phone_number in data.PhoneNumbers  %}
 			<div id="" class="PhoneNumber">
-				<a href="/phone-numbers/{{phone_number.PhoneNumber}}">{{phone_number.FriendlyName}} - {{phone_number.PhoneNumber}}</a>
+				<a href="/phone-numbers/{{phone_number.Sid}}">{{phone_number.FriendlyName}} - {{phone_number.PhoneNumber}}</a>
 			</div>
 		{%endfor%}
 	</div>

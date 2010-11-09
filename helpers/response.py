@@ -32,9 +32,11 @@ def add_nodes(self,response_data, format):
 	
 def recording_format_response(self, response_data, format):
 	if format == '':
+		pass
 		#WAV FORMAT
 		#load a short wav file
 	elif format == 'MP3':
+		pass
 		#MP3 Format
 		#load a short mp3 file
 	elif format == 'XML' or format == 'HTML' or format == 'JSON':

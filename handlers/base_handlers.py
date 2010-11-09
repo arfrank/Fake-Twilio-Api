@@ -39,7 +39,11 @@ class InstanceHandler(webapp.RequestHandler):
 			self.response.out.write(response.format_response(errors.rest_error_response(405,"The requested method is not allowed",format,20004,'http://www.twilio.com/docs/errors/20004'),format))
 
 	@authorization.authorize_request
-	def post(self, API_VERSION, ACCOUNT_SID, *args):
+	def post(self, API_VERSION, ACCOUNT_SID, *args, **kwargs):
+		if 'request' in kwargs:
+			request = kwargs['request']
+		else:
+			request = self.request
 		format = response.response_format( args[0] )
 		if 'POST' in self.AllowedMethods:
 			InstanceSid = args[0].split('.')[0]
@@ -51,16 +55,16 @@ class InstanceHandler(webapp.RequestHandler):
 				TwilioCode = 0
 				TwilioMsg = ''
 				index = 0
-				arg_length = len(self.request.arguments())
-				arg_list = self.request.arguments()
+				arg_length = len(request.arguments())
+				arg_list = request.arguments()
 				while Valid and index < arg_length:
 					#if we are allowed to alter that argument
-					if arg_list[index] in self.AllowedProperties['Post']:
+					if arg_list[index] in self.AllowedProperties['POST']:
 						#validate that a valid value was passed in
-						Valid,TwilioCode,TwilioMsg =  Instance.validate(self.request, arg_list[index], self.request.get( arg_list[index] ))
+						Valid,TwilioCode,TwilioMsg =  Instance.validate(request, arg_list[index], request.get( arg_list[index] ))
 							#set it to a valid argument value
 						if Valid:
-							setattr(Instance, arg_list[index], Instance.sanitize( self.request, arg_list[index], self.request.get( arg_list[index] )))
+							setattr(Instance, arg_list[index], Instance.sanitize( request, arg_list[index], request.get( arg_list[index] )))
 				if Valid:
 					Instance.put()
 					InstanceHandler.get(self,API_VERSION,ACCOUNT_SID,*args)

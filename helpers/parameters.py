@@ -1,5 +1,6 @@
 import urlparse
 import re
+import logging
 #Parses the given phone number, and then makes sure that it can be put into a valid twilio format.
 #Returns the twilio formatted phone_number and whether or not it went well, Valid or not
 def parse_phone_number(phone_number):
@@ -69,35 +70,49 @@ def sms_allowed_methods(parameter,METHOD_TYPES = ['GET','POST']):
 
 #Does a basic check of url validity for netlocation and scheme being used
 def check_url(URL):
-	parse_result = urlparse.urlparse(URL.lower())
-	return (parse_result.scheme == 'http' and parse_result.netloc != '')
+	logging.info('check url')
+	logging.info(URL)
+	if URL is not None and URL != '':
+		parse_result = urlparse.urlparse(URL.lower())
+		logging.info('check url bool')
+		return (parse_result.scheme == 'http' and parse_result.netloc != '')
+	else:
+		logging.info('check url - none')		
+		return True
 
 # Checks for the normal callback url to make sure they are valid
 def standard_urls(request,StandardArgName):
-	if check_url(request.get(StandardArgName,'')):
-		return True, 0, ''
+	logging.info('standard urls')
+	if request.get(StandardArgName, None) is not None:
+	  	if check_url(request.get(StandardArgName,None)):
+			return True, 0, ''
+		else:
+			return False, 21502, 'http://www.twilio.com/docs/errors/21502'
 	else:
-		return False, 21502, 'http://www.twilio.com/docs/errors/21502'
+		return True, 0, ''
 
 #What should this pass back?
 #Passed,Twilio error code, Twilio error message
 #Checks fallback urls for validity, normal callback being created (cant have fallback without normal callback)
 def fallback_urls(request, FallbackArgName, StandardArgName, Instance, method = 'Voice'):
 	# need to check that its a valid url,
-	if check_url(request.get('FallbackArgName')):
-		# need to check that a standard url is passed, or set already
-		if request.get(StandardArgName,None) is not None or getattr(Instance,StandardArgName) is not None:
-			return True, 0, ''
-		else:
-			#Hack to check for sms fallback missing or not.
-			if method == 'SMS':
-				#11100
-				return False, 21406,'http://www.twilio.com/docs/errors/21406'
-			elif method == 'Voice':
-				return False, 21405,'http://www.twilio.com/docs/errors/21405'
+	if request.get(FallbackArgName,None) is not None:
+		if check_url(request.get(FallbackArgName,None)):
+			# need to check that a standard url is passed, or set already
+			if (request.get(StandardArgName,None) is not None and request.get(StandardArgName,None) != '') or (getattr(Instance,StandardArgName) is not None and getattr(Instance,StandardArgName) != ''):
+				return True, 0, ''
+			else:
+				#Hack to check for sms fallback missing or not.
+				if method == 'SMS':
+					#11100
+					return False, 21406,'http://www.twilio.com/docs/errors/21406'
+				elif method == 'Voice':
+					return False, 21405,'http://www.twilio.com/docs/errors/21405'
 				
+		else:
+			return False, 21502, 'http://www.twilio.com/docs/errors/21502'
 	else:
-		return False, 21502, 'http://www.twilio.com/docs/errors/21502'
+		return True, 0, ''
 
 def friendlyname_length(parameter,min_length=1, max_length = 64):
 	if min_length <= len(parameter) <= max_length:
