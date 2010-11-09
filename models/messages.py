@@ -20,23 +20,22 @@ class Message(base.CommonModel):
 	StatusCallback = db.StringProperty()
 
 	@classmethod
-	def new(cls, request, AccountSid, PhoneNumber, **kwargs):
+	def new(cls, request, AccountSid, **kwargs):
 		property_dictionary = {}
 		Valid = True
 		arg_length = len(kwargs)
 		for keyword in kwargs:
 			if hasattr(cls,keyword) and kwargs[keyword] is not None:
-				Valid,TwilioCode,TwilioMsg = Phone_Number().validate( request, keyword, kwargs[keyword] )
+				Valid, TwilioCode, TwilioMsg = Message().validate( request, keyword, kwargs[keyword] )
 				if not Valid:
 					break
 				else:
-					property_dictionary[keyword] = Phone_Number().sanitize(request, keyword, kwargs[keyword])
+					property_dictionary[keyword] = Message().sanitize(request, keyword, kwargs[keyword])
 		if Valid:
-			Sid = 'PN'+sha256(str(random())).hexdigest()
+			Sid = 'SM'+sha256(To+str(random())+From).hexdigest()
 			return cls(
 						Sid = Sid,
 						AccountSid = AccountSid,
-						PhoneNumber = PhoneNumber,
 						**property_dictionary
 					), True, 0, ''
 		else:
@@ -45,7 +44,6 @@ class Message(base.CommonModel):
 
 
 	def new(cls,To,From,Body,AccountSid,Direction,Status,Price=None,StatusCallback = None):
-		Sid = 'SM'+sha256(To+str(random())+From).hexdigest()
 		return cls(To=To,From=From,Body=Body,AccountSid=AccountSid,Direction=Direction,Status=Status,Price = Price,Sid = Sid,StatusCallback = StatusCallback)
 
 	def send(self):

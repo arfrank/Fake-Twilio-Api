@@ -3,8 +3,6 @@ from models import base
 from random import random
 from hashlib import sha256
 
-import logging
-
 from helpers import parameters
 
 """
@@ -54,9 +52,7 @@ class Phone_Number(base.CommonModel):
 	def new(cls, request, AccountSid, PhoneNumber, **kwargs):
 		property_dictionary = {}
 		Valid = True
-		arg_length = len(kwargs)
 		for keyword in kwargs:
-			logging.info(keyword)
 			if hasattr(cls,keyword) and kwargs[keyword] is not None:
 				Valid,TwilioCode,TwilioMsg = Phone_Number().validate( request, keyword, kwargs[keyword] )
 				if not Valid:

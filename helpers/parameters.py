@@ -29,7 +29,7 @@ def valid_body(body, required=True):
 	if body is None and required:
 		return False, 14103, 'http://www.twilio.com/docs/errors/14103'
 	else:
-		pass
+		return True, 0, ''
 
 def required(required_list,request):
 	Valid = True
