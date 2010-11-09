@@ -13,9 +13,7 @@ class Account(base.CommonModel):
 	AuthToken = db.StringProperty()
 	Salt = db.StringProperty()
 	Email = db.EmailProperty()
-	Password = db.StringProperty()
-	__Active = db.BooleanProperty(default = True)
-	
+	Password = db.StringProperty()	
 	
 	@classmethod
 	def new(cls, key_name, email, password):
