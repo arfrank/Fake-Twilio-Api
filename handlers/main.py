@@ -170,6 +170,8 @@ class FakeVoice(webapp.RequestHandler):
 	@webapp_decorator.check_logged_in
 	def post(self,Sid):		
 		ALLOWED_PARAMETERS = ['From','FromCity','FromState','FromZip','FromCounty','ToCity','ToState','ToZip','ToCounty']
+		#Create a fake call
+		
 		
 class Calls(webapp.RequestHandler):
 	@webapp_decorator.check_logged_in

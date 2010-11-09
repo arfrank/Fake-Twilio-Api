@@ -20,28 +20,27 @@ def authorize_request(method):
 		if not len(args):
 			args = [ACCOUNT_SID]
 			ACCOUNT_SID = ACCOUNT_SID.split('.')[0]
-		logging.info('args = '+ACCOUNT_SID)
 		format = response.response_format(self.request.path.split('/')[-1])
-		logging.info(format)
 		#Memcache the account to speed things up alittle
 		#PREMATURE OPTIMIZATION!
 		Account = memcache.get(ACCOUNT_SID)
 		if Account is None:
 			Account = accounts.Account.all().filter('Sid = ',ACCOUNT_SID).get()
-			logging.info(Account)
 			if Account is not None:
 				memcache.set(ACCOUNT_SID,db.model_to_protobuf(Account).Encode())
 		else:
 			Account = db.model_from_protobuf(entity_pb.EntityProto(Account))
 			#convert back from proto model
-		logging.info(Account)
 		if Account is not None:
 			authstring = base64.encodestring(Account.Sid+':'+Account.AuthToken).replace('\n','')
 			if 'Authorization' in self.request.headers: #hasattr(self.request.headers,'Authorization'):
 				request_auth = self.request.headers['Authorization'].split(' ')
 				if request_auth[0] == 'Basic' and request_auth[1]==authstring:
-					self.data = {'Account' : Account}
-					return method(self,API_VERSION,ACCOUNT_SID,*args,**kwargs)
+					if Account.Status == 'active':
+						self.data = {'Account' : Account}
+						return method(self,API_VERSION,ACCOUNT_SID,*args,**kwargs)
+					else:
+						self.response.out.write(response.format_response(errors.rest_error_response(401,"Account Not Active",format,20005,'http://www.twilio.com/docs/errors/20005'),format))
 				else:
 					logging.info('Basic Authorization Failed')
 					self.response.out.write(response.format_response(errors.rest_error_response(401,"Unauthorized",format),format))
@@ -54,12 +53,16 @@ def authorize_request(method):
 					auth_info = net_split[0]
 					auth_split = auth_info.split(':')
 					if auth_split[0] == ACCOUNT_SID and auth_split[1] == Account.AuthToken:
-						self.data = {'Account' : Account}
-						return method(self,API_VERSION,ACCOUNT_SID,*args)
+						if Account.Status == 'active':
+							self.data = {'Account' : Account}
+							return method(self,API_VERSION,ACCOUNT_SID,*args)
+						else:
+							self.response.out.write(response.format_response(errors.rest_error_response(401,"Account Not Active",format,20005,'http://www.twilio.com/docs/errors/20005'),format))
+							
 					else:
-						self.response.out.write(response.format_response(errors.rest_error_response(401,"Authorization Required",format,20004),format))
+						self.response.out.write(response.format_response(errors.rest_error_response(401,"Authorization Required",format,20004,'http://www.twilio.com/docs/errors/20004'),format))
 				else:
-					self.response.out.write(response.format_response(errors.rest_error_response(401,"Authorization Required",format,20004),format))
+					self.response.out.write(response.format_response(errors.rest_error_response(401,"Authorization Required",format,20004,'http://www.twilio.com/docs/errors/20004'),format))
 					
 		else:
 			logging.info('No account exists')

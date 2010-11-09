@@ -22,7 +22,7 @@ class Account(base.CommonModel):
 		Password = sha256(Sid+password+Salt).hexdigest()
 		AuthToken = sha256(Sid+Password).hexdigest()
 		return cls(key_name=email,Email = email, FriendlyName = email,
-					Sid=Sid,Status='Active',Salt=Salt,
+					Sid=Sid,Status='active',Salt=Salt,
 					Password=Password,AuthToken=AuthToken)
 	
 	def check_password(self,password):
