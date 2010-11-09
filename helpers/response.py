@@ -20,9 +20,16 @@ def format_response(response_data,format):
 	elif format == 'XML' or format == '':
 		return xml.to_xml(response_data)
 
+def _check_none(param):
+	if param is None:
+		return ''
+	else:
+		return param
 
 def add_nodes(self,response_data, format):
 	if format == 'XML' or format == '' or format == 'HTML':
+		for key in response_data:
+			response_data[key] = _check_none(response_data[key])
 		response_data = {
 			'TwilioResponse' : {
 				self.InstanceModelName : response_data
