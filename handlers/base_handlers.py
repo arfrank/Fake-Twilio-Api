@@ -6,22 +6,14 @@ import math
 
 class InstanceHandler(webapp.RequestHandler):
 	"""
-	#EXAMPLE - for message
-	def __init__(self):
-		self.InstanceModel = messages.Message.all() 
-		self.AllowedMethods = ['GET']
-		self.AllowedFilters = {
-			'GET':[['To','='],['From','='],['DateSent','=']]
-		}
-		self.ListName = 'SmsMessages'
-		self.InstanceModelName = 'SmsMessage'
-		#Only for Put and Post
-		self.InstanceHelper = message_helper
-		self.AllowedProperties = {
-		'POST': [],
-		'PUT': []
-		}		
-	"""
+	self.InstanceModel = phone_numbers.Phone_Number.all()
+	self.AllowedMethods = ['GET','POST','PUT','DELETE']
+	self.InstanceModelName = 'IncomingPhoneNumber'
+	self.AllowedProperties = {
+		'POST' : ['FriendlyName','ApiVersion','VoiceUrl','VoiceMethod','VoiceFallbackUrl','VoiceFallbackMethod','StatusCallback','StatusCallbackMethod','SmsUrl','SmsMethod','SmsFallbackUrl','SmsFallbackMethod','VoiceCallerIdLookup'],
+		'PUT' : ['FriendlyName','ApiVersion','VoiceUrl','VoiceMethod','VoiceFallbackUrl','VoiceFallbackMethod','StatusCallback','StatusCallbackMethod','SmsUrl','SmsMethod','SmsFallbackUrl','SmsFallbackMethod','VoiceCallerIdLookup']
+	}
+	"""	
 	@authorization.authorize_request
 	def get(self,API_VERSION,ACCOUNT_SID, *args):
 		if not len(args):
@@ -107,6 +99,23 @@ class InstanceHandler(webapp.RequestHandler):
 
 
 class ListHandler(webapp.RequestHandler):
+	"""
+	#EXAMPLE - for message
+	def __init__(self):
+		self.InstanceModel = messages.Message.all() 
+		self.AllowedMethods = ['GET']
+		self.AllowedFilters = {
+			'GET':[['To','='],['From','='],['DateSent','=']]
+		}
+		self.ListName = 'SmsMessages'
+		self.InstanceModelName = 'SmsMessage'
+		#Only for Put and Post
+		self.AllowedProperties = {
+		'POST': [],
+		'PUT': []
+		}		
+	"""
+	
 	@authorization.authorize_request
 	def get(self,API_VERSION,ACCOUNT_SID, *args):
 		format = response.response_format(self.request.path.split('/')[-1])
