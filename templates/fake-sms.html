@@ -22,7 +22,7 @@
 			Sms Fallback Url: {{data.PhoneNumber.SmsFallbackUrl}} - Method: {{data.PhoneNumber.SmsFallbackMethod }}
 			<form action="/phone-numbers/sms/{{data.PhoneNumber.Sid}}" method="POST" accept-charset="utf-8">
 				<p>
-					<label for="From">From</label><input name="From" value="+1">
+					<label for="From">From</label><input id="phone_number" name="From" value="+1">
 				</p>
 				<p>
 					<label for="To">To</label> {{data.PhoneNumber.PhoneNumber}}
@@ -67,9 +67,24 @@
 		{% endif %}
 	</div>
 	<script type="text/javascript" charset="utf-8">
+		//phone_number jquery objec
+		function validate_phone_number(phone_number) {
+			pn = phone_number.val().replace(/[^0-9]/g, '');
+			if(pn.length == 11){
+				phone_number.val('+'+pn);
+				return true;
+			}else{
+				if(pn.length == 10){
+					phone_number.val('+1'+pn);
+					return true;
+				}else{
+					return false;
+				}
+			}
+		}
 		$(document).ready(function() {
 			$('form').submit(function() {
-				$('#Additional').slideUp()
+				$('#Additional').slideUp();
 				valid = true;
 				any = false;
 				$('.Additional').each(function(index) {
@@ -80,10 +95,15 @@
 					}
 				});
 				if(any && !valid){
-					$('#Additional').slideDown()
+					$('#Additional').slideDown();
 					return false;
 				}else{
-					return true;
+					if (validate_phone_number($('#phone_number'))){
+						return true;
+					}else{
+						$('#Phone').slideDown();
+						return false;
+					}	
 				}
 			});
 		});
