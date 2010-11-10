@@ -16,7 +16,14 @@
 		<h2>Phone Number - {{data.PhoneNumber.PhoneNumber}}</h2>
 		{% if data.PhoneNumber.SmsUrl %}
 		<p id="Additional" class="error hide">
-			In order to submit Additional Parameters, all of them must be valid
+			In order to submit Additional Parameters, all of them must be valid.
+		</p>
+		<p id="Phone" class="error hide">
+			You have entered an invalid phone number.
+		</p>
+
+		<p id="Textarea" class="error hide">
+			You need to enter a message to send.
 		</p>
 			Sms Url: {{data.PhoneNumber.SmsUrl}} - Method: {{data.PhoneNumber.SmsFallbackMethod }} <br>
 			Sms Fallback Url: {{data.PhoneNumber.SmsFallbackUrl}} - Method: {{data.PhoneNumber.SmsFallbackMethod }}
@@ -82,9 +89,13 @@
 				}
 			}
 		}
+		//THIS IS SOME REALLY BAD JS, but it's just for some upfront nice-ity
 		$(document).ready(function() {
 			$('form').submit(function() {
 				$('#Additional').slideUp();
+				$('#Phone').slideUp();
+				$('#Textarea').slideUp();
+
 				valid = true;
 				any = false;
 				$('.Additional').each(function(index) {
@@ -99,7 +110,12 @@
 					return false;
 				}else{
 					if (validate_phone_number($('#phone_number'))){
-						return true;
+						if ($('textarea[name="Body"]').val() == '') {
+							$('#Textarea').slideDown();
+							return false;
+						}else{
+							return true;
+						}
 					}else{
 						$('#Phone').slideDown();
 						return false;
