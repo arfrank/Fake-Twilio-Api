@@ -1,0 +1,3 @@
+[submodule "libraries/twilio-emulator"]
+	path = libraries/twilio-emulator
+	url = git://github.com/minddog/twilio-emulator.git
