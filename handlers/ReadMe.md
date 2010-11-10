@@ -40,8 +40,9 @@ A primer on the handlers
 				- InstanceModelName = Singular name of the object (ie. 'IncomingPhoneNumber')
 				- AllowedProperties = Filter which properties can be updated view POST and PUT calls (ie. { 'POST' : ['FriendlyName','ApiVersion','VoiceUrl',..., 'PUT' : ['FriendlyName','ApiVersion','VoiceUrl',...] }
 			
-			- GET
+			- GET<br >
 				Url Path includes the type of object and the Sid of the specific object so we can pass back the correct object in the correct format
+				- Returns the object formatted correctly
 			- POST
 				- If allowed will update the allowed properties of the object and return the same info as GET
 			- PUT
