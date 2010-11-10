@@ -19,6 +19,7 @@ class Message(base.CommonModel):
 	Price = db.FloatProperty()
 	StatusCallback = db.StringProperty()
 
+	"""
 	@classmethod
 	def new(cls, request, AccountSid, **kwargs):
 		property_dictionary = {}
@@ -40,7 +41,7 @@ class Message(base.CommonModel):
 					), True, 0, ''
 		else:
 			return '', False, TwilioCode, TwilioMsg
-	
+	"""
 	@classmethod
 	def new_Sid(self):
 		return 'SM'+sha256(str(random())).hexdigest()
