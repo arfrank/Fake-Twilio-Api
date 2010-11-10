@@ -11,13 +11,16 @@
 	ForwardedFrom	This parameter is set only when Twilio receives a forwarded call, but its value depends on the caller's carrier including information when forwarding. Not all carriers support passing this information.	
 #}
 {% block 'content' %}
-	<h1 id="account_information">Fake an Inbound Phone Call</h1>
+	<h1 id="account_information">Fake an Inbound SMS</h1>
 	<div id="content">
 		<h2>Phone Number - {{data.PhoneNumber.PhoneNumber}}</h2>
 		{% if data.PhoneNumber.SmsUrl %}
+		<p id="Additional" class="error hide">
+			In order to submit Additional Parameters, all of them must be valid
+		</p>
 			Sms Url: {{data.PhoneNumber.SmsUrl}} - Method: {{data.PhoneNumber.SmsFallbackMethod }} <br>
 			Sms Fallback Url: {{data.PhoneNumber.SmsFallbackUrl}} - Method: {{data.PhoneNumber.SmsFallbackMethod }}
-			<form action="/phone-numbers/voice/{{data.PhoneNumber}}" method="POST" accept-charset="utf-8">
+			<form action="/phone-numbers/sms/{{data.PhoneNumber.Sid}}" method="POST" accept-charset="utf-8">
 				<p>
 					<label for="From">From</label><input name="From" value="+1">
 				</p>
@@ -25,39 +28,65 @@
 					<label for="To">To</label> {{data.PhoneNumber.PhoneNumber}}
 				</p>
 				<p>
+					<label for="Body">Body</label> <textarea name="Body" rows="8" cols="40"></textarea>
+				</p>
+				<p>
 					<label for="ApiVersion">ApiVersion</label> 2010-04-01
 				</p>
 				<h3>Additional Parameters</h3>
 				<p>
-					<label for="FromCity">FromCity</label><input name="FromCity" value="">
+					<label for="FromCity">From City</label><input class="Additional" name="FromCity" value="">
 				</p>
 				<p>
-					<label for="FromState">FromState</label><input name="FromState" value="">
+					<label for="FromState">From State</label><input class="Additional"  name="FromState" value="">
 				</p>
 				<p>
-					<label for="FromZip">FromZip</label><input name="FromZip" value="">
+					<label for="FromZip">From Zip</label><input class="Additional"  name="FromZip" value="">
 				</p>
 				<p>
-					<label for="FromCountry">FromCountry</label><input name="FromCountry" value="">
+					<label for="FromCountry">From Country</label><input class="Additional"  name="FromCountry" value="">
 				</p>
 
 				<p>
-					<label for="ToCity">ToCity</label><input name="ToCity" value="">
+					<label for="ToCity">To City</label><input class="Additional"  name="ToCity" value="">
 				</p>
 				<p>
-					<label for="ToState">ToState</label><input name="ToState" value="">
+					<label for="ToState">To State</label><input class="Additional"  name="ToState" value="">
 				</p>
 				<p>
-					<label for="ToZip">ToZip</label><input name="ToZip" value="">
+					<label for="ToZip">To Zip</label><input class="Additional"  name="ToZip" value="">
 				</p>
 				<p>
-					<label for="ToCountry">ToCountry</label><input name="ToCountry" value="">
+					<label for="ToCountry">To Country</label><input class="Additional"  name="ToCountry" value="">
 				</p>
 
-				<p><input type="submit" value="Make Request"></p>
+				<p><input type="submit" value="Send SMS"></p>
 			</form>
 		{% else %}
 		You must set a SMS Url before inbound calls can be received.
 		{% endif %}
 	</div>
+	<script type="text/javascript" charset="utf-8">
+		$(document).ready(function() {
+			$('form').submit(function() {
+				$('#Additional').slideUp()
+				valid = true;
+				any = false;
+				$('.Additional').each(function(index) {
+					if($(this).val() == ''){
+						valid = false;
+					}else{
+						any = true;
+					}
+				});
+				if(any && !valid){
+					$('#Additional').slideDown()
+					return false;
+				}else{
+					return true;
+				}
+			});
+		});
+		
+	</script>
 {% endblock %}

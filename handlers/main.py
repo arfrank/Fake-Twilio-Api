@@ -142,7 +142,7 @@ class FakeSms(webapp.RequestHandler):
 
 	@webapp_decorator.check_logged_in
 	def post(self,Sid):
-		pass
+		ALLOWED_PARAMETERS = ['From','Body','FromCity','FromState','FromZip','FromCounty','ToCity','ToState','ToZip','ToCounty']
 		
 class FakeVoice(webapp.RequestHandler):
 	"""
@@ -168,7 +168,7 @@ class FakeVoice(webapp.RequestHandler):
 			self.redirect('/phone-numbers')
 
 	@webapp_decorator.check_logged_in
-	def post(self,Sid):		
+	def post(self,Sid):
 		ALLOWED_PARAMETERS = ['From','FromCity','FromState','FromZip','FromCounty','ToCity','ToState','ToZip','ToCounty']
 		#Create a fake call
 		

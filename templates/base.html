@@ -6,7 +6,7 @@
 	<style type="text/css" media="screen">
 		body{
 			background:#ee9999;
-			margin: 50px 0px;
+			margin: 20px 0px;
 		}
 		#content-container{
 			border:10px solid #fff;
@@ -43,11 +43,29 @@
 			font-size:15px;
 			margin:5px;
 		}
+		textarea{
+			width:600px;
+			height:40px;
+		}
 		#content-container input[type=email], #content-container input[type=password], #content-container input[type=text]{
 			width:200px;
 			height:15px;
 		}
+		.error{
+			background:#ee9999;
+			margin-right:20px;
+		}
+		#Additional{
+			padding:10px;
+		}
+		.hide{
+			display:none;
+		}
 	</style>
+	<script src="https://www.google.com/jsapi"></script>
+	<script type="text/javascript">
+		google.load("jquery", "1.4.3");
+	</script>
 </head>
 <body>
 	<div id="content-container" class="">
