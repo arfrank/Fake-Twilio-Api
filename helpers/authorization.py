@@ -15,10 +15,14 @@ def authorize_request(Account,request):
 	else:
 		return False
 		
+
 ##STOLEN FROM TWILIO UTILITY CLASS
-def create_twilio_authorization_hash(Account,URL,Payload):
+def create_twilio_authorization_hash(Account,URL,Payload, Method = 'POST'):
 	Hash_String = URL
 	if len(Payload) > 0:
-		for k, v in sorted(Payload.items()):
-			Hash_String += k + v
+		if Method == 'POST':
+			for k, v in sorted(Payload.items()):
+				Hash_String += k + v
+		elif Method == 'GET':
+			Hash_String+= '?' + '&'.join(k+'='+v for k,v in Payload.iteritems())
 	return base64.encodestring(hmac.new(Account.AuthToken, Hash_String, sha1).digest())

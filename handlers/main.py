@@ -27,7 +27,7 @@ from libraries.gaesessions import get_current_session
 
 from models import accounts, phone_numbers, calls, messages
 
-from helpers import application
+from helpers import application, authorization, request, twiml
 
 from decorators import webapp_decorator
 
@@ -144,6 +144,7 @@ class FakeSms(webapp.RequestHandler):
 	def post(self,Sid):
 		self.data['PhoneNumber'] = phone_numbers.Phone_Number.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Sid = ',Sid).get()
 		if self.data['PhoneNumber'] is not None:
+			#########Doing webapp error checking!
 			REQUIRED = ['From','Body']
 			ALLOWED_PARAMETERS = ['FromCity','FromState','FromZip','FromCounty','ToCity','ToState','ToZip','ToCounty']
 			Valid = True
@@ -157,9 +158,10 @@ class FakeSms(webapp.RequestHandler):
 					Any = True
 				else:
 					Blank = True
-			if Any and Blank:
+			if Valid and (Any and Blank):
 				Valid = False
 			if Valid:
+			### ERROR CHECKING DONE FOR PASSED IN
 				logging.info(self.data['PhoneNumber'].PhoneNumber)
 				Message, Valid, self.data['TwilioCode'],self.data['TwilioMsg'] = messages.Message.new(
 											To = self.data['PhoneNumber'].PhoneNumber,
@@ -170,6 +172,7 @@ class FakeSms(webapp.RequestHandler):
 											Direction = 'incoming',
 											Status = 'sent'
 										)
+				#CHECK IF WE'VE PASSED VALID INFO TO MESSAGE
 				if Valid:
 					Message.put()
 					Payload = Message.get_dict()
@@ -177,16 +180,25 @@ class FakeSms(webapp.RequestHandler):
 					Payload = {}
 					for param in ALLOWED_PARAMETERS:
 						Payload[param] = self.request.get(param)
-					#urlfetch.fetch(url,method)
-					self.redirect('/phone-numbers/'+self.data['PhoneNumber'].Sid)
-					logging.info('URL FETCHING THINGS!')
+					#has to have a smsurl, not necessarily fallback url
+					GoodResponse = False
+					self.data['Response'] = request.request_twiml(self.data['Account'], self.data['PhoneNumber'].SmsUrl, self.data['PhoneNumber'].SmsMethod, Payload)
+					if 400 <= self.data['Response'].status_code <= 600:
+						#bad response and see if there is a fallback and repeat	
+						if self.data['PhoneNumber'].SmsFallbackUrl is not None and self.data['PhoneNumber'].SmsFallbackUrl != '':
+							self.data['FallbackResponse'] = request.request_twiml(self.data['Account'], self.data['PhoneNumber'].SmsFallbackUrl, self.data['PhoneNumber'].SmsFallbackMethod, Payload)
+							if 200 <= self.data['FallbackResponse'].status_code <=300:
+								twiml_object  = twiml.parse_twiml(self.data['FallbackResponse'].content)
+					elif 200<= self.data['Response'].status_code <= 300:
+						twiml_object  = twiml.parse_twiml(self.data['Response'].content)
+					
+						#parse the twiml and do some fake things
+					path = os.path.join(os.path.dirname(__file__), '../templates/fake-sms-result.html')
+					self.response.out.write(template.render(path,{'data':self.data}))
 				else:
-					logging.info('error')
-					logging.info(self.data['TwilioCode'])
 					self.data['Arguments'] = {}
 					for key in self.request.arguments():
 						self.data['Arguments'][key] = self.request.get(key,'')
-					logging.info(self.data['Arguments'])
 					FakeSms.get(self,Sid)
 			else:
 				self.data['Arguments'] = {}

@@ -43,32 +43,7 @@ class Phone_Number(base.CommonModel):
 	SmsMethod = db.StringProperty(default = 'POST')
 	SmsFallbackUrl = db.StringProperty()
 	SmsFallbackMethod = db.StringProperty(default = 'POST')
-	"""
-	@classmethod
-	#FriendlyName = None,AccountSid = None,PhoneNumber = None,VoiceCallerIdLookup = False,
-	#VoiceUrl = None,VoiceMethod = 'POST',VoiceFallbackUrl = None,VoiceFallbackMethod = 'POST',
-	#StatusCallback = None, StatusCallbackMethod = 'POST', SmsUrl = None, SmsMethod = 'POST',
-	#SmsFallbackUrl = None, SmsFallbackMethod = 'POST'
-	def new(cls, request, AccountSid, PhoneNumber, **kwargs):
-		property_dictionary = {}
-		Valid = True
-		for keyword in kwargs:
-			if hasattr(cls,keyword) and kwargs[keyword] is not None:
-				Valid,TwilioCode,TwilioMsg = Phone_Number().validate( request, keyword, kwargs[keyword] )
-				if not Valid:
-					break
-				else:
-					property_dictionary[keyword] = Phone_Number().sanitize(request, keyword, kwargs[keyword])
-		if Valid:
-			Sid = 'PN'+sha256(str(random())).hexdigest()
-			return cls(
-						Sid = Sid,
-						AccountSid = AccountSid,
-						**property_dictionary
-					), True, 0, ''
-		else:
-			return '', False, TwilioCode, TwilioMsg
-	"""
+
 	@classmethod
 	def new_Sid(self):
 		return 'PN'+sha256(str(random())).hexdigest()
