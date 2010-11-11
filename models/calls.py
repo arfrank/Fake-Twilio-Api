@@ -28,7 +28,6 @@ CallerName	If this call was an incoming call from a phone number with Caller ID 
 """
 
 class Calls(base.CommonModel):
-	Sid = db.StringProperty()
 	AccountSid = db.StringProperty()
 	To = db.StringProperty()
 	From = db.StringProperty()

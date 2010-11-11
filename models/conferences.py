@@ -4,7 +4,6 @@ from hashlib import sha256
 import random
 import string
 class Conference(base.CommonModel):
-	Sid = db.StringProperty()
 
 	
 	@classmethod

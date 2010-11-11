@@ -75,6 +75,7 @@ class InstanceHandler(webapp.RequestHandler):
 	def put(self, API_VERSION, ACCOUNT_SID, *args):
 		format = response.response_format( args[0] )
 		if 'PUT' in self.AllowedMethods:
+			#Cheating and just using post for now
 			InstanceHandler.post(self,API_VERSION,ACCOUNT_SID,*args)
 		else:
 			self.response.out.write(response.format_response(errors.rest_error_response(405,"The requested method is not allowed",format,20004,'http://www.twilio.com/docs/errors/20004'),format))

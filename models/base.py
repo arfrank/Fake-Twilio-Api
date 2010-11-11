@@ -5,7 +5,9 @@ import logging
 class CommonModel(db.Model):
 	DateCreated = db.DateTimeProperty(auto_now_add = True)
 	DateUpdated = db.DateTimeProperty(auto_now = True)
-	
+	#EVERYTHING HAS AN Sid
+	Sid = db.StringProperty()
+
 	def get_dict(self):
 		object_dict = {}
 		for key in self.properties():

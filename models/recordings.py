@@ -16,7 +16,6 @@ SubresourceUris	The list of subresources under this account
 """
 
 class Recording(base.CommonModel):
-	Sid = db.StringProperty()
 	AccountSid = db.StringProperty()
 	CallSid = db.StringProperty()
 	Duration = db.Integer

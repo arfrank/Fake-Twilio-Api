@@ -27,7 +27,6 @@ SmsFallbackMethod	The HTTP method Twilio will use when requesting the above URL.
 Uri	The URI for this resource, relative to https://api.twilio.com.
 """
 class Phone_Number(base.CommonModel):
-	Sid = db.StringProperty()
 	FriendlyName = db.StringProperty()
 	AccountSid = db.StringProperty()
 	PhoneNumber = db.StringProperty()

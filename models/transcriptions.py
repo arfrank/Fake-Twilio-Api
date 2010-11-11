@@ -4,7 +4,6 @@ from hashlib import sha256
 import random
 import string
 class Transcription(base.CommonModel):
-	Sid = db.StringProperty()
 	Text = db.TextProperty()
 	CallSid = db.StringProperty()
 	RecordingSid = db.StringProperty()

@@ -7,7 +7,6 @@ import string
 from helpers import parameters
 
 class Account(base.CommonModel):
-	Sid = db.StringProperty()
 	FriendlyName = db.StringProperty()
 	Status = db.StringProperty()
 	AuthToken = db.StringProperty()

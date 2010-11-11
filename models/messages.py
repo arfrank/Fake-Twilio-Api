@@ -13,7 +13,6 @@ class Message(base.CommonModel):
 	Body = db.StringProperty()
 	DateSent = db.DateTimeProperty()
 	AccountSid = db.StringProperty()
-	Sid = db.StringProperty()
 	Status = db.StringProperty()
 	Direction = db.StringProperty()
 	Price = db.FloatProperty()
