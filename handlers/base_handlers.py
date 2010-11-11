@@ -50,6 +50,9 @@ class InstanceHandler(webapp.RequestHandler):
 
 	@authorization.authorize_request
 	def post(self, API_VERSION, ACCOUNT_SID, *args, **kwargs):
+		#HACK TO LET ACCOUNTS WORK
+		if not len(args):
+			args = [ACCOUNT_SID]
 		if 'request' in kwargs:
 			request = kwargs['request']
 		else:
@@ -57,7 +60,10 @@ class InstanceHandler(webapp.RequestHandler):
 		format = response.response_format( args[-1] )
 		if 'POST' in self.AllowedMethods:
 			InstanceSid = args[-1].split('.')[-1]
-			Instance = self.InstanceModel.filter('Sid =',InstanceSid).filter('AccountSid = ',ACCOUNT_SID).get()
+			self.InstanceModel.filter(self.LastSidName+' =',InstanceSid)
+			if self.InstanceModelName != 'Account':
+				self.InstanceModel.filter('AccountSid = ',ACCOUNT_SID)
+			Instance = self.InstanceModel.get()
 			if Instance is not None:
 				#update stuff according to allowed rules
 				#get all arguments passed in
@@ -67,8 +73,8 @@ class InstanceHandler(webapp.RequestHandler):
 					if arg in self.AllowedProperties['POST']:
 						#validate that a valid value was passed in
 						if Valid:
-							Valid,TwilioCode,TwilioMsg =  Instance.validate(request, arg, request.get( arg ))
-								#set it to a valid argument value
+							Valid, TwilioCode, TwilioMsg =  Instance.validate(request, arg, request.get( arg ))
+							#set it to a valid argument value
 							if Valid:
 								setattr(Instance, arg, Instance.sanitize( request, arg, request.get( arg )))
 				if Valid:
@@ -101,7 +107,7 @@ class InstanceHandler(webapp.RequestHandler):
 				db.delete(Instance)
 				self.response.set_status(204)
 			else:
-				self.error(404)
+				self.response.out.write(response.format_response(errors.rest_error_response(404,"The requested resource was not found",format),format))
 		else:
 			self.response.out.write(response.format_response(errors.rest_error_response(405,"The requested method is not allowed",format,20004,'http://www.twilio.com/docs/errors/20004'),format))
 

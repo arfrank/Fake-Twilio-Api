@@ -107,12 +107,18 @@ class Calls(base.CommonModel):
 			self.Price = self.Duration * (0.02)
 		elif self.Direction == 'inbound':
 			self.Price = self.Duration * (0.01)
-		self.put()
-		if StatusCallback is not None:
-			try:
-				taskqueue.Queue('StatusCallbacks').add(taskqueue.Task(url='/Callbacks/Call', params = {'CallSid':self.Sid,'StatusCallback':StatusCallback,'StatusCallbackMethod':StatusCallbackMethod}))
-			except Exception, e:
-				pass
+		try:
+			self.put()
+		except Exception, e:
+			return False
+		else:
+			if StatusCallback is not None:
+				try:
+					taskqueue.Queue('StatusCallbacks').add(taskqueue.Task(url='/Callbacks/Call', params = {'CallSid':self.Sid,'StatusCallback':StatusCallback,'StatusCallbackMethod':StatusCallbackMethod}))
+				except Exception, e:
+					pass
+			return True
+				
 				
 	def sanitize():
 		pass

@@ -2,6 +2,7 @@
 from google.appengine.ext import db
 from models import base
 from hashlib import sha256
+from helpers import parameters
 import random
 import string
 class Participant(base.CommonModel):
@@ -20,9 +21,9 @@ class Participant(base.CommonModel):
 	CallSid = db.StringProperty()
 	ConferenceSid = db.StringProperty()
 	AccountSid = db.StringProperty()
-	Muted = db.StringProperty()
-	StartConferenceOnEnter = db.BooleanProperty()
-	EndConferenceOnExit = db.BooleanProperty()
+	Muted = db.BooleanProperty(default = False)
+	StartConferenceOnEnter = db.BooleanProperty(default = False)
+	EndConferenceOnExit = db.BooleanProperty(default = False)
 	
 	@classmethod
 	def new_Sid(self):
@@ -37,8 +38,9 @@ class Participant(base.CommonModel):
 		else:
 			return arg_value
 
-	def validators(self, request, arg_name, arg_value):
+	def validate(self, request, arg_name, arg_value):
 		validators = {
+			'Muted' : parameters.allow_boolean(arg_value if arg_value is not None else request.get( arg_name, None) )
 		}
 		if arg_name in validators:
 			return validators[arg_name]

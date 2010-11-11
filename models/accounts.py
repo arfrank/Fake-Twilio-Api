@@ -4,6 +4,8 @@ from hashlib import sha256
 import random
 import string
 
+import logging
+
 from helpers import parameters
 
 class Account(base.CommonModel):
@@ -40,11 +42,13 @@ class Account(base.CommonModel):
 		else:
 			return arg_value
 			
-	def validators(self, request, arg_name, arg_value):
+	def validate(self, request, arg_name, arg_value):
+		logging.info('TesT')
 		validators = {
 			'FriendlyName' : parameters.friendlyname_length(request.get('FriendlyName',''))
 		}
 		if arg_name in validators:
+			
 			return validators[arg_name]
 		else:
 			return True, 0, ''

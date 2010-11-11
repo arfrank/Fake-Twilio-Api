@@ -18,9 +18,9 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 
 from handlers import base_handlers
-
+from helpers import response, errors
 from decorators import authorization
-from models import conferences, participants
+from models import conferences, participants, calls
 
 class ConferenceInstance(base_handlers.InstanceHandler):
 	def __init__(self):
@@ -41,6 +41,9 @@ class ConferenceList(base_handlers.ListHandler):
 		self.AllowedProperties = {
 		}
 
+
+# http://www.twilio.com/docs/api/2010-04-01/rest/participant
+
 # /2010-04-01/Accounts/{AccountSid}/Conferences/{ConferenceSid}/Participants/{CallSid}
 class ParticipantInstance(base_handlers.InstanceHandler):
 	def __init__(self):
@@ -51,14 +54,29 @@ class ParticipantInstance(base_handlers.InstanceHandler):
 		self.LastSidName = 'CallSid'
 		#						 ['NAME =', location in args]
 		self.AdditionalFilters = ['ConferenceSid =',0]
-		#NEED TO QUERY BY
-		#participants.Participant.all().filter('ConferenceSid =',ConferenceSid).filter('CallSid')
+		self.AllowedProperties = { 'POST' : ['Muted'] }
 
-
+	#Kick this participant from the conference. Returns HTTP 204 (No Content), with no body, if the participant was successfuly booted from the conference.
+	@authorization.authorize_request
+	def delete(self,API_VERSION,ACCOUNT_SID,*args):
+		format = response.response_format( args[-1] )
+		call = calls.Call.all().filter('AccountSid =',ACCOUNT_SID).filter('Sid =',)
+		if call is not None:
+			Valid = call.disconnect()
+			if Valid:
+				self.response.set_status(204)
+			else:
+				self.response.out.write(response.format_response(errors.rest_error_response(500,"Unable to disconnect call",format,12400,'http://www.twilio.com/docs/errors/12400'),format))
+		else:
+			self.response.out.write(response.format_response(errors.rest_error_response(404,"The requested resource was not found",format),format))
 class ParticipantList(base_handlers.ListHandler):
 	def __init__(self):
 		self.AllowedMethods = ['GET']
 		self.InstanceModel = conferences.Conference.all()
+		self.AdditionalFilters = ['ConferenceSid =',0]
+		self.AllowedFilters = {
+			'GET':[['Muted','=']]
+		}
 
 def main():
 	application = webapp.WSGIApplication([
