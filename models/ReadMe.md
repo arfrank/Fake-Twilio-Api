@@ -5,8 +5,13 @@ A basic primer on how the models work
 Basic Model
 -----------
 * Functions
-	- __init__
-		Avoid using this because it is a heavy function on the backend
+	- Properties<br>Everything has these properties
+		- DateSent
+		- DateCreated
+		- Sid (should move to the base model, although need to define for every model separately since each model has a special prefix)
+	- \_\_init\_\_
+		-Avoid using this because it is a heavy function on the backend
+		-
 	- New
 		* Class Method
 	- new_Sid

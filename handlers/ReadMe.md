@@ -3,6 +3,7 @@ Handlers
 
 A primer on the handlers
 
+For more detailed information go here: http://www.twilio.com/docs/api/2010-04-01/rest/
 ------------------------
 * Main Webapp (main.py)<br>
 	Handles the user side
@@ -10,6 +11,8 @@ A primer on the handlers
 	- Login
 	- Log Display
 	- Faking Incoming Calls & SMS
+	- Updating information
+	- Call information
 * Base Handler (base_handler.py) - Everything inherits from two classes here except main webapp
 	- List Handler - Just RESTful way of getting a list of objects back
 		- Functions
