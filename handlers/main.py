@@ -162,7 +162,6 @@ class FakeSms(webapp.RequestHandler):
 				Valid = False
 			if Valid:
 			### ERROR CHECKING DONE FOR PASSED IN
-				logging.info(self.data['PhoneNumber'].PhoneNumber)
 				Message, Valid, self.data['TwilioCode'],self.data['TwilioMsg'] = messages.Message.new(
 											To = self.data['PhoneNumber'].PhoneNumber,
 											From = self.request.get('From'),
@@ -188,11 +187,13 @@ class FakeSms(webapp.RequestHandler):
 						if self.data['PhoneNumber'].SmsFallbackUrl is not None and self.data['PhoneNumber'].SmsFallbackUrl != '':
 							self.data['FallbackResponse'] = request.request_twiml(self.data['Account'], self.data['PhoneNumber'].SmsFallbackUrl, self.data['PhoneNumber'].SmsFallbackMethod, Payload)
 							if 200 <= self.data['FallbackResponse'].status_code <=300:
-								twiml_object  = twiml.parse_twiml(self.data['FallbackResponse'].content)
+								Valid, self.data['twiml_object'], self.data['ErrorMessage']  = twiml.parse_twiml(self.data['FallbackResponse'].content)
 					elif 200<= self.data['Response'].status_code <= 300:
-						twiml_object  = twiml.parse_twiml(self.data['Response'].content)
+						Valid, self.data['twiml_object'], self.data['ErrorMessage'] = twiml.parse_twiml(self.data['Response'].content)
 					
 						#parse the twiml and do some fake things
+					self.data['twiml_object'] = True
+
 					path = os.path.join(os.path.dirname(__file__), '../templates/fake-sms-result.html')
 					self.response.out.write(template.render(path,{'data':self.data}))
 				else:

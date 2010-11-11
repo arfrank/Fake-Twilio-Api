@@ -4,7 +4,6 @@ from helpers import authorization
 import logging
 #returns the response object
 def request_twiml(Account, Url, Method, Payload):
-	logging.info(Payload)
 	if Method == 'GET':
 		url = Url + '?' +'&'.join(k+'='+v for k,v in Payload.iteritems())
 		Twilio_Signature = authorization.create_twilio_authorization_hash(Account, Url, Payload, Method = 'GET')

@@ -43,7 +43,6 @@ class Account(base.CommonModel):
 			return arg_value
 			
 	def validate(self, request, arg_name, arg_value):
-		logging.info('TesT')
 		validators = {
 			'FriendlyName' : parameters.friendlyname_length(request.get('FriendlyName',''))
 		}

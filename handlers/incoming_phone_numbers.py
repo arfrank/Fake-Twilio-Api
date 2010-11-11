@@ -27,8 +27,6 @@ from models import phone_numbers
 
 from decorators import authorization
 
-import logging
-
 class IncomingPhoneNumberInstance(base_handlers.InstanceHandler):
 	def __init__(self):
 		super(IncomingPhoneNumberInstance,self).__init__()
@@ -55,8 +53,6 @@ class IncomingPhoneNumberList(base_handlers.ListHandler):
 		format = response.response_format(self.request.path.split('/')[-1])
 		AreaCode = self.request.get('AreaCode',None)
 		PhoneNumber = self.request.get('PhoneNumber',None)
-		logging.info(AreaCode)
-		logging.info(PhoneNumber)
 		if (AreaCode is not None or AreaCode is not None) and not (AreaCode is not None and PhoneNumber is not None):
 			#assume phone number is valid no matter what for now
 			if (AreaCode is not None and len( AreaCode ) == 3) or (PhoneNumber is not None and len( PhoneNumber ) == 12 ):
