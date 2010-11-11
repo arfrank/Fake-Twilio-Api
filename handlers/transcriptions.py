@@ -26,6 +26,7 @@ from models import transcriptions
 # /2010-04-01/Accounts/{AccountSid}/Transcriptions/{TranscriptionSid}
 class TranscriptionInstance(base_handlers.InstanceHandler):
 	def __init__(self):
+		super(TranscriptionInstance,self).__init__()
 		self.AllowedMethods = ['GET']
 		self.InstanceModel = transcriptions.Transcription.all()
 

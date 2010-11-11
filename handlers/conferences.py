@@ -20,22 +20,40 @@ from google.appengine.ext.webapp import util
 from handlers import base_handlers
 
 from decorators import authorization
-from models import conferences
+from models import conferences, participants
 
 class ConferenceInstance(base_handlers.InstanceHandler):
 	def __init__(self):
 		self.AllowedMethods = ['GET']
 		self.InstanceModel = conferences.Conference.all()
+		self.InstanceModelName = 'Conference'
 		
-class ConferenceList(webapp.RequestHandler):
-	def get(self,*args):
-		pass
+class ConferenceList(base_handlers.ListHandler):
+	def __init__(self):
+		self.InstanceModel = messages.Message.all()
+		self.AllowedMethods = ['GET']
+		self.AllowedFilters = {
+			'GET':[['Status','='],['FriendlyName','=']]#,['DateCreated','='],['DateUpdated', '=']]
+		}
+		self.ListName = 'Conferences'
+		self.InstanceModelName = 'Conference'
+		#Only for Put and Post
+		self.AllowedProperties = {
+		}
 
 # /2010-04-01/Accounts/{AccountSid}/Conferences/{ConferenceSid}/Participants/{CallSid}
 class ParticipantInstance(base_handlers.InstanceHandler):
 	def __init__(self):
+		super(ParticipantInstance,self).__init__()
 		self.AllowedMethods = ['GET']
-		self.InstanceModel = conferences.Conference.all()
+		self.InstanceModel = participants.Participant.all()
+		self.InstanceModelName = 'Participant'
+		self.LastSidName = 'CallSid'
+		#						 ['NAME =', location in args]
+		self.AdditionalFilters = ['ConferenceSid =',0]
+		#NEED TO QUERY BY
+		#participants.Participant.all().filter('ConferenceSid =',ConferenceSid).filter('CallSid')
+
 
 class ParticipantList(base_handlers.ListHandler):
 	def __init__(self):
@@ -44,10 +62,10 @@ class ParticipantList(base_handlers.ListHandler):
 
 def main():
 	application = webapp.WSGIApplication([
-											('/(.*)/Accounts/(.*)/Conferences/(.*)/Participantes/(.*)', ParticipantInstance),
-											('/(.*)/Accounts/(.*)/Conferences/(.*)/Participantes', ParticipantList),
+											('/(.*)/Accounts/(.*)/Conferences/(.*)/Participants/(.*)', ParticipantInstance),
+											('/(.*)/Accounts/(.*)/Conferences/(.*)/Participants.*', ParticipantList),
 											('/(.*)/Accounts/(.*)/Conferences/(.*)', ConferenceInstance)
-											('/(.*)/Accounts/(.*)/Conferences', ConferenceList)
+											('/(.*)/Accounts/(.*)/Conferences.*', ConferenceList)
 										],
 										 debug=True)
 	util.run_wsgi_app(application)

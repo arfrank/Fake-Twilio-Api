@@ -26,6 +26,7 @@ from models import recordings
 # /2010-04-01/Accounts/{AccountSid}/Recordings/{RecordingSid}
 class RecordingInstance(base_handlers.InstanceHandler):
 	def __init__(self):
+		super(RecordingInstance,self).__init__()
 		self.InstanceModel = recordings.Recording.all()
 		self.AllowedMethods = ['GET','DELETE']
 
@@ -49,6 +50,7 @@ class RecordingInstance(base_handlers.InstanceHandler):
 
 class RecordingInstanceTranscription(base_handlers.InstanceHandler):
 	def __init__(self):
+		super(RecordingInstanceTranscription,self).__init__()
 		self.InstanceModel = recordings.Recording.all()
 		self.AllowedMethods = ['GET','DELETE']
 

@@ -26,6 +26,7 @@ from models import notifications
 # /2010-04-01/Accounts/{AccountSid}/Transcriptions/{TranscriptionSid}
 class NotificationInstance(base_handlers.InstanceHandler):
 	def __init__(self):
+		super(NotificationInstance,self).__init__()
 		self.AllowedMethods = ['GET','DELETE']
 		self.InstanceModel = notifications.Notification.all()
 

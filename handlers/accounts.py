@@ -24,6 +24,7 @@ from models import accounts
 
 class Accounts(base_handlers.InstanceHandler):
 	def __init__(self):
+		super(Accounts,self).__init__()
 		self.AllowedMethods = ['GET','PUT','POST']
 		self.InstanceModel = accounts.Account.all()
 		self.InstanceModelName = 'Account'

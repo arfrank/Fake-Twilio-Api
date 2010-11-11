@@ -19,6 +19,8 @@ For more detailed information go here: http://www.twilio.com/docs/api/2010-04-01
 			- \_\_init\_\_
 				- InstanceModel = Query Class of the object type (ie. messages.Message.all())
 				- AllowedMethods =  Allow which rest methods to allow for this type of object (ie. ['GET','POST','PUT','DELETE'])
+				- LastSidName = Allows for different url configurations (ie. 'Sid')
+				- AdditonalFilters = With know uri paths we can add filters for additional sids (ie. ['ConferenceSid =', 0])
 				- AllowedFilters = For GET calls, limit what parameters can be passed in to filter the query (ie. { 'GET':[['To','='],['From','='],['DateSent','=']] })<br>Dates are currently not supported as filters
 				- ListName = Plural name of the object (ie. 'SmsMessages')
 				- InstanceModelName = Singular name of the object (ie. 'SmsMessage')

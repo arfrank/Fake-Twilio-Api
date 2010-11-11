@@ -37,6 +37,7 @@ import urllib
 
 class CallInstance(base_handlers.InstanceHandler):
 	def __init__(self):
+		super(CallInstance,self).__init__()
 		self.AllowedMethods = ['GET']
 		self.InstanceModel = calls.Call.all()
 		self.InstanceModelName = 'Call'
@@ -48,6 +49,7 @@ class CallInstance(base_handlers.InstanceHandler):
 # Represents a list of recordings generated during the call identified by {CallSid}. See the Recordings section for resource properties and response formats.
 class CallInstanceRecordings(base_handlers.InstanceHandler):
 	def __init__(self):
+		super(CallInstanceRecordings,self).__init__()
 		self.AllowedMethods = ['GET']
 		self.InstanceModel = calls.Call.all()
 		self.InstanceModelName = 'Recording'
@@ -55,6 +57,7 @@ class CallInstanceRecordings(base_handlers.InstanceHandler):
 # Represents a list of notifications generated during the call identified by {CallSid}. See the Notifications section for resource properties and response formats.
 class CallInstanceNotifications(base_handlers.InstanceHandler):
 	def __init__(self):
+		super(CallInstanceNotifications).__init__()
 		self.AllowedMethods = ['GET']
 		self.InstanceModel = calls.Call.all()
 		self.InstanceModelName = 'Notification'

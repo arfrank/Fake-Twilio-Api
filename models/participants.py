@@ -4,7 +4,7 @@ from models import base
 from hashlib import sha256
 import random
 import string
-class Conference(base.CommonModel):
+class Participant(base.CommonModel):
 	"""
 	CallSid	A 34 character string that uniquely identifies the call that is connected to this conference
 	ConferenceSid	A 34 character string that identifies the conference this participant is in

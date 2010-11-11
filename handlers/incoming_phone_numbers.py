@@ -31,6 +31,7 @@ import logging
 
 class IncomingPhoneNumberInstance(base_handlers.InstanceHandler):
 	def __init__(self):
+		super(IncomingPhoneNumberInstance,self).__init__()
 		self.InstanceModel = phone_numbers.Phone_Number.all()
 		self.AllowedMethods = ['GET','POST','PUT','DELETE']
 		self.InstanceModelName = 'IncomingPhoneNumber'

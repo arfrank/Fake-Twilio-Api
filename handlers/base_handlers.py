@@ -3,10 +3,13 @@ from google.appengine.ext import webapp
 from helpers import response, parameters, sid, authorization, xml, uris, errors
 from decorators import authorization
 import math
-
+import logging
 from google.appengine.ext import db
 
 class InstanceHandler(webapp.RequestHandler):
+	def __init__(self):
+		self.LastSidName = 'Sid'
+		self.AdditionalFilters = []
 	"""
 	self.InstanceModel = phone_numbers.Phone_Number.all()
 	self.AllowedMethods = ['GET','POST','PUT','DELETE']
@@ -18,16 +21,23 @@ class InstanceHandler(webapp.RequestHandler):
 	"""	
 	@authorization.authorize_request
 	def get(self,API_VERSION,ACCOUNT_SID, *args):
+		#hack for accounts having short urls
 		if not len(args):
 			args = [ACCOUNT_SID]
-		format = response.response_format( args[0] )
+		format = response.response_format( args[-1] )
 		if 'GET' in self.AllowedMethods:
-			InstanceSid = args[0].split('.')[0]
-			if self.InstanceModelName == 'Account':
-				#HACK
-				Instance = self.InstanceModel.filter('Sid =',InstanceSid).get()
-			else:
-				Instance = self.InstanceModel.filter('Sid =',InstanceSid).filter('AccountSid = ',ACCOUNT_SID).get()
+			#Get the instanceSid from the url
+			InstanceSid = args[-1].split('.')[-1]
+			#Use the lastsidname to filter, usually will just be sid, but can be something different
+			self.InstanceModel.filter(self.LastSidName+' =',InstanceSid).get()
+			#Only needed for compatabilty with Accounts because Accounts dont have Sids
+			if self.InstanceModelName != 'Account':
+				Instance = self.InstanceModel.filter('AccountSid = ',ACCOUNT_SID)
+			#Might not exist, since its only used for special cases with long urls
+			if hasattr(self,'AdditionalFilter'):
+				for addfilter in self.AdditionalFilters:
+					Instance.filter(addfilter[0],args[addfilter[1]])
+			Instance = self.InstanceModel.get()
 			if Instance is not None:
 				response_data = Instance.get_dict()
 				response_data['ApiVersion'] = API_VERSION
@@ -44,9 +54,9 @@ class InstanceHandler(webapp.RequestHandler):
 			request = kwargs['request']
 		else:
 			request = self.request
-		format = response.response_format( args[0] )
+		format = response.response_format( args[-1] )
 		if 'POST' in self.AllowedMethods:
-			InstanceSid = args[0].split('.')[0]
+			InstanceSid = args[-1].split('.')[-1]
 			Instance = self.InstanceModel.filter('Sid =',InstanceSid).filter('AccountSid = ',ACCOUNT_SID).get()
 			if Instance is not None:
 				#update stuff according to allowed rules
@@ -73,7 +83,7 @@ class InstanceHandler(webapp.RequestHandler):
 		
 	@authorization.authorize_request
 	def put(self, API_VERSION, ACCOUNT_SID, *args):
-		format = response.response_format( args[0] )
+		format = response.response_format( args[-1] )
 		if 'PUT' in self.AllowedMethods:
 			#Cheating and just using post for now
 			InstanceHandler.post(self,API_VERSION,ACCOUNT_SID,*args)
@@ -82,10 +92,10 @@ class InstanceHandler(webapp.RequestHandler):
 
 	@authorization.authorize_request
 	def delete(self, API_VERSION, ACCOUNT_SID, *args):
-		format = response.response_format( args[0] )
+		format = response.response_format( args[-1] )
 		if 'DELETE' in self.AllowedMethods:
-			format = response.response_format( args[0] )
-			InstanceSid = args[0].split('.')[0]
+			format = response.response_format( args[-1] )
+			InstanceSid = args[-1].split('.')[-1]
 			Instance = self.InstanceModel.filter('Sid = ',InstanceSid).get()
 			if Instance is not None:
 				db.delete(Instance)
@@ -97,6 +107,8 @@ class InstanceHandler(webapp.RequestHandler):
 
 
 class ListHandler(webapp.RequestHandler):
+	def __init__(self):
+		self.AdditionalFilter = []
 	"""
 	#EXAMPLE - for message
 	def __init__(self):
@@ -123,23 +135,28 @@ class ListHandler(webapp.RequestHandler):
 					if query_filter[0] in self.request.arguments():
 						self.InstanceModel.filter(query_filter[0]+query_filter[1],self.request.get(query_filter[0]))
 						#NEEDS TO TAKE INTO ACCOUNT DATES
+			if hasattr(self,'AdditionalFilter'):
+				for addfilter in self.AdditionalFilter:
+					self.InstanceModel.filter(addfilter[0],addfilter[1])
 			try:
 				Page = int(self.request.get('Page',0))
 			except Exception, e:
 				Page = 0
-			if Page < 0:
-				Page = 0
+			else:
+				if Page < 0:
+					Page = 0
 			try:
 				PageSize = int(self.request.get('PageSize',50))
 			except Exception, e:
 				PageSize = 50
-			if PageSize > 1000:
-				PageSize = 1000
-			if PageSize < 0:
-				PageSize = 50
+			else:
+				if PageSize > 1000:
+					PageSize = 1000
+				elif PageSize < 0:
+					PageSize = 50
 			ListCount = self.InstanceModel.count()
 			ListInstance = self.InstanceModel.fetch(PageSize,(Page*PageSize))
-			End = PageSize+(Page*PageSize) if ( ListCount < (PageSize+(Page*PageSize)) )  else ListCount
+			End = PageSize+(Page*PageSize) if ( ListCount < ( PageSize+( Page*PageSize ) ) )  else ListCount
 			response_data = {
 							"start": (Page*PageSize),
 							"end": End,

@@ -73,6 +73,7 @@ class MessageList(base_handlers.ListHandler):
 		
 class MessageInstanceResource(base_handlers.InstanceHandler):
 	def __init__(self):
+		super(MessageInstanceResource,self).__init__()
 		self.InstanceModel = messages.Message.all()
 		self.AllowedMethods = ['GET']
 		self.InstanceModelName = 'SmsMessage'
@@ -80,8 +81,7 @@ class MessageInstanceResource(base_handlers.InstanceHandler):
 def main():
 	application = webapp.WSGIApplication([
 											('/(.*)/Accounts/(.*)/SMS/Messages/(.*)', MessageInstanceResource),
-											('/(.*)/Accounts/(.*)/SMS/Messages', MessageList),
-											('/(.*)/Accounts/(.*)/SMS/Messages.json', MessageList)
+											('/(.*)/Accounts/(.*)/SMS/Messages.*', MessageList)
 										],
 										 debug=True)
 	util.run_wsgi_app(application)

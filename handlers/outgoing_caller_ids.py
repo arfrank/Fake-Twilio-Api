@@ -28,6 +28,7 @@ from decorators import authorization
 
 class OutgoingCallerId(base_handlers.InstanceHandler):
 	def __init__(self):
+		super(OutgoingCalleId,self).__init__()
 		self.AllowedMethods = ['GET','PUT','POST','DELETE']
 		self.InstanceModel = phone_numbers.Phone_Number.all()
 		
