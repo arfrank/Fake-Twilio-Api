@@ -4,8 +4,6 @@ from helpers import response, parameters, sid, authorization, xml, uris, errors
 from decorators import authorization
 import math
 
-import logging
-
 from google.appengine.ext import db
 
 class InstanceHandler(webapp.RequestHandler):
@@ -29,7 +27,6 @@ class InstanceHandler(webapp.RequestHandler):
 				#HACK
 				Instance = self.InstanceModel.filter('Sid =',InstanceSid).get()
 			else:
-				logging.info('here')
 				Instance = self.InstanceModel.filter('Sid =',InstanceSid).filter('AccountSid = ',ACCOUNT_SID).get()
 			if Instance is not None:
 				response_data = Instance.get_dict()
@@ -55,19 +52,15 @@ class InstanceHandler(webapp.RequestHandler):
 				#update stuff according to allowed rules
 				#get all arguments passed in
 				Valid = True
-				TwilioCode = 0
-				TwilioMsg = ''
-				index = 0
-				arg_length = len(request.arguments())
-				arg_list = request.arguments()
-				while Valid and index < arg_length:
+				for arg in request.arguments():
 					#if we are allowed to alter that argument
-					if arg_list[index] in self.AllowedProperties['POST']:
+					if arg in self.AllowedProperties['POST']:
 						#validate that a valid value was passed in
-						Valid,TwilioCode,TwilioMsg =  Instance.validate(request, arg_list[index], request.get( arg_list[index] ))
-							#set it to a valid argument value
 						if Valid:
-							setattr(Instance, arg_list[index], Instance.sanitize( request, arg_list[index], request.get( arg_list[index] )))
+							Valid,TwilioCode,TwilioMsg =  Instance.validate(request, arg, request.get( arg ))
+								#set it to a valid argument value
+							if Valid:
+								setattr(Instance, arg, Instance.sanitize( request, arg, request.get( arg )))
 				if Valid:
 					Instance.put()
 					InstanceHandler.get(self,API_VERSION,ACCOUNT_SID,*args)
