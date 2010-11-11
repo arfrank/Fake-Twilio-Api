@@ -25,9 +25,9 @@ import logging
 
 from libraries.gaesessions import get_current_session
 
-from models import accounts, phone_numbers, calls, messages
+from models import accounts, phone_numbers, calls, messages, twimls
 
-from helpers import application, authorization, request, twiml
+from helpers import application, authorization, request, twiml_parser
 
 from decorators import webapp_decorator
 
@@ -187,13 +187,22 @@ class FakeSms(webapp.RequestHandler):
 						if self.data['PhoneNumber'].SmsFallbackUrl is not None and self.data['PhoneNumber'].SmsFallbackUrl != '':
 							self.data['FallbackResponse'] = request.request_twiml(self.data['Account'], self.data['PhoneNumber'].SmsFallbackUrl, self.data['PhoneNumber'].SmsFallbackMethod, Payload)
 							if 200 <= self.data['FallbackResponse'].status_code <=300:
-								Valid, self.data['twiml_object'], self.data['ErrorMessage']  = twiml.parse_twiml(self.data['FallbackResponse'].content)
+								TwimlText = self.data['FallbackResponse']
+								Valid, self.data['twiml_object'], self.data['ErrorMessage']  = twiml_parser.parse_twiml(self.data['FallbackResponse'].content)
 					elif 200<= self.data['Response'].status_code <= 300:
-						Valid, self.data['twiml_object'], self.data['ErrorMessage'] = twiml.parse_twiml(self.data['Response'].content)
-					
-						#parse the twiml and do some fake things
-					self.data['twiml_object'] = True
-
+						TwimlText = self.data['Response']
+						Valid, self.data['twiml_object'], self.data['ErrorMessage'] = twiml_parser.parse_twiml(self.data['Response'].content)
+					if Valid:
+						import pickle
+						Twiml = twimls.Twiml.new(
+							AccountSid = self.data['Account'].Sid,
+							Text = TwimlText,
+							Twiml = pickle.dumps(self.data['twiml_object']),
+							Current = [0]
+						)
+						Twiml.put()
+						self.data['Twiml'] = Twiml()
+					#parse the twiml and do some fake things
 					path = os.path.join(os.path.dirname(__file__), '../templates/fake-sms-result.html')
 					self.response.out.write(template.render(path,{'data':self.data}))
 				else:
@@ -250,7 +259,47 @@ class Calls(webapp.RequestHandler):
 		path = os.path.join(os.path.dirname(__file__), '../templates/calls.html')
 		self.response.out.write(template.render(path,{'data':self.data}))
 		
+class TwimlHandler(webapp.RequestHandler):
+	
+	def process_verb(verb):
+		possibilites = {
+			'Say': (verb.Child[0].Data,False),
+			'Play': (verb.Child[0].Data,False),
+			'Record': (verb.Child[0].Data,False),
+			'Gather': ,
+			'Sms': ,
+			'Pause': ('Pausing for '+verb.Attr.length+' seconds', False),
+			''
+			}
+		
+		return possibilities[verb.Type]
 
+
+	@webapp_decorator.check_logged_in
+	def post(self,Sid):
+		import pickle
+		
+		Twiml = twimls.Twiml.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Sid = ',Sid)
+		if Twiml is not None:
+			I,C = 0,0 #index, child for lists later to store status
+			Twiml_obj = pickle.loads(Twiml.Twiml)
+			if Twiml.Initial:
+				#process list items until need a response?
+				response = ''
+				for verb in Twiml_obj:
+					twiml_response,Break = process_verb(verb)
+					response+= twiml_response+'<br>'
+					if Break:
+						break
+				Twiml.Initial = False
+			else:
+				#goto
+				pass
+			Twiml.put()
+			self.response.out.write('')
+		else:
+			self.response.set_status(404)
+		
 class Call(webapp.RequestHandler):
 	@webapp_decorator.check_logged_in
 	def get(self,Sid):
@@ -261,6 +310,14 @@ class Call(webapp.RequestHandler):
 			self.response.out.write(template.render(path,{'data':self.data}))
 		else:
 			self.redirect('/calls')
+
+class Test(webapp.RequestHandler):
+	from random import random
+	try:
+		response = twiml_parser.parse_twiml("""<?xml version="1.0" encoding="UTF-8" ?><Response><Play>http://foo.com/cowbell.mp3</Play><Gather></Gather><Say>This it another child</Say><Gather><Say>Press 1</Say></Gather></Response>""")
+		print response
+	except Exception, e:
+		print e
 
 class Logout(webapp.RequestHandler):
 	def get(self):
@@ -279,7 +336,9 @@ def main():
 											('/phone-numbers',PhoneNumbers),
 											('/phone-numbers/sms/(.*)',FakeSms),
 											('/phone-numbers/voice/(.*)',FakeVoice),
-											('/phone-numbers/(.*)',PhoneNumber)
+											('/phone-numbers/twiml/(.*)',TwimlHandler),
+											('/phone-numbers/(.*)',PhoneNumber),
+											('/test',Test)
 										],
 										 debug=True)
 	util.run_wsgi_app(application)

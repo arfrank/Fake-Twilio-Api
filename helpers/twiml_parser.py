@@ -36,14 +36,34 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import sys, signal, os
 import urllib, urllib2
 import urlparse
-from StringIO import StringIO
-from threading import Timer
+from xml.dom.minidom import parseString
+from xml.parsers.expat import ExpatError
 from optparse import OptionParser
 from datetime import datetime
 
 from xml.dom import minidom
 from google.appengine.api import urlfetch
 
+import logging
+
+ALLOWED_ATTRIBUTES = {
+'Say':['voice','language','loop'],
+'Play':['loop'],
+'Gather':['action','method','timeout','finishOnKey','numDigits'],
+'Record':['action','method','timeout','finishOnKey','maxLength','transcribe','transcribeCallback','playBeep'],
+'Sms':['to','from','action','method','statusCallback'],
+'Dial':['action','method','timeout','hangupOnStar','timeLimit','callerId'],
+'Number':['sendDigits','url'],
+'Conference':['muted','beep','startConferenceOnEnter','endConferenceOnExit','waitUrl','waitMethod'],
+'Hangup':[],
+'Redirect':['method'],
+'Reject':['reason'],
+'Pause':['length']
+}
+ALLOWED_SUBELEMENTS = {
+	'Gather': ['Say', 'Play', 'Pause'],
+	'Dial':['Number', 'Conference']
+}
 """
 def emulate(url, method = 'GET', digits = None):
 	logger.notice('[Emulation Start] %s' % url)
@@ -95,24 +115,55 @@ class TwiMLSyntaxError(Exception):
 		self.lineno = lineno
 		self.col = col
 		self.doc = doc
-		self.line = self.doc.split("\n")[self.lineno-2]
-		
+
 	def __str__(self):
 		return "TwiMLSyntaxError at line %i col %i near %s" \
-			% (self.lineno, self.col, self.line)
+			% (self.lineno, self.col, self.doc)
 
 #Returns valid, twiml_object, error message
 def parse_twiml(response):
 	try:
 		rdoc = minidom.parseString(response)
 	except ExpatError, e:
-		return False, False, TwiMLSyntaxError(e.lineno, e.offset, response)
+		return False, False, 'Bad TwiML Document'
 
 	try:
 		respNode = rdoc.getElementsByTagName('Response')[0]
 	except IndexError, e:
 		return False, False, 'No response tag in TwiML'
 
-	return True, respNode, ''
-	
-	
+	if not respNode.hasChildNodes():
+		return False, False, 'No child nodes, nothing to do.'
+	nodes = respNode.childNodes
+	try:
+		twiml_object = walk_tree(nodes,'Response')
+	except TwiMLSyntaxError, e:
+		return False, False, e
+	#lets walk the tree and create a list [ { 'Verb' : '', 'Attr': { 'action' : '', 'Method' : 'POST' } } ]
+	else:
+		return True, twiml_object, False
+
+def retrieve_attr(node, Type):
+	d = {}
+	for attr in node.attributes.items():
+		if attr[0] in ALLOWED_ATTRIBUTES[Type]:
+			d[attr[0]] = attr[1]
+		else:
+			raise TwiMLSyntaxError(0, 0, 'Invalid attribute in '+Type+':('+attr[0]+'='+attr[1]+')')
+	return d
+
+def walk_tree(nodes, parentType):
+	twiml = []
+	for node in nodes:
+		logging.info(node.attributes)
+		if node.nodeType == node.ELEMENT_NODE:
+			if parentType == 'Response' or parentType in ALLOWED_SUBELEMENTS:
+				if parentType == 'Response' or  node.nodeName.encode('ascii') in ALLOWED_SUBELEMENTS[parentType]:
+					twiml.append( { 'Type' : node.nodeName.encode( 'ascii' ), 'Attr' : retrieve_attr(node, node.nodeName.encode('ascii')),'Children': walk_tree(node.childNodes, node.nodeName.encode('ascii')) } )
+				else:
+					raise TwiMLSyntaxError(0, 0, 'Invalid TwiML nested element in '+parentType+'. Not allowed to nest '+node.nodeName.encode('ascii'))					
+			else:
+				raise TwiMLSyntaxError(0, 0, 'Invalid TwiML in '+parentType+'. Not allowed to have nested elements')
+		elif node.nodeType == node.TEXT_NODE:
+			twiml.append( { 'Type' : 'Text', 'Data': node.nodeValue.encode('ascii') })
+	return twiml
