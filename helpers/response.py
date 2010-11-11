@@ -1,5 +1,5 @@
 from django.utils import simplejson
-from helpers import xml,html
+from helpers import xml_helper,html
 
 def response_format(last_argument):
 	split = last_argument.split('.')
@@ -18,7 +18,7 @@ def format_response(response_data,format):
 	elif format == 'HTML':
 		return html.to_html(response_data)
 	elif format == 'XML' or format == '':
-		return xml.to_xml(response_data)
+		return xml_helper.to_xml(response_data)
 
 def _check_none(param):
 	if param is None:

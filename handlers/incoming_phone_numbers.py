@@ -21,7 +21,7 @@ from google.appengine.ext.webapp import util
 from google.appengine.ext import db
 from random import randint
 
-from helpers import response, parameters, xml, errors
+from helpers import response, parameters, xml_helper, errors
 from handlers import base_handlers
 from models import phone_numbers
 

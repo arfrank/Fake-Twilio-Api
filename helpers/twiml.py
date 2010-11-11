@@ -38,11 +38,10 @@ import urllib, urllib2
 import urlparse
 from StringIO import StringIO
 from threading import Timer
-from xml.dom.minidom import parseString
-from xml.parsers.expat import ExpatError
 from optparse import OptionParser
 from datetime import datetime
 
+from xml.dom import minidom
 from google.appengine.api import urlfetch
 
 """

@@ -1,6 +1,6 @@
 from google.appengine.ext import webapp
 
-from helpers import response, parameters, sid, authorization, xml, uris, errors
+from helpers import response, parameters, sid, authorization, xml_helper, uris, errors
 from decorators import authorization
 import math
 import logging
