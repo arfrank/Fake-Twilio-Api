@@ -66,6 +66,6 @@ def authorize_request(method):
 					
 		else:
 			logging.info('No account exists')
-			self.response.out.write(response.format_response(errors.rest_error_response(400,"No Account Found",format),format))
+			self.response.out.write(response.format_response(errors.rest_error_response(404,"No Account Found",format),format))
 			
 	return authorized_method

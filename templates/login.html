@@ -2,15 +2,19 @@
 {% block 'content' %}
 	<h1>Login</h1>
 	<div id="content">
-	<form action="/login" method="post" accept-charset="utf-8">
+		<form action="/login" method="post" accept-charset="utf-8">
 		
-
-		<p>
-			<label for="email">Email: </label><input type="email" name="email" value="" id="email"><br>
-			<label for="password">Password: </label><input type="password" name="password" value=""><br>
-			<input type="submit" value="Login">
-			
-		</p>
-	</form>
+		<div id="login">
+			<p>
+				<label for="email">Email: </label><input type="email" name="email" value="" id="email">
+			</p>
+			<p>
+				<label for="password">Password: </label><input type="password" name="password" value=""><br>
+			</p>
+			<p>
+				<input type="submit" value="Login">
+			</p>
+		</div>
+		</form>
 </div>
 {% endblock %}

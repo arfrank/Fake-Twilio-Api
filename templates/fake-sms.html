@@ -43,7 +43,7 @@
 					<label for="To">To</label> <input type="hidden" name="To" value="{{data.PhoneNumber.PhoneNumber}}" id="To">{{data.PhoneNumber.PhoneNumber}}
 				</p>
 				<p>
-					<label for="Body">Body</label> <textarea name="Body">{% if data.Arguments.Body %}{{data.Arguments.Body}}{% endif %}</textarea>
+					<label for="Body">Body</label> <textarea id="Body" name="Body">{% if data.Arguments.Body %}{{data.Arguments.Body}}{% endif %}</textarea>
 				</p>
 				<p>
 					<label for="ApiVersion">ApiVersion</label> 2010-04-01

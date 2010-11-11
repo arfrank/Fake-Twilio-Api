@@ -4,6 +4,10 @@ from helpers import response, parameters, sid, authorization, xml, uris, errors
 from decorators import authorization
 import math
 
+import logging
+
+from google.appengine.ext import db
+
 class InstanceHandler(webapp.RequestHandler):
 	"""
 	self.InstanceModel = phone_numbers.Phone_Number.all()
@@ -93,7 +97,7 @@ class InstanceHandler(webapp.RequestHandler):
 				db.delete(Instance)
 				self.response.set_status(204)
 			else:
-				self.error(400)
+				self.error(404)
 		else:
 			self.response.out.write(response.format_response(errors.rest_error_response(405,"The requested method is not allowed",format,20004,'http://www.twilio.com/docs/errors/20004'),format))
 

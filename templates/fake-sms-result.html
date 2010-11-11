@@ -15,7 +15,7 @@
 	<div id="content">
 		<h2>Phone Number - {{data.PhoneNumber.PhoneNumber}}</h2>
 		{% if data.Response %}
-		<div>
+		<div id="Response" class="twiml-info">
 			<h3>Sms Url</h3>
 			<label>Url:</label>{{ data.PhoneNumber.SmsUrl }}<br>
 			<label>Status Code:</label>{{data.Response.status_code}}<br>
@@ -23,7 +23,7 @@
 		</div>
 		{% endif %}
 		{% if data.FallbackResponse %}
-		<div>
+		<div id="FallbackResponse" class="twiml-info">
 			<h3>Sms Fallback Url</h3>
 			<label>Url:</label>{{ data.PhoneNumber.SmsFallbackUrl }}<br>
 			<label>Status Code:</label>{{data.FallbackResponse.status_code}}<br>
