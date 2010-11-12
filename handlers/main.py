@@ -288,7 +288,7 @@ class FakeVoice(webapp.RequestHandler):
 				Valid = False
 			if Valid:
 			### ERROR CHECKING DONE FOR PASSED IN
-				Message, Valid, self.data['TwilioCode'],self.data['TwilioMsg'] = messages.Message.new(
+				Call, Valid, self.data['TwilioCode'],self.data['TwilioMsg'] = calls.Call.new(
 											To = self.data['PhoneNumber'].PhoneNumber,
 											From = self.request.get('From'),
 											Body = self.request.get('Body'),
@@ -299,8 +299,8 @@ class FakeVoice(webapp.RequestHandler):
 										)
 				#CHECK IF WE'VE PASSED VALID INFO TO MESSAGE
 				if Valid:
-					Message.put()
-					Payload = Message.get_dict()
+					Call.put()
+					Payload = Call.get_dict()
 					#This is some really really bad bad form processing
 					Payload = {}
 					for param in ALLOWED_PARAMETERS:
@@ -308,22 +308,22 @@ class FakeVoice(webapp.RequestHandler):
 					#has to have a smsurl, not necessarily fallback url
 
 					# GET THE TWIML URLS
-					self.data['Response'] = request.request_twiml(self.data['Account'], self.data['PhoneNumber'].SmsUrl, self.data['PhoneNumber'].SmsMethod, Payload)
+					self.data['Response'] = request.request_twiml(self.data['Account'], self.data['PhoneNumber'].VoiceUrl, self.data['PhoneNumber'].VoiceMethod, Payload)
 
 					if 200<= self.data['Response'].status_code <= 300:
 
 						TwimlText = str(self.data['Response'].content.replace('\n',''))
 
 						Valid, self.data['twiml_object'], self.data['ErrorMessage'] = twiml.parse_twiml(self.data['Response'].content, True)
-						Url = self.data['PhoneNumber'].SmsUrl
+						Url = self.data['PhoneNumber'].VoiceUrl
 
 					elif 400 <= self.data['Response'].status_code <= 600 or Valid == False:
 
 						#bad response and see if there is a fallback and repeat	or bad twiml
 
-						if self.data['PhoneNumber'].SmsFallbackUrl is not None and self.data['PhoneNumber'].SmsFallbackUrl != '':
+						if self.data['PhoneNumber'].VoiceFallbackUrl is not None and self.data['PhoneNumber'].VoiceFallbackUrl != '':
 
-							self.data['FallbackResponse'] = request.request_twiml(self.data['Account'], self.data['PhoneNumber'].SmsFallbackUrl, self.data['PhoneNumber'].SmsFallbackMethod, Payload)
+							self.data['FallbackResponse'] = request.request_twiml(self.data['Account'], self.data['PhoneNumber'].VoiceFallbackUrl, self.data['PhoneNumber'].VoiceFallbackMethod, Payload)
 
 							if 200 <= self.data['FallbackResponse'].status_code <=300:
 
@@ -331,7 +331,7 @@ class FakeVoice(webapp.RequestHandler):
 
 								Valid, self.data['twiml_object'], self.data['ErrorMessage']  = twiml.parse_twiml(self.data['FallbackResponse'].content.replace('\n',''), True)
 
-								Url = self.data['PhoneNumber'].SmsFallbackUrl
+								Url = self.data['PhoneNumber'].VoiceFallbackUrl
 
 					if Valid:
 
@@ -343,24 +343,24 @@ class FakeVoice(webapp.RequestHandler):
 							AccountSid = self.data['Account'].Sid,
 							Twiml = pickle.dumps(self.data['twiml_object']),
 							Current = [],
-							SmsSid = Message.Sid
+							CallSid = Call.Sid
 						)
 						#logging.info(Twiml)
 						Twiml.put()
 						self.data['Twiml'] = Twiml
 					#parse the twiml and do some fake things
-					path = os.path.join(os.path.dirname(__file__), '../templates/fake-sms-result.html')
+					path = os.path.join(os.path.dirname(__file__), '../templates/fake-voice-result.html')
 					self.response.out.write(template.render(path,{'data':self.data}))
 				else:
 					self.data['Arguments'] = {}
 					for key in self.request.arguments():
 						self.data['Arguments'][key] = self.request.get(key,'')
-					FakeSms.get(self,Sid)
+					FakeVoice.get(self,Sid)
 			else:
 				self.data['Arguments'] = {}
 				for key in self.request.argument():
 					self.data['Arguments'][key] = self.request.get(key,'')
-				FakeSms.get(self,Sid)
+				FakeVoice.get(self,Sid)
 		else:
 			self.redirect('/phone-numbers')
 		
