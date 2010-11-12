@@ -237,7 +237,7 @@ class FakeSms(webapp.RequestHandler):
 					FakeSms.get(self,Sid)
 			else:
 				self.data['Arguments'] = {}
-				for key in self.request.argument():
+				for key in self.request.arguments():
 					self.data['Arguments'][key] = self.request.get(key,'')
 				FakeSms.get(self,Sid)
 		else:
@@ -272,15 +272,17 @@ class FakeVoice(webapp.RequestHandler):
 		if self.data['PhoneNumber'] is not None:
 			#########Doing webapp error checking!
 			REQUIRED = ['From']
-			ALLOWED_PARAMETERS = ['From','FromCity','FromState','FromZip','FromCounty','ToCity','ToState','ToZip','ToCounty']
+			ALLOWED_PARAMETERS = ['FromCity','FromState','FromZip','FromCounty','ToCity','ToState','ToZip','ToCounty']
 			Valid = True
 			Any = False
 			Blank = False
 			for param in REQUIRED:
 				if self.request.get(param,'') == '':
+					logging.info('Missing Required Parameter'+ param)
 					Valid = False
 			for param in ALLOWED_PARAMETERS:
 				if self.request.get(param,'') != '':
+					logging.info('Have optional parameter'+ param)
 					Any = True
 				else:
 					Blank = True
@@ -358,7 +360,8 @@ class FakeVoice(webapp.RequestHandler):
 					FakeVoice.get(self,Sid)
 			else:
 				self.data['Arguments'] = {}
-				for key in self.request.argument():
+				logging.info
+				for key in self.request.arguments():
 					self.data['Arguments'][key] = self.request.get(key,'')
 				FakeVoice.get(self,Sid)
 		else:
@@ -384,11 +387,14 @@ class TwimlHandler(webapp.RequestHandler):
 		
 		Twiml = twimls.Twiml.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Sid = ',Sid).get()
 		if Twiml is not None:
-
+			logging.info(Twiml.CallSid)
+			logging.info(Twiml.SmsSid)
 			if Twiml.CallSid is not None:
 				Original = calls.Call.all().filter('Sid = ',Twiml.CallSid).get()
+				logging.info('Original')
+				logging.info(Original)
 			elif Twiml.SmsSid is not None:
-				Origional = messages.Message.all().filter('Sid = ',Twiml.SmsSid).get()
+				Original = messages.Message.all().filter('Sid = ',Twiml.SmsSid).get()
 
 			I,C = 0,0 #index, child for lists later to store status
 
@@ -410,7 +416,7 @@ class TwimlHandler(webapp.RequestHandler):
 
 			while I < len(Twiml_obj):
 				#get the response, whether or not to keep processing, and if the newTwiml document exists
-				twiml_response, Break, newTwiml = twiml.process_verb(Twiml_obj[I], Twiml, Origional, self.request.get('input',''))
+				twiml_response, Break, newTwiml = twiml.process_verb(Twiml_obj[I], Twiml, Original, self.request.get('input',''))
 
 				response += str(twiml_response) + '\n'
 

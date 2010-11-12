@@ -314,7 +314,7 @@ def process_sms(verb, OTwiml, Instance):
 	Account = accounts.Account.all().filter('Sid =',Instance.AccountSid).get()
 	NewDoc = False
 	if Action is None:
-		#then techincally we should rerequest the origional url
+		#then techincally we should rerequest the original url
 		#but i dont make sure the method is the same :/
 		#Action = OTwiml.Url
 		pass
@@ -441,13 +441,13 @@ ALLOWED_ATTRIBUTES = {
 
 def get_external_twiml(Account, Action, Method, Instance, Payload, Twiml):
 	#determine if its a relative or absolute URL
-	OrigionalUrl = urlparse.urlparse(Twiml.Url)
+	OriginalUrl = urlparse.urlparse(Twiml.Url)
 	NewUrl = urlparse.urlparse(Action)
 	
 	if NewUrl.scheme != '' and NewUrl.netloc != '':
 		ActionUrl= Action
 	else:
-		ActionUrl = OrigionalUrl.scheme+OrigionalUrl.netloc+'/'+Action
+		ActionUrl = OriginalUrl.scheme+OriginalUrl.netloc+'/'+Action
 
 	Response = request.request_twiml(Account, ActionUrl, Method, Payload)		#make call to action with smssid and status, with correct method
 	if 200 <= Response.status_code <= 300:

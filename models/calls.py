@@ -27,7 +27,7 @@ ForwardedFrom	If this call was an incoming call forwarded from another number, t
 CallerName	If this call was an incoming call from a phone number with Caller ID Lookup enabled, the caller's name. Empty otherwise.
 """
 
-class Calls(base.CommonModel):
+class Call(base.CommonModel):
 	AccountSid = db.StringProperty()
 	To = db.StringProperty()
 	From = db.StringProperty()
@@ -118,10 +118,3 @@ class Calls(base.CommonModel):
 				except Exception, e:
 					pass
 			return True
-				
-				
-	def sanitize():
-		pass
-		
-	def validate():
-		pass
