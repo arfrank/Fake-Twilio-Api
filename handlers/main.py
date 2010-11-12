@@ -265,10 +265,104 @@ class FakeVoice(webapp.RequestHandler):
 		else:
 			self.redirect('/phone-numbers')
 
+	#COPIED FROM SMS, TOTALLY NOT DRY!
 	@webapp_decorator.check_logged_in
 	def post(self,Sid):
-		ALLOWED_PARAMETERS = ['From','FromCity','FromState','FromZip','FromCounty','ToCity','ToState','ToZip','ToCounty']
-		#Create a fake call
+		self.data['PhoneNumber'] = phone_numbers.Phone_Number.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Sid = ',Sid).get()
+		if self.data['PhoneNumber'] is not None:
+			#########Doing webapp error checking!
+			REQUIRED = ['From']
+			ALLOWED_PARAMETERS = ['From','FromCity','FromState','FromZip','FromCounty','ToCity','ToState','ToZip','ToCounty']
+			Valid = True
+			Any = False
+			Blank = False
+			for param in REQUIRED:
+				if self.request.get(param,'') == '':
+					Valid = False
+			for param in ALLOWED_PARAMETERS:
+				if self.request.get(param,'') != '':
+					Any = True
+				else:
+					Blank = True
+			if Valid and (Any and Blank):
+				Valid = False
+			if Valid:
+			### ERROR CHECKING DONE FOR PASSED IN
+				Message, Valid, self.data['TwilioCode'],self.data['TwilioMsg'] = messages.Message.new(
+											To = self.data['PhoneNumber'].PhoneNumber,
+											From = self.request.get('From'),
+											Body = self.request.get('Body'),
+											request = self.request,
+											AccountSid = self.data['Account'].Sid,
+											Direction = 'incoming',
+											Status = 'sent'
+										)
+				#CHECK IF WE'VE PASSED VALID INFO TO MESSAGE
+				if Valid:
+					Message.put()
+					Payload = Message.get_dict()
+					#This is some really really bad bad form processing
+					Payload = {}
+					for param in ALLOWED_PARAMETERS:
+						Payload[param] = self.request.get(param)
+					#has to have a smsurl, not necessarily fallback url
+
+					# GET THE TWIML URLS
+					self.data['Response'] = request.request_twiml(self.data['Account'], self.data['PhoneNumber'].SmsUrl, self.data['PhoneNumber'].SmsMethod, Payload)
+
+					if 200<= self.data['Response'].status_code <= 300:
+
+						TwimlText = str(self.data['Response'].content.replace('\n',''))
+
+						Valid, self.data['twiml_object'], self.data['ErrorMessage'] = twiml.parse_twiml(self.data['Response'].content, True)
+						Url = self.data['PhoneNumber'].SmsUrl
+
+					elif 400 <= self.data['Response'].status_code <= 600 or Valid == False:
+
+						#bad response and see if there is a fallback and repeat	or bad twiml
+
+						if self.data['PhoneNumber'].SmsFallbackUrl is not None and self.data['PhoneNumber'].SmsFallbackUrl != '':
+
+							self.data['FallbackResponse'] = request.request_twiml(self.data['Account'], self.data['PhoneNumber'].SmsFallbackUrl, self.data['PhoneNumber'].SmsFallbackMethod, Payload)
+
+							if 200 <= self.data['FallbackResponse'].status_code <=300:
+
+								TwimlText = str(self.data['FallbackResponse'].content)
+
+								Valid, self.data['twiml_object'], self.data['ErrorMessage']  = twiml.parse_twiml(self.data['FallbackResponse'].content.replace('\n',''), True)
+
+								Url = self.data['PhoneNumber'].SmsFallbackUrl
+
+					if Valid:
+
+						#logging.info(TwimlText)
+
+						Twiml, Valid, TwilioCode,TwilioMsg  = twimls.Twiml.new(
+							request = self.request,
+							Url = Url,
+							AccountSid = self.data['Account'].Sid,
+							Twiml = pickle.dumps(self.data['twiml_object']),
+							Current = [],
+							SmsSid = Message.Sid
+						)
+						#logging.info(Twiml)
+						Twiml.put()
+						self.data['Twiml'] = Twiml
+					#parse the twiml and do some fake things
+					path = os.path.join(os.path.dirname(__file__), '../templates/fake-sms-result.html')
+					self.response.out.write(template.render(path,{'data':self.data}))
+				else:
+					self.data['Arguments'] = {}
+					for key in self.request.arguments():
+						self.data['Arguments'][key] = self.request.get(key,'')
+					FakeSms.get(self,Sid)
+			else:
+				self.data['Arguments'] = {}
+				for key in self.request.argument():
+					self.data['Arguments'][key] = self.request.get(key,'')
+				FakeSms.get(self,Sid)
+		else:
+			self.redirect('/phone-numbers')
 		
 		
 class Calls(webapp.RequestHandler):
