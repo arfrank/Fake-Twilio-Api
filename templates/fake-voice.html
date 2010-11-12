@@ -27,32 +27,8 @@
 				<p>
 					<label for="ApiVersion">ApiVersion</label> 2010-04-01
 				</p>
-				<h3>Additional Parameters</h3>
-				<p>
-					<label for="FromCity">FromCity</label><input name="FromCity" value="">
-				</p>
-				<p>
-					<label for="FromState">FromState</label><input name="FromState" value="">
-				</p>
-				<p>
-					<label for="FromZip">FromZip</label><input name="FromZip" value="">
-				</p>
-				<p>
-					<label for="FromCountry">FromCountry</label><input name="FromCountry" value="">
-				</p>
-
-				<p>
-					<label for="ToCity">ToCity</label><input name="ToCity" value="">
-				</p>
-				<p>
-					<label for="ToState">ToState</label><input name="ToState" value="">
-				</p>
-				<p>
-					<label for="ToZip">ToZip</label><input name="ToZip" value="">
-				</p>
-				<p>
-					<label for="ToCountry">ToCountry</label><input name="ToCountry" value="">
-				</p>
+				
+				{% include "../templates/shared/additional_parameters.html" %}
 
 				<p><input type="submit" value="Make Call"></p>
 			</form>

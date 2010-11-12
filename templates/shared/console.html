@@ -1,0 +1,49 @@
+		<h3>Console</h3>
+		<textarea name="console" rows="8" cols="40" onfocus="blur()" id="console"></textarea>
+		<input name="commandline" id="console_input" value="">
+		<p>
+			<li>For Gathers, entering a blank response will cause a timeout to occur</l>
+			<li>Pauses are noted and echoed</li>
+			<li>Recording ask for a duration, 0 will mean the recording did not happen</li>
+			<li>Transcriptions, if turned on, will be faked with "lorem ipsum" text</li>
+			<li>SMS are sent according the attributes passed in</li>
+		</p>
+<script type="text/javascript" charset="utf-8">
+	$TwimlSid = '{{data.Twiml.Sid}}';
+	$console = $('#console');
+	function ajax_call (val) {
+		$.ajax({
+		  url: '/phone-numbers/twiml/'+$TwimlSid,
+		  type: 'POST',
+		  data: { 'input': val },
+		  dataType: 'json',
+		  complete: function(xhr, textStatus) {
+			//called when complete
+		  },
+		  success: function(data, textStatus, xhr) {
+			$('#console').html($console.html()+data.Text);
+			if(data.TwimlSid != undefined){
+				$TwimlSid = data.TwimlSid;
+				//Make a new fresh ajax call to the new twiml document and start a fresh from the top of it
+				ajax_call('');
+			}
+		  },
+		  error: function(xhr, textStatus, errorThrown) {
+			//called when there is an error
+		  }
+		});
+		
+	}
+
+	$(document).ready(function() {
+		$('#console_input').bind('keydown', function(event) {
+			if (event.keyCode == 13) {
+				ajax_call($(this).val());
+			}
+		});
+		// Make a call to start processing the twiml and displaying the results to the user
+		ajax_call('');
+	});
+
+	
+</script>
