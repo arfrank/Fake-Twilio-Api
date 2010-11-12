@@ -6,9 +6,10 @@ import string
 
 class Twiml(base.CommonModel):
 	AccountSid = db.StringProperty()
+	Url = db.StringProperty()
 	Text = db.TextProperty()
 	Twiml = db.BlobProperty() #pickled since its a list, 0,0 means first child of first element
-	Current = db.ListProperty(int, default = []) 
+	Current = db.ListProperty(int, default = [0]) 
 	Initial = db.BooleanProperty(default = True)
 	CallSid = db.StringProperty()
 	SmsSid = db.StringProperty()

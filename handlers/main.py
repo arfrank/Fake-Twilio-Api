@@ -185,21 +185,39 @@ class FakeSms(webapp.RequestHandler):
 
 					# GET THE TWIML URLS
 					self.data['Response'] = request.request_twiml(self.data['Account'], self.data['PhoneNumber'].SmsUrl, self.data['PhoneNumber'].SmsMethod, Payload)
+					
 					if 200<= self.data['Response'].status_code <= 300:
+					
 						TwimlText = str(self.data['Response'].content.replace('\n',''))
+					
 						Valid, self.data['twiml_object'], self.data['ErrorMessage'] = twiml.parse_twiml(self.data['Response'].content, True)
+						Url = self.data['PhoneNumber'].SmsUrl
+					
 					elif 400 <= self.data['Response'].status_code <= 600 or Valid == False:
+					
 						#bad response and see if there is a fallback and repeat	or bad twiml
+					
 						if self.data['PhoneNumber'].SmsFallbackUrl is not None and self.data['PhoneNumber'].SmsFallbackUrl != '':
+					
 							self.data['FallbackResponse'] = request.request_twiml(self.data['Account'], self.data['PhoneNumber'].SmsFallbackUrl, self.data['PhoneNumber'].SmsFallbackMethod, Payload)
+					
 							if 200 <= self.data['FallbackResponse'].status_code <=300:
+					
 								TwimlText = str(self.data['FallbackResponse'].content)
+					
 								Valid, self.data['twiml_object'], self.data['ErrorMessage']  = twiml.parse_twiml(self.data['FallbackResponse'].content.replace('\n',''), True)
+								
+								Url = self.data['PhoneNumber'].SmsFallbackUrl
+					
 					if Valid:
+					
 						#logging.info(TwimlText)
+					
 						import pickle
+					
 						Twiml, Valid, TwilioCode,TwilioMsg  = twimls.Twiml.new(
 							request = self.request,
+							Url = Url,
 							AccountSid = self.data['Account'].Sid,
 							Text = TwimlText,
 							Twiml = pickle.dumps(self.data['twiml_object']),
@@ -280,20 +298,28 @@ class TwimlHandler(webapp.RequestHandler):
 			I,C = 0,0 #index, child for lists later to store status
 			Twiml_obj = pickle.loads(Twiml.Twiml)
 			response = ''
-			if Twiml.Initial:
-				#process list items until need a response?
-				logging.info(Twiml_obj)
-				while I < len(Twiml_obj):
-					twiml_response, Break, newTwiml = twiml.process_verb(Twiml_obj[I], Origional)
-					response += str(twiml_response) + '\n'
-					if Break:
-						break
-					I+=1
-				#Twiml.Initial = False
+			newTwiml = None
+			if not Twiml.Initial:
+				I = Twiml.Current[0]
 			else:
-				#goto
-				pass
+				Twiml.Initial = False
+			# process list items until need a response?
+			logging.info(Twiml_obj)
+			while I < len(Twiml_obj):
+				twiml_response, Break, newTwiml = twiml.process_verb(Twiml_obj[I], Twiml, Origional)
+				response += str(twiml_response) + '\n'
+				if Break:
+					#Check to see if its the final break; hangup, reject
+					if Twiml_obj[I]['Type'] == 'Hangup' or Twiml_obj[I] == 'Reject':
+						I = len(Twiml_obj)
+					break
+				I+=1
+			if I == len(Twiml_obj):
+				response+='You have reached the end of that Twiml Document\n'
 			response_data = {'Text': response }
+			if newTwiml:
+				response_data['TwimlSid'] = newTwiml.Sid
+			Twiml.Current = [I]
 			Twiml.put()
 			self.response.out.write(simplejson.dumps(response_data))
 		else:

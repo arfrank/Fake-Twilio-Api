@@ -38,9 +38,13 @@ from xml.parsers.expat import ExpatError
 from xml.dom import minidom
 from google.appengine.api import urlfetch
 
-from models import calls, messages, transcriptions, conferences, participants, notifications, recordings
+from models import calls, messages, transcriptions, conferences, participants, notifications, recordings, twimls, accounts
+
+from helpers import request, errors
 
 import logging
+
+import urlparse
 
 ALLOWED_VOICE_ELEMENTS = {
 'Say':['voice','language','loop'],
@@ -208,32 +212,15 @@ def process_gather(verb):
 			if Break:
 				break
 		return all_resp,True,newTwiml
+#the verb node of the tiwml document, the twiml document, and the instance that caused the creation of the twiml document
+def process_sms(verb, OTwiml, Instance):
+	msg = ''
+	To = verb['Attr']['to'] if 'Attr' in verb and 'to' in verb['Attr'] else Instance.From
+	From = verb['Attr']['from'] if 'Attr' in verb and 'from' in verb['Attr'] else Instance.To
+	Action = verb['Attr']['action']	if 'Attr' in verb and 'action' in verb['Attr'] else None
+	Method = verb['Attr']['method'] if 'Attr' in verb and 'method' in verb['Attr'] else 'POST'
+	statusCallback = verb['Attr']['statusCallback'] if 'Attr' in verb and 'statusCallback' in verb['Attr'] else None
 
-def process_sms(verb, Instance):
-	if 'Attr' in verb and 'to' in verb['Attr']:
-		To = verb['Attr']['to']
-	else:
-		To = Instance.From
-
-	if 'Attr' in verb and 'from' in verb['Attr']:
-		From = verb['Attr']['from']
-	else:
-		From = Instance.To
-		
-	if 'Attr' in verb and 'action' in verb['Attr']:
-		Action = verb['Attr']['action']
-	else:
-		Action = None
-		
-	if 'Attr' in verb and 'method' in verb['Attr']:
-		Method = verb['Attr']['method']
-	else:
-		Method = 'POST'
-
-	if 'Attr' in verb and 'statusCallback' in verb['Attr']:
-		statusCallback = verb['Attr']['statusCallback']
-	else:
-		statusCallback = None
 	Message,Valid,TwilioCode,TwilioMsg= messages.Message.new(
 		AccountSid = Instance.AccountSid,
 		request = None,
@@ -245,27 +232,71 @@ def process_sms(verb, Instance):
 	)
 	logging.info(str(Valid)+' '+TwilioMsg)
 	Message.put()
-	
+
+	msg += 'SMS sent to '+To+' from '+From+' with body "'+process_text(verb)+'"\n'
+
+	Account = accounts.Account.all().filter('Sid =',Instance.AccountSid).get()
+	NewDoc = False
 	if Action is not None:
-		pass
-		#make call to action with smssid and status, with correct method
-		#get the new twiml document
-		#parse the new twiml document
-		#if all that works, create new twiml document
-		#pass it back up
-		
+		Valid, Twiml_object, ErrorMessage = get_external_twiml(Account,Action,Method,{'SmsSid' : Instance.Sid, 'SmsStatus' : Message.Status}, OTwiml)
+		if Valid:
+			NewDoc = True
+			#if all that works, create new twiml document
+			CallSid = Instance.Sid if Instance.Sid[0:2] == 'CA' else None
+			SmsSid = Instance.Sid if Instance.Sid[0:2] == 'SM' else None
+			Twiml, Valid, TwilioCode,TwilioMsg = twimls.Twiml.new(
+				AccountSid = Account.Sid,
+				request = None,
+				Text = TwimlText,
+				Twiml = pickle.dumps(Twiml_object),
+				Current = [],
+				SmsSid = SmsSid,
+				CallSid = CallSid
+			)
+			Twiml.put()
+		else:
+			msg+='An error occured parsing your action\'s Twiml document, will continue parsing origional\n'+ErrorMessage+'\n'
 	Message.send()
 	if Message.StatusCallback is not None:
 		queued = Message.queueCallback()
-
-	return 'SMS sent to '+To+' from '+From+' with body "'+process_text(verb)+'"',False,False
+	if NewDoc:
+		msg+='A new Twiml document was created, processing will continue on that document'
+		return msg, True, Twiml
+	else:
+		return msg,False,False
 
 
 def process_hangup(verb):
 	return 'Call Hung Up'
 
-def process_redirect(verb):
-	return 'Redirecting to '+process_text(verb)
+def process_redirect(verb,OTwiml, Instance):
+	msg = 'Redirecting to '+process_text(verb)
+	Account = accounts.Account.all().filter('Sid =',Instance.AccountSid).get()
+	NewDoc = False
+	Valid, Twiml_object, ErrorMessage = get_external_twiml(Account,process_text(verb),verb['Attr']['method'] if 'method' in verb['Attr'] else 'POST',{}, OTwiml)
+	if Valid:
+		NewDoc = True
+		#if all that works, create new twiml document
+		CallSid = Instance.Sid if Instance.Sid[0:2] == 'CA' else None
+		SmsSid = Instance.Sid if Instance.Sid[0:2] == 'SM' else None
+		Twiml, Valid, TwilioCode,TwilioMsg = twimls.Twiml.new(
+			AccountSid = Account.Sid,
+			request = None,
+			Text = TwimlText,
+			Twiml = pickle.dumps(Twiml_object),
+			Current = [],
+			SmsSid = SmsSid,
+			CallSid = CallSid
+		)
+		Twiml.put()		
+	else:
+		msg+='Unable to parse redirect URL, continuing in origional Twiml Document\n'+ErrorMessage
+
+	if NewDoc:
+		msg+='A new Twiml document was created, processing will continue on that document'
+		return msg, True, Twiml
+	else:
+		return msg,False,False
 
 def process_reject(verb):
 	if 'Attr' in verb and 'reason' in verb['Attr']:
@@ -277,8 +308,10 @@ def process_text(verb):
 	logging.info('process text')
 	if 'Data' in verb['Children'][0]:
 		return verb['Children'][0]['Data']
+	else:
+		return ''
 
-def process_verb(verb,Instance):
+def process_verb(verb,Twiml, ModelInstance):
 	logging.info(verb)
 	if verb['Type'] =='Say': 
 		return process_say(verb)
@@ -289,7 +322,7 @@ def process_verb(verb,Instance):
 	elif verb['Type'] == 'Gather':
 		return process_gather(verb)
 	elif verb['Type'] == 'Sms':
-		return process_sms(verb, Instance)
+		return process_sms(verb, Twiml, ModelInstance)
 	elif verb['Type'] == 'Dial':
 		return (process_dial(verb),True,False)	
 	elif verb['Type'] == 'Number':
@@ -299,7 +332,7 @@ def process_verb(verb,Instance):
 	elif verb['Type'] == 'Hangup':
 		return (process_hangup(verb),True,False)
 	elif verb['Type'] == 'Redirect':
-		return (process_redirect(verb),True,False)
+		return (process_redirect(verb, Twiml, ModelInstance),True,False)
 	elif verb['Type'] == 'Reject':
 		return (process_reject(verb),True,False)
 	elif verb['Type'] == 'Pause':
@@ -322,3 +355,24 @@ ALLOWED_ATTRIBUTES = {
 'Reject':['reason'],
 'Pause':['length']
 }"""
+
+
+def get_external_twiml(Account, Action, Method, Instance, Payload, Twiml):
+	#determine if its a relative or absolute URL
+	OrigionalUrl = urlparse.urlparse(Twiml.Url)
+	NewUrl = urlparse.urlparse(Action)
+	
+	if NewUrl.scheme != '' and NewUrl.netloc != '':
+		ActionUrl= Action
+	else:
+		ActionUrl = OrigionalUrl.scheme+OrigionalUrl.netloc+'/'+Action
+
+	Response = request.request_twiml(Account, ActionUrl, Method, Payload)		#make call to action with smssid and status, with correct method
+	if 200 <= Response.status_code <= 300:
+		#YAY WE HAVE AN ACTUAL URL!
+		#get the new twiml document
+		TwimlText = str(Response.content).replace('\n','')
+		#parse the new twiml document
+		if 'Content-Length' in Response.headers and Response.headers['Content-Length'] > 0:
+			return parse_twiml(self.data['Response'].content, True) #returns Valid, Twiml_object, ErrorMessage
+	return False, False, 'Could not retrieve a valid TwiML document'
