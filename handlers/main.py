@@ -371,13 +371,13 @@ class FakeVoice(webapp.RequestHandler):
 class Calls(webapp.RequestHandler):
 	@webapp_decorator.check_logged_in
 	def get(self):
-		self.data['QueuedCalls'] = calls.Calls.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Status = ','queued').get()
-		self.data['RingingCalls'] = calls.Calls.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Status = ','ringing').get()
-		self.data['InProgressCalls'] = calls.Calls.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Status = ','in-progress').get()
-		self.data['CompletedCalls'] = calls.Calls.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Status = ','completed').get()
-		self.data['BusyCalls'] = calls.Calls.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Status = ','busy').get()
-		self.data['NoAnswerCalls'] = calls.Calls.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Status = ','no-answer').get()
-		self.data['CanceledCalls'] = calls.Calls.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Status = ','canceled').get()
+		self.data['QueuedCalls'] = calls.Call.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Status = ','queued').get()
+		self.data['RingingCalls'] = calls.Call.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Status = ','ringing').get()
+		self.data['InProgressCalls'] = calls.Call.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Status = ','in-progress').get()
+		self.data['CompletedCalls'] = calls.Call.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Status = ','completed').get()
+		self.data['BusyCalls'] = calls.Call.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Status = ','busy').get()
+		self.data['NoAnswerCalls'] = calls.Call.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Status = ','no-answer').get()
+		self.data['CanceledCalls'] = calls.Call.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Status = ','canceled').get()
 		path = os.path.join(os.path.dirname(__file__), '../templates/calls.html')
 		self.response.out.write(template.render(path,{'data':self.data}))
 		
