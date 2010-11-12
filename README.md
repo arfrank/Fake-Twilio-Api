@@ -6,6 +6,8 @@ Fake Twilio API
 
 This is an attempt to replicate the Twilio API in order to create a way to test locally, or deploy to GAE and test a lot of basic functionality for free.
 
+A semi-recent deployed version can be found at <a href="https://twilioapi.appspot.com/">https://twilioapi.appspot.com/</a>
+
 2. What has been done?
 ----------------------
 - A basic outline of how the API works
