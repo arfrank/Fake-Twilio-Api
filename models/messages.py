@@ -5,6 +5,8 @@ from hashlib import sha256
 
 from helpers import parameters
 
+from google.appengine.api.labs import taskqueue
+
 import datetime
 
 class Message(base.CommonModel):
@@ -22,6 +24,15 @@ class Message(base.CommonModel):
 	def new_Sid(self):
 		return 'SM'+sha256(str(random())).hexdigest()
 
+	def queueCallback(self):
+		try:
+			taskqueue.Queue('StatusCallbacks').add(taskqueue.Task(url='/Callbacks/SMS', params = {'SmsSid':self.Sid}))
+			return True
+		except Exception, e:
+			logging.error(e)
+			logging.error('Unable to queue the callback task')
+			return False
+
 	def send(self):
 		self.Status = 'sent'
 		self.Price = 0.03
@@ -38,7 +49,7 @@ class Message(base.CommonModel):
 			'To' : parameters.valid_to_phone_number(arg_value if arg_value is not None else request.get('To',None),required=True),
 			'From' : parameters.valid_from_phone_number(arg_value if arg_value is not None else request.get('From',None),required=True),
 			'Body' : parameters.valid_body(arg_value if arg_value is not None else request.get('Body',None),required=True),
-			'StatusCallback' : parameters.standard_urls(request,'StatusCallback')
+			'StatusCallback' : arg_value if (arg_value is not None or request is None) else parameters.standard_urls(request,'StatusCallback')
 		}
 		if arg_name in validators:
 			return validators[arg_name]

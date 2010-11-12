@@ -61,7 +61,7 @@ class MessageList(base_handlers.ListHandler):
 			Message.send()
 			#make sure put happens before callback happens
 			if Message.StatusCallback is not None:
-				taskqueue.Queue('StatusCallbacks').add(taskqueue.Task(url='/Callbacks/SMS', params = {'SmsSid':Message.Sid}))
+				Message.queueCallback()
 		else:
 			self.response.out.write(response.format_response(errors.rest_error_response(400,"You have passed incorrect paremeters",format,TwilioCode,TwilioMsg),format))
 			

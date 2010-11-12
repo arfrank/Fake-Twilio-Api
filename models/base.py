@@ -50,4 +50,4 @@ class CommonModel(db.Model):
 		return arg_value
 
 	def validate(self, request, arg_name, arg_value):
-		return True
+		return True, 0, ''

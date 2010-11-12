@@ -23,11 +23,13 @@ import os
 import urllib, urllib2, base64, hmac
 import logging
 
+from django.utils import simplejson
+
 from libraries.gaesessions import get_current_session
 
 from models import accounts, phone_numbers, calls, messages, twimls
 
-from helpers import application, authorization, request, twiml_parser
+from helpers import application, authorization, request, twiml
 
 from decorators import webapp_decorator
 
@@ -180,28 +182,33 @@ class FakeSms(webapp.RequestHandler):
 					for param in ALLOWED_PARAMETERS:
 						Payload[param] = self.request.get(param)
 					#has to have a smsurl, not necessarily fallback url
-					GoodResponse = False
+
+					# GET THE TWIML URLS
 					self.data['Response'] = request.request_twiml(self.data['Account'], self.data['PhoneNumber'].SmsUrl, self.data['PhoneNumber'].SmsMethod, Payload)
-					if 400 <= self.data['Response'].status_code <= 600:
-						#bad response and see if there is a fallback and repeat	
+					if 200<= self.data['Response'].status_code <= 300:
+						TwimlText = str(self.data['Response'].content.replace('\n',''))
+						Valid, self.data['twiml_object'], self.data['ErrorMessage'] = twiml.parse_twiml(self.data['Response'].content, True)
+					elif 400 <= self.data['Response'].status_code <= 600 or Valid == False:
+						#bad response and see if there is a fallback and repeat	or bad twiml
 						if self.data['PhoneNumber'].SmsFallbackUrl is not None and self.data['PhoneNumber'].SmsFallbackUrl != '':
 							self.data['FallbackResponse'] = request.request_twiml(self.data['Account'], self.data['PhoneNumber'].SmsFallbackUrl, self.data['PhoneNumber'].SmsFallbackMethod, Payload)
 							if 200 <= self.data['FallbackResponse'].status_code <=300:
-								TwimlText = self.data['FallbackResponse']
-								Valid, self.data['twiml_object'], self.data['ErrorMessage']  = twiml_parser.parse_twiml(self.data['FallbackResponse'].content)
-					elif 200<= self.data['Response'].status_code <= 300:
-						TwimlText = self.data['Response']
-						Valid, self.data['twiml_object'], self.data['ErrorMessage'] = twiml_parser.parse_twiml(self.data['Response'].content)
+								TwimlText = str(self.data['FallbackResponse'].content)
+								Valid, self.data['twiml_object'], self.data['ErrorMessage']  = twiml.parse_twiml(self.data['FallbackResponse'].content.replace('\n',''), True)
 					if Valid:
+						#logging.info(TwimlText)
 						import pickle
-						Twiml = twimls.Twiml.new(
+						Twiml, Valid, TwilioCode,TwilioMsg  = twimls.Twiml.new(
+							request = self.request,
 							AccountSid = self.data['Account'].Sid,
 							Text = TwimlText,
 							Twiml = pickle.dumps(self.data['twiml_object']),
-							Current = [0]
+							Current = [],
+							SmsSid = Message.Sid
 						)
+						#logging.info(Twiml)
 						Twiml.put()
-						self.data['Twiml'] = Twiml()
+						self.data['Twiml'] = Twiml
 					#parse the twiml and do some fake things
 					path = os.path.join(os.path.dirname(__file__), '../templates/fake-sms-result.html')
 					self.response.out.write(template.render(path,{'data':self.data}))
@@ -260,43 +267,35 @@ class Calls(webapp.RequestHandler):
 		self.response.out.write(template.render(path,{'data':self.data}))
 		
 class TwimlHandler(webapp.RequestHandler):
-	
-	def process_verb(verb):
-		possibilites = {
-			'Say': (verb.Child[0].Data,False),
-			'Play': (verb.Child[0].Data,False),
-			'Record': (verb.Child[0].Data,False),
-			'Gather': ,
-			'Sms': ,
-			'Pause': ('Pausing for '+verb.Attr.length+' seconds', False),
-			''
-			}
-		
-		return possibilities[verb.Type]
-
-
 	@webapp_decorator.check_logged_in
 	def post(self,Sid):
 		import pickle
 		
-		Twiml = twimls.Twiml.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Sid = ',Sid)
+		Twiml = twimls.Twiml.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Sid = ',Sid).get()
 		if Twiml is not None:
+			if Twiml.CallSid is not None:
+				Original = calls.Call.all().filter('Sid = ',Twiml.CallSid).get()
+			elif Twiml.SmsSid is not None:
+				Origional = messages.Message.all().filter('Sid = ',Twiml.SmsSid).get()
 			I,C = 0,0 #index, child for lists later to store status
 			Twiml_obj = pickle.loads(Twiml.Twiml)
+			response = ''
 			if Twiml.Initial:
 				#process list items until need a response?
-				response = ''
-				for verb in Twiml_obj:
-					twiml_response,Break = process_verb(verb)
-					response+= twiml_response+'<br>'
+				logging.info(Twiml_obj)
+				while I < len(Twiml_obj):
+					twiml_response, Break, newTwiml = twiml.process_verb(Twiml_obj[I], Origional)
+					response += str(twiml_response) + '\n'
 					if Break:
 						break
-				Twiml.Initial = False
+					I+=1
+				#Twiml.Initial = False
 			else:
 				#goto
 				pass
+			response_data = {'Text': response }
 			Twiml.put()
-			self.response.out.write('')
+			self.response.out.write(simplejson.dumps(response_data))
 		else:
 			self.response.set_status(404)
 		
@@ -314,7 +313,7 @@ class Call(webapp.RequestHandler):
 class Test(webapp.RequestHandler):
 	from random import random
 	try:
-		response = twiml_parser.parse_twiml("""<?xml version="1.0" encoding="UTF-8" ?><Response><Play>http://foo.com/cowbell.mp3</Play><Gather></Gather><Say>This it another child</Say><Gather><Say>Press 1</Say></Gather></Response>""")
+		response = twiml.parse_twiml("""<?xml version="1.0" encoding="UTF-8" ?><Response><Play>http://foo.com/cowbell.mp3</Play><Gather></Gather><Say>This it another child</Say><Gather><Say>Press 1</Say></Gather></Response>""")
 		print response
 	except Exception, e:
 		print e
