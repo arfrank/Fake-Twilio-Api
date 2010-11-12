@@ -1,7 +1,13 @@
 from google.appengine.ext import db
 from models import base
 from hashlib import sha256
-from randomimport random
+from random import random
+
+from models import transcriptions
+
+from google.appengine.api.labs import taskqueue
+
+
 import string
 """
 Sid	A 34 character string that uniquely identifies this resource.
@@ -23,3 +29,21 @@ class Recording(base.CommonModel):
 	@classmethod
 	def new_Sid(self):
 		return 'RE'+sha256(str(random())).hexdigest()
+		
+	def transcribe(self,callbackUrl = None):
+		Trans,Valid, TwilioCode, TwilioMsg = transcriptions.Transcription.new(
+			AccoundSid = self.AccountSid,
+			request = None,
+			Duratation = self.Duration,
+			RecordingSid = self.Sid,
+			Status = 'in-progress',
+			TranscribeText = 'Lorem Ipsum',
+			Price = self.Duration * (0.05)
+		)
+		Trans.put()
+		if callbackUrl is not None:
+			try:
+				taskqueue.Queue( 'StatusCallbacks' ).add( taskqueue.Task( url='/Callbacks/Transcription', params = { 'TranscriptionSid' : Trans.Sid } ) )
+			except Exception, e:
+				pass
+			

@@ -19,7 +19,10 @@ from google.appengine.ext.webapp import util
 from google.appengine.ext.webapp import template
 from google.appengine.api import urlfetch
 
+import pickle
+
 import os
+
 import urllib, urllib2, base64, hmac
 import logging
 
@@ -213,13 +216,10 @@ class FakeSms(webapp.RequestHandler):
 					
 						#logging.info(TwimlText)
 					
-						import pickle
-					
 						Twiml, Valid, TwilioCode,TwilioMsg  = twimls.Twiml.new(
 							request = self.request,
 							Url = Url,
 							AccountSid = self.data['Account'].Sid,
-							Text = TwimlText,
 							Twiml = pickle.dumps(self.data['twiml_object']),
 							Current = [],
 							SmsSid = Message.Sid
@@ -287,42 +287,67 @@ class Calls(webapp.RequestHandler):
 class TwimlHandler(webapp.RequestHandler):
 	@webapp_decorator.check_logged_in
 	def post(self,Sid):
-		import pickle
 		
 		Twiml = twimls.Twiml.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Sid = ',Sid).get()
 		if Twiml is not None:
+
 			if Twiml.CallSid is not None:
 				Original = calls.Call.all().filter('Sid = ',Twiml.CallSid).get()
 			elif Twiml.SmsSid is not None:
 				Origional = messages.Message.all().filter('Sid = ',Twiml.SmsSid).get()
+
 			I,C = 0,0 #index, child for lists later to store status
+
 			Twiml_obj = pickle.loads(Twiml.Twiml)
+
 			response = ''
+
 			newTwiml = None
+
 			if not Twiml.Initial:
+
 				I = Twiml.Current[0]
 			else:
+
 				Twiml.Initial = False
+
 			# process list items until need a response?
 			logging.info(Twiml_obj)
+
 			while I < len(Twiml_obj):
-				twiml_response, Break, newTwiml = twiml.process_verb(Twiml_obj[I], Twiml, Origional)
+				#get the response, whether or not to keep processing, and if the newTwiml document exists
+				twiml_response, Break, newTwiml = twiml.process_verb(Twiml_obj[I], Twiml, Origional, self.request.get('input',''))
+
 				response += str(twiml_response) + '\n'
+
 				if Break:
 					#Check to see if its the final break; hangup, reject
 					if Twiml_obj[I]['Type'] == 'Hangup' or Twiml_obj[I] == 'Reject':
+
 						I = len(Twiml_obj)
+
 					break
+
 				I+=1
+
 			if I == len(Twiml_obj):
+
 				response+='You have reached the end of that Twiml Document\n'
+
 			response_data = {'Text': response }
+
 			if newTwiml:
+
 				response_data['TwimlSid'] = newTwiml.Sid
+
 			Twiml.Current = [I]
+
 			Twiml.put()
+
 			self.response.out.write(simplejson.dumps(response_data))
+
 		else:
+
 			self.response.set_status(404)
 		
 class Call(webapp.RequestHandler):
