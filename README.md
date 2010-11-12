@@ -16,7 +16,7 @@ A semi-recent deployed version can be found at <a href="https://twilioapi.appspo
 - Lists Handler
 - TwiML processing (could be more robust, but currently works)
 
-3. What still needs to be done?
+3. What still needs to be done(may not be accurate - in fact will definitely be out of date)?
 -------------------------------
 * Finish rounding out all models (including validators/santizers for each model)
 	* Recordings
@@ -38,3 +38,13 @@ A semi-recent deployed version can be found at <a href="https://twilioapi.appspo
 4. Who am I?
 ------------
 Just someone who enjoys working with the Twilio API and wanted a different way to develop on it and one that didn't accidentally call people at 1am like I once did.
+
+5. License (for now)
+-----------
+Copyright (c) 2010 Aaron Frank
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
