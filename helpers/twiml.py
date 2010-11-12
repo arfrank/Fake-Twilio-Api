@@ -248,9 +248,13 @@ def process_sms(verb, Instance):
 	
 	if Action is not None:
 		pass
+		#make call to action with smssid and status, with correct method
 		#get the new twiml document
 		#parse the new twiml document
-
+		#if all that works, create new twiml document
+		#pass it back up
+		
+	Message.send()
 	if Message.StatusCallback is not None:
 		queued = Message.queueCallback()
 
