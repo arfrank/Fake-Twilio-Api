@@ -1,7 +1,9 @@
 from google.appengine.ext import db
 from models import base
 from hashlib import sha256
-import random
+
+from random import random, choice
+
 import string
 
 import logging
@@ -18,7 +20,7 @@ class Account(base.CommonModel):
 	
 	@classmethod
 	def new(cls, key_name, email, password):
-		Salt = ''.join(random.choice(string.digits) for x in range(32))
+		Salt = ''.join(choice(string.digits) for x in range(32))
 		Sid = 'AC'+sha256(email).hexdigest()
 		Password = sha256(Sid+password+Salt).hexdigest()
 		AuthToken = sha256(Sid+Password).hexdigest()

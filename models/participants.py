@@ -3,7 +3,7 @@ from google.appengine.ext import db
 from models import base
 from hashlib import sha256
 from helpers import parameters
-import random
+from random import random
 import string
 class Participant(base.CommonModel):
 	"""

@@ -1,7 +1,7 @@
 from google.appengine.ext import db
 from models import base
 from hashlib import sha256
-import random
+from randomimport random
 import string
 """
 Sid	A 34 character string that uniquely identifies this resource.

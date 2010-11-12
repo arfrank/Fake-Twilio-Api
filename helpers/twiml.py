@@ -193,8 +193,12 @@ def process_play(verb):
 def process_record(verb):
 	logging.info('process record')
 	#'Record':['action','method','timeout','finishOnKey','maxLength','transcribe','transcribeCallback','playBeep'],
-	response = ''
-	return (process_text(verb),False,False)
+	msg = ''
+	Action = verb['Attr']['action']	if 'Attr' in verb and 'action' in verb['Attr'] else None
+	Method = verb['Attr']['method'] if 'Attr' in verb and 'method' in verb['Attr'] else 'POST'
+	statusCallback = verb['Attr']['statusCallback'] if 'Attr' in verb and 'statusCallback' in verb['Attr'] else None
+
+	return (process_text(verb),True,False)
 
 def process_pause(verb):
 	logging.info('process pause')
@@ -318,9 +322,9 @@ def process_verb(verb,Twiml, ModelInstance):
 	elif verb['Type'] == 'Play': 
 		return process_play(verb)
 	elif verb['Type'] == 'Record': 
-		return process_record(verb)
+		return process_record(verb,Twiml,ModelInstance)
 	elif verb['Type'] == 'Gather':
-		return process_gather(verb)
+		return process_gather(verb,Twiml,ModelInstance)
 	elif verb['Type'] == 'Sms':
 		return process_sms(verb, Twiml, ModelInstance)
 	elif verb['Type'] == 'Dial':
@@ -374,5 +378,5 @@ def get_external_twiml(Account, Action, Method, Instance, Payload, Twiml):
 		TwimlText = str(Response.content).replace('\n','')
 		#parse the new twiml document
 		if 'Content-Length' in Response.headers and Response.headers['Content-Length'] > 0:
-			return parse_twiml(self.data['Response'].content, True) #returns Valid, Twiml_object, ErrorMessage
+			return parse_twiml(self.data['Response'].content, True if Instance.Sid[0:2 == 'SM' else False]) #returns Valid, Twiml_object, ErrorMessage
 	return False, False, 'Could not retrieve a valid TwiML document'

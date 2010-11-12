@@ -2,7 +2,7 @@
 from google.appengine.ext import db
 from models import base
 from hashlib import sha256
-import random
+from random import random
 import string
 class Conference(base.CommonModel):
 	"""
