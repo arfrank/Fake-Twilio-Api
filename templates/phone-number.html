@@ -1,6 +1,6 @@
 {% extends "../templates/base.html" %}
 {% block 'content' %}
-	<h1 id="account_information">Phone Number - {{ data.PhoneNumber.PhoneNumber }}</h1>
+	<h1 id="account_information">Phone Number {{ data.PhoneNumber.PhoneNumber }}</h1>
 	<div id="content">
 		<form action="/phone-numbers/{{data.PhoneNumber.Sid}}" method="post" accept-charset="utf-8">
 			{% if data.Error %}

@@ -13,7 +13,7 @@
 {% block 'content' %}
 	<h1 id="account_information">Inbound SMS Result</h1>
 	<div id="content">
-		<h2>Phone Number - {{data.PhoneNumber.PhoneNumber}}</h2>
+		<h2>Phone Number {{data.PhoneNumber.PhoneNumber}}</h2>
 		{% if data.Response %}
 			<div id="Response" class="twiml-info">
 				<h3>Sms Url</h3>

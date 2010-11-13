@@ -1,0 +1,15 @@
+{% extends "../templates/base.html" %}
+{% block 'content' %}
+	<h1 id="fake_twilio_api">Fake Twilio API Examples</h1>
+	<div id="content">
+	<h2>Messages</h2>
+	<p class="wrap">
+		curl {{data.Account.Sid}}:{{data.Account.AuthToken}}@localhost:8094/2010-04-01/Accounts/{{data.Account.Sid}}/SMS/Messages.json
+	</p>
+	<h2>Phone Numbers</h2>
+	<h3>Requisition a number with Area Code(301) and assign a Friendly Name</h3>
+	<p class="wrap">
+		curl -d "AreaCode=301&amp;FriendlyName=Phone Number Example" --user {{data.Account.Sid}}:{{data.Account.AuthToken}} localhost:8094/2010-04-01/Accounts/{{data.Account.Sid}}/IncomingPhoneNumbers.json
+	</p>
+	</div>
+{% endblock %}

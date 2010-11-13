@@ -469,6 +469,12 @@ class Test(webapp.RequestHandler):
 	except Exception, e:
 		print e
 
+class Examples(webapp.RequestHandler):
+	@webapp_decorator.check_logged_in
+	def get(self):
+		path = os.path.join(os.path.dirname(__file__), '../templates/examples.html')
+		self.response.out.write(template.render(path,{'data':self.data}))
+		
 class Logout(webapp.RequestHandler):
 	def get(self):
 		session = get_current_session()
@@ -481,6 +487,7 @@ def main():
 											('/login',Login),
 											('/logout',Logout),
 											('/account',Account),
+											('/examples',Examples),
 											('/calls', Calls),
 											('/calls/(.*)',Call),
 											('/phone-numbers',PhoneNumbers),
