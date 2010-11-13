@@ -460,5 +460,6 @@ def get_external_twiml(Account, Action, Method, Instance, Payload, Twiml):
 		#get the new twiml document
 		#parse the new twiml document
 		if 'Content-Length' in Response.headers and Response.headers['Content-Length'] > 0:
+			#return Valid, Twiml_object, ErrorMessage
 			return parse_twiml(Response.content, True if Instance.Sid[0:2] == 'SM' else False) #returns Valid, Twiml_object, ErrorMessage
 	return False, False, 'Could not retrieve a valid TwiML document'
