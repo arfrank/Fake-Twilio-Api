@@ -64,6 +64,27 @@ class Call(base.CommonModel):
 					CallerName = CallerName
 				)
 	"""
+	
+	def validate(self, request, arg_name,arg_value):
+		validators = {
+			'To' : parameters.valid_to_phone_number(arg_value if arg_value is not None else request.get('To',None),required=True),
+			'From' : parameters.valid_from_phone_number(arg_value if arg_value is not None else request.get('From',None),required=True)
+		}
+		if arg_name in validators:
+			return validators[arg_name]
+		else:
+			return True, 0, ''
+
+	def sanitize(self, request, arg_name, arg_value):
+		sanitizers = {
+			'To' : arg_value if (arg_value is not None or request is None) else request.get('To',None),
+			'From' : arg_value if (arg_value is not None or request is None) else request.get('From',None),
+		}
+		if arg_name in sanitizers:
+			return sanitizers[arg_name]
+		else:
+			return arg_value
+	
 	@classmethod
 	def new_Sid(self):
 		return 'CA'+sha256(str(random())).hexdigest()
