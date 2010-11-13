@@ -232,26 +232,8 @@ def process_record(verb, Twiml, ModelInstance, Input = ''):
 				NewDoc = False
 				if Action is not None:
 					#Whether or not twiml parsed, the twiml dictionary, and any error messages
-					Valid, Twiml_object, ErrorMessage = get_external_twiml(Account, Action, Method, MethodInstance, {'SmsSid' : Instance.Sid, 'SmsStatus' : Message.Status}, OTwiml)
-
-					if Valid:
-						NewDoc = True
-						#if all that works, create new twiml document
-						CallSid = Instance.Sid if Instance.Sid[0:2] == 'CA' else None
-						SmsSid = Instance.Sid if Instance.Sid[0:2] == 'SM' else None
-						Twiml, Valid, TwilioCode,TwilioMsg = twimls.Twiml.new(
-							AccountSid = Account.Sid,
-							Url = Action,
-							request = None,
-							Twiml = pickle.dumps(Twiml_object),
-							Current = [],
-							SmsSid = SmsSid,
-							CallSid = CallSid
-						)
-						Twiml.put()
-					else:
-						msg+='An error occurred parsing your action\'s Twiml document, will continue parsing original\n'+ErrorMessage+'\n'
-
+					Valid, Twiml, AddMessage = get_external_twiml(Account, Action, Method, MethodInstance, {'SmsSid' : Instance.Sid, 'SmsStatus' : Message.Status}, OTwiml)
+				msg+=AddMessage
 				if 'transcribe' in verb['Attr'] and verb['Attr']['transcribe'] == 'true':
 					transcribeCallback = verb['Attr']['transcribeCallback'] if 'Attr' in verb and 'transcribeCallback' in verb['Attr'] else None
 					Recording.transcribe(transcribeCallback)
@@ -260,9 +242,9 @@ def process_record(verb, Twiml, ModelInstance, Input = ''):
 					msg+='A new Twiml document was created, processing will continue on that document\n'
 					return msg, True, Twiml
 				else:
-					return msg,False,False
+					return msg, False, False
 			else:
-				return 'Recording failed',False,False
+				return 'Recording failed', False, False
 	else:
 		#need to inform the person of a recording happening
 		msg += 'Recording in progress.\n'
@@ -324,30 +306,14 @@ def process_sms(verb, OTwiml, Instance):
 		#Action = OTwiml.Url
 		pass
 	if Action is not None:
+		Valid, Twiml, AddMessage = get_external_twiml(Account, Action, Method, Instance,{'SmsSid' : Instance.Sid, 'SmsStatus' : Message.Status}, OTwiml)
+	
+	msg+=AddMessage
 
-		Valid, Twiml_object, ErrorMessage = get_external_twiml(Account, Action, Method, Instance,{'SmsSid' : Instance.Sid, 'SmsStatus' : Message.Status}, OTwiml)
-
-		if Valid:
-			NewDoc = True
-			#if all that works, create new twiml document
-			CallSid = Instance.Sid if Instance.Sid[0:2] == 'CA' else None
-			SmsSid = Instance.Sid if Instance.Sid[0:2] == 'SM' else None
-			Twiml, Valid, TwilioCode,TwilioMsg = twimls.Twiml.new(
-				AccountSid = Account.Sid,
-				Url = Action,
-				request = None,
-				Twiml = pickle.dumps(Twiml_object),
-				Current = [],
-				SmsSid = SmsSid,
-				CallSid = CallSid
-			)
-			Twiml.put()
-		else:
-			msg+='An error occurred parsing your action\'s Twiml document, will continue parsing original\n'+ErrorMessage+'\n'
 	Message.send()
 	if Message.StatusCallback is not None:
 		queued = Message.queueCallback()
-	if NewDoc:
+	if Valid:
 		msg+='A new Twiml document was created, processing will continue on that document'
 		return msg, True, Twiml
 	else:
@@ -357,29 +323,13 @@ def process_sms(verb, OTwiml, Instance):
 def process_hangup(verb):
 	return 'Call Hung Up'
 
-def process_redirect(verb,OTwiml, Instance):
+def process_redirect(verb, OTwiml, Instance):
 	msg = 'Redirecting to '+process_text(verb)
 	Account = accounts.Account.all().filter('Sid =',Instance.AccountSid).get()
 	NewDoc = False
-	Valid, Twiml_object, ErrorMessage = get_external_twiml(Account,process_text(verb),verb['Attr']['method'] if 'method' in verb['Attr'] else 'POST', Instance, {}, OTwiml)
+	Valid, Twiml, AddMessage = get_external_twiml(Account,process_text(verb),verb['Attr']['method'] if 'method' in verb['Attr'] else 'POST', Instance, {}, OTwiml)
+	msg+=AddMessage
 	if Valid:
-		NewDoc = True
-		#if all that works, create new twiml document
-		CallSid = Instance.Sid if Instance.Sid[0:2] == 'CA' else None
-		SmsSid = Instance.Sid if Instance.Sid[0:2] == 'SM' else None
-		Twiml, Valid, TwilioCode,TwilioMsg = twimls.Twiml.new(
-			AccountSid = Account.Sid,
-			request = None,
-			Twiml = pickle.dumps(Twiml_object),
-			Current = [],
-			SmsSid = SmsSid,
-			CallSid = CallSid
-		)
-		Twiml.put()		
-	else:
-		msg+='Unable to parse redirect URL, continuing in original Twiml Document\n'+ErrorMessage
-
-	if NewDoc:
 		msg+='A new Twiml document was created, processing will continue on that document'
 		return msg, True, Twiml
 	else:
@@ -443,8 +393,9 @@ ALLOWED_ATTRIBUTES = {
 'Pause':['length']
 }"""
 
-
+#Returns Whether or not it went well, The new Twiml model instance, and messsages
 def get_external_twiml(Account, Action, Method, Instance, Payload, Twiml):
+	msg = ''
 	#determine if its a relative or absolute URL
 	OriginalUrl = urlparse.urlparse(Twiml.Url)
 	NewUrl = urlparse.urlparse(Action)
@@ -461,5 +412,24 @@ def get_external_twiml(Account, Action, Method, Instance, Payload, Twiml):
 		#parse the new twiml document
 		if 'Content-Length' in Response.headers and Response.headers['Content-Length'] > 0:
 			#return Valid, Twiml_object, ErrorMessage
-			return parse_twiml(Response.content, True if Instance.Sid[0:2] == 'SM' else False) #returns Valid, Twiml_object, ErrorMessage
+			Valid, Twiml_object, ErrorMessage =  parse_twiml(Response.content, True if Instance.Sid[0:2] == 'SM' else False) #returns Valid, Twiml_object, ErrorMessage
+			Twiml = None
+			if Valid:
+				#if all that works, create new twiml document
+				CallSid = Instance.Sid if Instance.Sid[0:2] == 'CA' else None
+				SmsSid = Instance.Sid if Instance.Sid[0:2] == 'SM' else None
+				Twiml, Valid, TwilioCode,TwilioMsg = twimls.Twiml.new(
+					AccountSid = Account.Sid,
+					Url = Action,
+					request = None,
+					Twiml = pickle.dumps(Twiml_object),
+					Current = [],
+					SmsSid = SmsSid,
+					CallSid = CallSid
+				)
+				Twiml.put()
+			else:
+				msg+='An error occurred parsing your action\'s Twiml document, will continue parsing original\n'+ErrorMessage+'\n'
+			return Valid, Twiml, msg
+
 	return False, False, 'Could not retrieve a valid TwiML document'
