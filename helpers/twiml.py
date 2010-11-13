@@ -319,6 +319,14 @@ def process_sms(verb, OTwiml, Instance):
 	else:
 		return msg,False,False
 
+def process_dial(verb):
+	pass
+
+def process_number(verb):
+	pass
+
+def process_conference(verb):
+	pass
 
 def process_hangup(verb):
 	return 'Call Hung Up'
@@ -351,48 +359,32 @@ def process_text(verb):
 def process_verb(verb,Twiml, ModelInstance, Input):
 	logging.info(verb)
 	if verb['Type'] =='Say': 
-		return process_say(verb)
+		return process_say(verb) #done
 	elif verb['Type'] == 'Play': 
-		return process_play(verb)
+		return process_play(verb) #done
 	elif verb['Type'] == 'Record': 
-		return process_record(verb,Twiml,ModelInstance, Input)
+		return process_record(verb,Twiml,ModelInstance, Input) #done
 	elif verb['Type'] == 'Gather':
-		return process_gather(verb,Twiml,ModelInstance)
+		return process_gather(verb,Twiml,ModelInstance, Input)
 	elif verb['Type'] == 'Sms':
-		return process_sms(verb, Twiml, ModelInstance)
+		return process_sms(verb, Twiml, ModelInstance) #done
 	elif verb['Type'] == 'Dial':
-		return (process_dial(verb),True,False)	
+		return (process_dial(verb),True,False)
 	elif verb['Type'] == 'Number':
 		return (process_number(verb),True,False)
 	elif verb['Type'] == 'Conference':
 		return (process_conference(verb),True,False)
 	elif verb['Type'] == 'Hangup':
-		return (process_hangup(verb),True,False)
+		return (process_hangup(verb),True,False) #done
 	elif verb['Type'] == 'Redirect':
-		return (process_redirect(verb, Twiml, ModelInstance),True,False)
+		return (process_redirect(verb, Twiml, ModelInstance),True,False) #done
 	elif verb['Type'] == 'Reject':
-		return (process_reject(verb),True,False)
+		return (process_reject(verb),True,False) #done
 	elif verb['Type'] == 'Pause':
-		return process_pause(verb)
+		return process_pause(verb) #done
 	elif verb['Type'] == 'Text':
-		return (process_text(verb),False,False)
+		return (process_text(verb),False,False) #done
 			
-"""
-ALLOWED_ATTRIBUTES = {
-'Say':['voice','language','loop'],
-'Play':['loop'],
-'Gather':['action','method','timeout','finishOnKey','numDigits'],
-'Record':['action','method','timeout','finishOnKey','maxLength','transcribe','transcribeCallback','playBeep'],
-'Sms':['to','from','action','method','statusCallback'],
-'Dial':['action','method','timeout','hangupOnStar','timeLimit','callerId'],
-'Number':['sendDigits','url'],
-'Conference':['muted','beep','startConferenceOnEnter','endConferenceOnExit','waitUrl','waitMethod'],
-'Hangup':[],
-'Redirect':['method'],
-'Reject':['reason'],
-'Pause':['length']
-}"""
-
 #Returns Whether or not it went well, The new Twiml model instance, and messsages
 def get_external_twiml(Account, Action, Method, Instance, Payload, Twiml):
 	msg = ''

@@ -9,8 +9,16 @@
 			<li>SMS are sent according the attributes passed in</li>
 		</p>
 <script type="text/javascript" charset="utf-8">
+	function smooth_lines(new_lines, con, i){
+		lines = new_lines.split('\n');
+		console.log(lines[i]);
+		if(i < lines.length && lines[i]!= undefined){
+			con.html(con.html()+lines[i]+'\n');
+			setTimeout(function(){ smooth_lines(new_lines, con, i+1) },1000);
+		}
+	}
 	$TwimlSid = '{{data.Twiml.Sid}}';
-	$console = $('#console');
+	$con = $('#console');
 	function ajax_call (val) {
 		$.ajax({
 		  url: '/phone-numbers/twiml/'+$TwimlSid,
@@ -21,7 +29,7 @@
 			//called when complete
 		  },
 		  success: function(data, textStatus, xhr) {
-			$('#console').html($console.html()+data.Text);
+			smooth_lines(data.Text, $con, 0);
 			if(data.TwimlSid != undefined){
 				$TwimlSid = data.TwimlSid;
 				//Make a new fresh ajax call to the new twiml document and start a fresh from the top of it
