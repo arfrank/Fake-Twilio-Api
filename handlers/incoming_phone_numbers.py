@@ -22,15 +22,17 @@ from google.appengine.ext import db
 from random import randint
 
 from helpers import response, parameters, xml_helper, errors
+
 from handlers import base_handlers
-from models import phone_numbers
+
+from models import phone_numbers, incoming_phone_numbers
 
 from decorators import authorization
 
 class IncomingPhoneNumberInstance(base_handlers.InstanceHandler):
 	def __init__(self):
 		super(IncomingPhoneNumberInstance,self).__init__()
-		self.InstanceModel = phone_numbers.Phone_Number.all()
+		self.InstanceModel = incoming_phone_numbers.Incoming_Phone_Number.all()
 		self.AllowedMethods = ['GET','POST','PUT','DELETE']
 		self.InstanceModelName = 'IncomingPhoneNumber'
 		self.AllowedProperties = {
@@ -40,7 +42,7 @@ class IncomingPhoneNumberInstance(base_handlers.InstanceHandler):
 
 class IncomingPhoneNumberList(base_handlers.ListHandler):
 	def __init__(self):
-		self.InstanceModel = phone_numbers.Phone_Number.all()
+		self.InstanceModel = incoming_phone_numbers.Incoming_Phone_Number.all()
 		self.AllowedMethods = ['GET']
 		self.AllowedFilters = {
 			'GET':[['To','='],['From','=']]#,['DateSent','=']] #DateSent will require some additional work
@@ -61,7 +63,7 @@ class IncomingPhoneNumberList(base_handlers.ListHandler):
 				elif PhoneNumber is not None and (len( PhoneNumber ) == 12):
 					phone_number = PhoneNumber
 				METHOD_TYPES = ['GET','POST']
-				Phone_Number,Valid, TwilioCode,TwilioMsg = phone_numbers.Phone_Number.new(
+				Phone_Number, Valid, TwilioCode, TwilioMsg = incoming_phone_numbers.Incoming_Phone_Number.new(
 					request = self.request,
 					FriendlyName = self.request.get('FriendlyName',None),
 					AccountSid = ACCOUNT_SID,

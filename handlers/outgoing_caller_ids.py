@@ -22,7 +22,7 @@ from google.appengine.ext.webapp import util
 
 from handlers import base_handlers
 
-from models import phone_numbers
+from models import phone_numbers, outgoing_caller_ids
 
 from decorators import authorization
 
@@ -34,7 +34,7 @@ class OutgoingCallerIdInstance(base_handlers.InstanceHandler):
 			'POST':['FriendlyName'],
 			'PUT': ['FriendlyName']
 		}
-		self.InstanceModel = phone_numbers.Phone_Number.all()
+		self.InstanceModel = outgoing_caller_ids.Outgoing_Caller_Id.all()
 		
 class OutgoingCallerIdList(base_handlers.ListHandler):
 	def __init__(self):
@@ -46,7 +46,7 @@ class OutgoingCallerIdList(base_handlers.ListHandler):
 		self.ListName = 'OutgoingCallerIds'
 		self.InstanceModelName = 'OutgoingCallerId'
 		#Only for Put and Post
-		self.InstanceModel = phone_numbers.Phone_Number.all()
+		self.InstanceModel = outgoing_caller_ids.Outgoing_Caller_Id.all()
 	
 	@authorization.authorize_request
 	def post(self,API_VERSION,ACCOUNT_SID,*args):

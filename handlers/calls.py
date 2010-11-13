@@ -30,7 +30,7 @@ from handlers import base_handlers
 from helpers import parameters,response,errors, authorization, xml_helper
 
 from decorators import authorization
-from models import calls,phone_numbers
+from models import calls,phone_numbers, incoming_phone_numbers
 
 import urllib
 
@@ -99,7 +99,7 @@ class CallList(base_handlers.ListHandler):
 		"""
 		format = response.response_format(self.request.path.split('/')[-1])
 		if parameters.required(['From','To','Url'],self.request):
-			Phone_Number = phone_numbers.Phone_Number.all().filter('PhoneNumber = ',self.request.get('From')).filter('AccountSid =',ACCOUNT_SID).get()
+			Phone_Number = incoming_phone_numbers.Incoming_Phone_Number.all().filter('PhoneNumber = ',self.request.get('From')).filter('AccountSid =',ACCOUNT_SID).get()
 			if Phone_Number is not None:
 				Call = calls.Call.new(
 						From = self.request.get('From'),

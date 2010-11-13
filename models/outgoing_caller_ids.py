@@ -8,5 +8,5 @@ from hashlib import sha256
 
 from helpers import parameters
 
-class Phone_Number(phone_numbers.Phone_Number):
+class OutGoing_Caller_Id(phone_numbers.Phone_Number):
 	pass
