@@ -12,7 +12,7 @@
 	function smooth_lines(new_lines, con, i){
 		lines = new_lines.split('\n');
 		console.log(lines[i]);
-		if(i < lines.length && lines[i]!= undefined){
+		if(i < lines.length && lines[i]!= undefined && lines[i] != ''){
 			con.html(con.html()+lines[i]+'\n');
 			setTimeout(function(){ smooth_lines(new_lines, con, i+1) },1000);
 		}
