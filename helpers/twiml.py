@@ -47,7 +47,7 @@ import pickle
 import urlparse
 
 ALLOWED_VOICE_ELEMENTS = {
-'Say':['voice','language','loop'],
+'Say' : ['voice','language','loop'],
 'Play':['loop'],
 'Gather':['action','method','timeout','finishOnKey','numDigits'],
 'Record':['action','method','timeout','finishOnKey','maxLength','transcribe','transcribeCallback','playBeep'],
@@ -160,20 +160,25 @@ def retrieve_attr(node, Type, sms = False):
 
 def walk_tree(nodes, parentType, sms = False):
 	twiml = []
+	count = 0
 	for node in nodes:
 		if node.nodeType == node.ELEMENT_NODE:
 			#If its an element, makes 
 			logging.info(parentType)
+			logging.info(node.nodeName.encode('ascii'))
+			logging.info(sms)
 			if ( ( parentType == 'Response' and ( ( node.nodeName.encode('ascii') in ALLOWED_SMS_ELEMENTS and sms == True) or (node.nodeName.encode('ascii') in ALLOWED_VOICE_ELEMENTS and sms == False) ) ) or ( parentType in ALLOWED_SUBELEMENTS ) ):
 				if parentType == 'Response' or  node.nodeName.encode('ascii') in ALLOWED_SUBELEMENTS[parentType]:
 					twiml.append( { 'Type' : node.nodeName.encode( 'ascii' ), 'Attr' : retrieve_attr(node, node.nodeName.encode('ascii'), sms),'Children': walk_tree(node.childNodes, node.nodeName.encode('ascii'), sms) } )
 				else:
 					raise TwiMLSyntaxError(0, 0, 'Invalid TwiML nested element in '+parentType+'. Not allowed to nest '+node.nodeName.encode('ascii'))					
 			else:
-				raise TwiMLSyntaxError(0, 0, 'Invalid TwiML in '+parentType+'. Problem with '+node.nodeName.encode('ascii')+' element')
+				raise TwiMLSyntaxError(0, 0, 'Invalid TwiML in '+parentType+'. Problem with '+node.nodeName.encode('ascii')+' element: '+str(count))
 		elif node.nodeType == node.TEXT_NODE and parentType != 'Response':
 			if node.nodeValue.encode('ascii') != '\n':
 				twiml.append( { 'Type' : 'Text', 'Data': node.nodeValue.encode('ascii') })
+		count +=1
+		
 	return twiml
 
 
