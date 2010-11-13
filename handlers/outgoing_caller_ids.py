@@ -26,15 +26,61 @@ from models import phone_numbers
 
 from decorators import authorization
 
-class OutgoingCallerId(base_handlers.InstanceHandler):
+class OutgoingCallerIdInstance(base_handlers.InstanceHandler):
 	def __init__(self):
-		super(OutgoingCalleId,self).__init__()
+		super(OutgoingCallerId,self).__init__()
 		self.AllowedMethods = ['GET','PUT','POST','DELETE']
+		self.AllowedProperties = {
+			'POST':['FriendlyName'],
+			'PUT': ['FriendlyName']
+		}
 		self.InstanceModel = phone_numbers.Phone_Number.all()
 		
+class OutgoingCallerIdList(base_handlers.ListHandler):
+	def __init__(self):
+		super(OutgoingCallerId,self).__init__()
+		self.AllowedMethods = ['GET','POST']
+		self.AllowedFilters = {
+			'GET':[['PhoneNumber','='],['FriendlyName','=']]
+		}
+		self.ListName = 'OutgoingCallerIds'
+		self.InstanceModelName = 'OutgoingCallerId'
+		#Only for Put and Post
+		self.InstanceModel = phone_numbers.Phone_Number.all()
+	
+	@authorization.authorize_request
+	def post(self,API_VERSION,ACCOUNT_SID,*args):
+		"""
+		Adds a new CallerID to your account. After making this request, Twilio will return to you a validation code and Twilio will dial the phone number given to perform validation. The code returned must be entered via the phone before the CallerID will be added to your account. The following parameters are accepted:
+
+		Required Parameters
+
+		Parameter	Description
+		PhoneNumber	The phone number to verify. Should be formatted with a '+' and country code e.g., +16175551212 (E.164 format). Twilio will also accept unformatted US numbers e.g., (415) 555-1212, 415-555-1212.
+		Optional Parameters
+
+		Parameter	Description
+		FriendlyName	A human readable description for the new caller ID with maximum length 64 characters. Defaults to a nicely formatted version of the number.
+		CallDelay	The number of seconds, between 0 and 60, to delay before initiating the validation call. Defaults to 0.
+		This will create a new CallerID validation request within Twilio, which initiates a call to the phone number provided and listens for a validation code. The validation request is represented in the response by the following properties:
+
+		Response Properties
+
+		Property	Description
+		AccountSid	The unique id of the Account to which the Validation Request belongs.
+		PhoneNumber	The incoming phone number being validated, formatted with a '+' and country code e.g., +16175551212 (E.164 format).
+		FriendlyName	The friendly name you provided, if any.
+		ValidationCode	The 6 digit validation code that must be entered via the phone to validate this phone number for Caller ID.
+		"""
+
+		pass
 
 def main():
-	application = webapp.WSGIApplication([('/(.*)/Accounts/(.*)/OutgoingCallerIds/(.*)', OutgoingCallerId)],
+	application = webapp.WSGIApplication([
+											('/(.*)/Accounts/(.*)/OutgoingCallerIds/(.*)', OutgoingCallerId),
+											('/(.*)/Accounts/(.*)/OutgoingCallerIds.*', OutgoingCallerId),
+											
+										],
 										 debug=True)
 	util.run_wsgi_app(application)
 

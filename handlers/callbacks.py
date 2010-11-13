@@ -49,11 +49,16 @@ class SMSCallback(webapp.RequestHandler):
 class CallCallback(webapp.RequestHandler):
 	def post(self):
 		pass
+		
+class TranscribeCallback(webapp.RequestHandler):
+	def post(self):
+		pass
 
 def main():
     application = webapp.WSGIApplication([
 											('/Callbacks/SMS', SMSCallback),
 											('/Callbacks/Call', CallCallback)
+											('/Callbacks/Transcribe', TranscribeCallback)
 										],
                                          debug=True)
     util.run_wsgi_app(application)
