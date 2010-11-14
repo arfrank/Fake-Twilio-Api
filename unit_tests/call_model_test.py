@@ -3,6 +3,7 @@ import logging
 from google.appengine.ext import db
 import models
 
+
 class MessagesModel(unittest.TestCase):
 	def setUp(self):
 		#create account
@@ -48,4 +49,3 @@ class MessagesModel(unittest.TestCase):
 
 	def test_Message_creation_callback_failure(self):
 		Message, Valid, TwilioCode, TwilioMsg = models.messages.Message.new(To =  self.FakeToNumber, From = self.PhoneNumber.PhoneNumber, Body = 'Good body text', Direction = 'outbound-api', request = None, AccountSid = self.Account.Sid)
-		
