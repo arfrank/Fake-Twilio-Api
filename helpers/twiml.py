@@ -1,38 +1,3 @@
-#ADAPTED FROM https://github.com/minddog/twilio-emulator
-"""
-Twilio Emulator
-----------------------------------------------------
-A python based twilio call flow emulator that allows 
-user interaction for dialogs and timeouts.  It is 
-designed to speed up development of your application 
-without dialing a phone and saving telephony costs.
-
-Copyright(c) 2009 Adam Ballai <aballai@gmail.com>
-----------------------------------------------------
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-1. Redistributions of source code must retain the above copyright
-   notice, this list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright
-   notice, this list of conditions and the following disclaimer in the
-   documentation and/or other materials provided with the distribution.
-3. The name of the author may not be used to endorse or promote products
-   derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
-IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
-INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
 from xml.parsers.expat import ExpatError
 
 from xml.dom import minidom
@@ -71,6 +36,42 @@ ALLOWED_SUBELEMENTS = {
 	'Dial':['Number', 'Conference']
 }
 """
+#ADAPTED FROM https://github.com/minddog/twilio-emulator
+
+Twilio Emulator
+
+----------------------------------------------------
+A python based twilio call flow emulator that allows 
+user interaction for dialogs and timeouts.  It is 
+designed to speed up development of your application 
+without dialing a phone and saving telephony costs.
+
+Copyright(c) 2009 Adam Ballai <aballai@gmail.com>
+----------------------------------------------------
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. The name of the author may not be used to endorse or promote products
+   derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 def emulate(url, method = 'GET', digits = None):
 	logger.notice('[Emulation Start] %s' % url)
 	response = getResponse(
@@ -116,6 +117,7 @@ def emulate(url, method = 'GET', digits = None):
 				logger.error(e)
 				exit_handler()
 """
+
 class TwiMLSyntaxError(Exception):
 	def __init__(self, lineno, col, doc):
 		self.lineno = lineno
@@ -181,11 +183,9 @@ def walk_tree(nodes, parentType, sms = False):
 		
 	return twiml
 
-
-
+# ABOVE PROCESSING TwiML
 #############################################################################################
-
-
+# BELOW PROCESSING CONSOLE FUNCTIONS
 
 def process_say(verb):
 	logging.info('process say')
@@ -202,7 +202,6 @@ def process_record(verb, Twiml, ModelInstance, Input = ''):
 	try:
 		dur = int(Input)
 	except Exception, e:
-		error = True
 		dur = ''
 	if dur != '':
 		if dur == 0:
@@ -222,7 +221,7 @@ def process_record(verb, Twiml, ModelInstance, Input = ''):
 											CallSid = ModelInstance.Sid,
 											Duration = dur
 										)
-			logging.info('process record')
+			#logging.info('process record')
 			msg += 'A recording has been made\n'
 			if Valid:
 				Action = verb['Attr']['action']	if 'Attr' in verb and 'action' in verb['Attr'] else None
@@ -231,8 +230,10 @@ def process_record(verb, Twiml, ModelInstance, Input = ''):
 					Action = Twiml.Url
 				NewDoc = False
 				if Action is not None:
+					Account = accounts.Account.all().filter('Sid =',ModelInstance.AccountSid).get()
+					
 					#Whether or not twiml parsed, the twiml dictionary, and any error messages
-					Valid, Twiml, AddMessage = get_external_twiml(Account, Action, Method, MethodInstance, {'SmsSid' : Instance.Sid, 'SmsStatus' : Message.Status}, OTwiml)
+					Valid, Twiml, AddMessage = get_external_twiml(Account, Action, Method, ModelInstance, {'SmsSid' : Instance.Sid, 'SmsStatus' : Message.Status}, OTwiml)
 				msg+=AddMessage
 				if 'transcribe' in verb['Attr'] and verb['Attr']['transcribe'] == 'true':
 					transcribeCallback = verb['Attr']['transcribeCallback'] if 'Attr' in verb and 'transcribeCallback' in verb['Attr'] else None
@@ -252,10 +253,8 @@ def process_record(verb, Twiml, ModelInstance, Input = ''):
 		msg += 'Max Length: '+verb['Attr']['maxLength']+'\n' if 'maxLength' in verb['Attr'] else ''
 		msg += 'Timeout: '+verb['Attr']['timeout']+'\n' if 'timeout' in verb['Attr'] else ''
 		msg += 'Will Transcribe\n' if 'transcribe' in verb['Attr'] and verb['Attr']['transcribe'] == 'true' else ''
-		msg += 'Please enter how long you would like the recording to be'
-		if error:
-			msg += 'We had trouble understanding your response, please try again'
-		return (msg,True,False)
+		msg += 'Please enter how long you would like the recording to be (0 means no recording will be made - equivalent to timing out)'
+		return msg, True, False
 
 def process_pause(verb):
 	logging.info('process pause')
@@ -264,16 +263,86 @@ def process_pause(verb):
 	else:
 		return ('Pausing for 1 second',False,False)
 
-def process_gather(verb, Twiml, ModelInstance):
-	if len(verb['Children']):
-		all_resp = ''
-		for node in verb['Children']:
-			response, Break, newTwiml = process_verb(node, Twiml, ModelInstance, '')
-			all_resp += response + '\n'
-			if Break:
-				break
-		return all_resp,True,newTwiml
+# What does a gather do?
+# It waits for a response
+# HOW DO WE TIMEOUT?????????? right now if you respond with T it's a timeout
+# Currently a blank response will cause it to reparse the document
+# 'Gather':['action','method','timeout','finishOnKey','numDigits'],
 
+def process_gather(verb, Twiml, ModelInstance, Input):
+	msg = ''
+	logging.info(Input)
+	ALLOWED_RESPONSE = ['0','1','2','3','4','5','6','7','8','9','#','*']
+	#BAD SYSTEM but it should work
+	#Parse the input! - should just check that characters in 0-9 # *, dont know what my mind was thinking originally
+	dur = Input
+	for el in Input:
+		if el not in ALLOWED_RESPONSE:
+			dur = ''
+			break
+	#override for timeout
+	if Input == 'T':
+		dur = 'T'
+	#If no input, just replay that we are waiting for input
+	if dur == '':
+		numDigits = '\nmaximum Number of digits: '+verb['Attr']['numDigits']+'\n' if 'numDigits' in verb['Attr'] else '\n'
+		if len(verb['Children']):
+			msg = 'Gathering your response, nested elements to follow'+numDigits
+			for node in verb['Children']:
+				response, Break, newTwiml = process_verb(node, Twiml, ModelInstance, '')
+				msg += response + '\n'
+				if Break:
+					break
+			return msg, True, False
+		else:
+			msg = 'Gathering your response'+numDigits
+			return msg, True, False
+	else:
+		#check the length of the response, also strip extra
+		badLength = False
+		try:
+			#try and get max num of digits
+			length = int(verb['Attr']['numDigits'])
+		except ValueError, e:
+			#no a number in the twiml, 
+			logging.info('unable to process length, not a number')
+			msg = 'Unable to parse numDigits in Twiml, not a number\nMoving onto the next verb\n'
+			badLength = True
+			Break = False
+		except KeyError, e:
+			logging.info('unable to process length, not in Attr')
+		else:
+			if len(str(dur)) > length:
+				badLength = True
+				Break = True
+				msg = 'You have entered too many digits. Please try again\n'
+
+		#we have a response that we like
+		if badLength:
+			return msg, Break, False
+		else:
+			if dur == 'T':
+				return 'No gather was recorded (timeout), will continue on parsing', False, False
+			else:
+				Account = accounts.Account.all().filter('Sid =', ModelInstance.AccountSid).get()
+				#'Gather':['action','method','timeout','finishOnKey','numDigits'],
+				Action = verb['Attr']['action']	if 'Attr' in verb and 'action' in verb['Attr'] else None
+				Method = verb['Attr']['method'] if 'Attr' in verb and 'method' in verb['Attr'] else 'POST'
+				NewDoc = False
+				msg+='Gather was successful.'
+				if Action is None:
+					Action = Twiml.Url
+				if Action is not None:
+					#Whether or not twiml parsed, the twiml dictionary, and any error messages
+					logging.info('Getting new twiml doc')
+					Valid, Twiml, AddMessage = get_external_twiml(Account, Action, Method, ModelInstance,{'Digits':str(Input)} , Twiml)
+				msg += AddMessage
+				if NewDoc:
+					msg+='A new Twiml document was created, processing will continue on that document\n'
+					return msg, True, Twiml
+				else:
+					msg += '\nUnable to grab new twiml document, will continue parsing'
+					return msg, False, False
 
 #the verb node of the tiwml document, the twiml document, and the instance that caused the creation of the twiml document
 def process_sms(verb, OTwiml, Instance):
@@ -363,9 +432,9 @@ def process_verb(verb,Twiml, ModelInstance, Input):
 	elif verb['Type'] == 'Play': 
 		return process_play(verb) #done
 	elif verb['Type'] == 'Record': 
-		return process_record(verb,Twiml,ModelInstance, Input) #done
+		return process_record(verb, Twiml, ModelInstance, Input) #done
 	elif verb['Type'] == 'Gather':
-		return process_gather(verb,Twiml,ModelInstance, Input)
+		return process_gather(verb, Twiml, ModelInstance, Input)
 	elif verb['Type'] == 'Sms':
 		return process_sms(verb, Twiml, ModelInstance) #done
 	elif verb['Type'] == 'Dial':

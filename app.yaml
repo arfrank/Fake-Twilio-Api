@@ -5,6 +5,9 @@ api_version: 1
 
 handlers:
     
+- url: /examples/twiml
+  static_dir: examples/twiml
+
 #Handler for all callbacks as of right now.
 - url: /Callbacks/.*
   script: handlers/callbacks.py

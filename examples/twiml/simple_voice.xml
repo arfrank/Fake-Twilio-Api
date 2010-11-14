@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Response>
+<Say>This is the first one</Say>
+<Pause></Pause>
+<Say>This is the second one</Say>
+<Play>http://www.cnn.com</Play>
+<Hangup></Hangup>
+</Response>

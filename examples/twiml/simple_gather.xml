@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Response>
+<Gather>
+<Pause></Pause>
+<Say>This is the second one</Say>
+<Play>http://www.cnn.com</Play>
+</Gather>
+<Hangup></Hangup>
+</Response>

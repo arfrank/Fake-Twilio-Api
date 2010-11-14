@@ -98,7 +98,9 @@ class PhoneNumber(webapp.RequestHandler):
 	@webapp_decorator.check_logged_in
 	def get(self,Sid):
 		Sid = urllib.unquote(Sid)
+
 		self.data['PhoneNumber'] = incoming_phone_numbers.Incoming_Phone_Number.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Sid = ',Sid).get()
+
 		if self.data['PhoneNumber'] is not None:
 			path = os.path.join(os.path.dirname(__file__), '../templates/phone-number.html')
 			self.response.out.write(template.render(path,{'data':self.data}))
@@ -107,8 +109,6 @@ class PhoneNumber(webapp.RequestHandler):
 
 	@webapp_decorator.check_logged_in
 	def post(self,Sid):
-		from handlers import incoming_phone_numbers
-
 		Sid = urllib.unquote(Sid)
 
 		self.data['PhoneNumber'] = incoming_phone_numbers.Incoming_Phone_Number.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Sid = ',Sid).get()
