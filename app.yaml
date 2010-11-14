@@ -8,6 +8,9 @@ handlers:
 - url: /examples/twiml
   static_dir: examples/twiml
 
+- url: /test.*
+  script: gaeunit.py
+
 #Handler for all callbacks as of right now.
 - url: /Callbacks/.*
   script: handlers/callbacks.py

@@ -67,10 +67,10 @@ class Call(base.CommonModel):
 				)
 	"""
 	
-	def validate(self, request, arg_name,arg_value):
+	def validate(self, request, arg_name,arg_value, **kwargs):
 		validators = {
 			'To' : parameters.valid_to_phone_number(arg_value if arg_value is not None else request.get('To',None),required=True),
-			'From' : parameters.valid_from_phone_number(arg_value if arg_value is not None else request.get('From',None),required=True)
+			'From' : parameters.valid_from_phone_number(arg_value if arg_value is not None else request.get('From',None),required=True, self = self)
 		}
 		if arg_name in validators:
 			return validators[arg_name]
@@ -125,7 +125,7 @@ class Call(base.CommonModel):
 		self.Status = 'complete'
 		self.EndTime = datetime.datetime.now()
 		self.Duration = (self.EndTime - self.StartTime).seconds
-		if self.Direction == 'outgoing-api' or self.Direction == 'outbound-dial':
+		if self.Direction == 'outbound-api' or self.Direction == 'outbound-dial':
 			#should be dependent on country code, but will need more work
 			self.Price = self.Duration * (0.02)
 		elif self.Direction == 'inbound':

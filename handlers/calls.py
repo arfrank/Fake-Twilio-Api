@@ -107,7 +107,7 @@ class CallList(base_handlers.ListHandler):
 						PhoneNumberSid = Phone_Number.Sid, 
 						AccountSid = ACCOUNT_SID,
 						Status = 'queued',
-						Direction = 'outgoing-api'
+						Direction = 'outbound-api'
 					)
 				Call.put()
 				response_data = Call.get_dict()

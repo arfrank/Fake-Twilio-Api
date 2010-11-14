@@ -32,7 +32,7 @@ class Conference(base.CommonModel):
 		else:
 			return arg_value
 
-	def validate(self, request, arg_name, arg_value):
+	def validate(self, request, arg_name,arg_value, **kwargs):
 		validators = {
 			'FriendlyName' : parameters.friendlyname_length(request.get('FriendlyName',''))
 		}

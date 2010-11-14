@@ -3,8 +3,6 @@ from models import base
 from random import random
 from hashlib import sha256
 
-from helpers import parameters
-
 """
 Sid	A 34 character string that uniquely idetifies this resource.
 DateCreated	The date that this resource was created, given as GMT RFC 2822 format.
@@ -48,20 +46,34 @@ class Phone_Number(base.CommonModel):
 		return 'PN'+sha256(str(random())).hexdigest()
 
 	#Validators for all properties that are user-editable.
-	def validate(self, request, arg_name, arg_value):
+	def validate(self, request, arg_name, arg_value, **kwargs):
+		from helpers import parameters
+		
 		validators = {
-			'FriendlyName' : parameters.friendlyname_length(request.get('FriendlyName','')),
-			'VoiceCallerIdLookup' : parameters.allowed_boolean(request.get('VoiceCallerIdLookup',None)),
-			'VoiceUrl' : parameters.standard_urls(request,'VoiceUrl'),
-			'VoiceMethod' : parameters.phone_allowed_methods(arg_value,['GET','POST']),
-			'VoiceFallbackUrl' : parameters.fallback_urls(request, 'VoiceFallbackUrl', 'VoiceUrl', self, 'Voice'),
-			'VoiceFallbackMethod' : parameters.phone_allowed_methods(arg_value,['GET','POST']),
-			'StatusCallback' : parameters.standard_urls(request,'StatusCallback'),
-			'StatusCallbackMethod' : parameters.phone_allowed_methods(arg_value,['GET','POST']),
-			'SmsUrl' : parameters.standard_urls(request,'SmsUrl'),
-			'SmsMethod' : parameters.sms_allowed_methods(arg_value,['GET','POST']),
-			'SmsFallbackUrl' : parameters.fallback_urls(request, 'SmsFallbackUrl', 'SmsUrl', self, 'SMS'),
-			'SmsFallbackMethod' : parameters.sms_allowed_methods(arg_value,['GET','POST'])
+			'FriendlyName' : parameters.friendlyname_length(parameters.arg_or_request(arg_value, request, arg_name)),
+
+			'VoiceCallerIdLookup' : parameters.allowed_boolean(parameters.arg_or_request(arg_value, request, arg_name,False)),
+
+			'VoiceUrl' : parameters.standard_urls(parameters.arg_or_request(arg_value, request, arg_name)),
+
+			'VoiceMethod' : parameters.phone_allowed_methods(parameters.arg_or_request(arg_value, request, arg_name,'POST'),['GET','POST']),
+
+			'VoiceFallbackUrl' : parameters.fallback_urls(parameters.arg_or_request(arg_value, request, arg_name,''), parameters.arg_or_request(arg_value, request, 'VoiceUrl',''), 'VoiceUrl', self, 'Voice'),
+
+			'VoiceFallbackMethod' : parameters.phone_allowed_methods(parameters.arg_or_request(arg_value, request, arg_name,'POST'),['GET','POST']),
+
+			'StatusCallback' : parameters.standard_urls(parameters.arg_or_request(arg_value, request, arg_name)),
+
+			'StatusCallbackMethod' : parameters.phone_allowed_methods(parameters.arg_or_request(arg_value, request, arg_name,'POST'),['GET','POST']),
+
+			'SmsUrl' : parameters.standard_urls(parameters.arg_or_request(arg_value, request, arg_name)),
+
+			'SmsMethod' : parameters.sms_allowed_methods(parameters.arg_or_request(arg_value, request, arg_name,'POST'),['GET','POST']),
+
+			'SmsFallbackUrl' : parameters.fallback_urls(parameters.arg_or_request(arg_value, request, arg_name,''), parameters.arg_or_request(arg_value, request, 'SmsUrl',''), 'SmsUrl', self, 'SMS'),
+
+			'SmsFallbackMethod' : parameters.sms_allowed_methods(parameters.arg_or_request(arg_value, request, arg_name,'POST'),['GET','POST'])
+
 		}
 
 		if arg_name in validators:
@@ -70,19 +82,21 @@ class Phone_Number(base.CommonModel):
 			return True, 0, ''
 	#to be used, but for now will leave as is, minus standardizing how I do method saving
 	def sanitize(self, request, arg_name, arg_value):
+		from helpers import parameters
+		
 		sanitizers = {
-			'FriendlyName' : request.get('FriendlyName',None),
-			'VoiceCallerIdLookup' : request.get('VoiceCallerIdLookup',None),
-			'VoiceUrl' : request.get('VoiceUrl',None),
-			'VoiceMethod' : request.get('VoiceMethod','POST').upper(),
-			'VoiceFallbackUrl' : request.get('VoiceFallbackUrl',None),
-			'VoiceFallbackMethod' : request.get('VoiceFallbackMethod','POST').upper(),
-			'StatusCallback' : request.get('StatusCallback',None),
-			'StatusCallbackMethod' : request.get('StatusCallbackMethod','POST').upper(),
-			'SmsUrl' : request.get('SmsUrl',None),
-			'SmsMethod' : request.get('SmsMethod','POST').upper(),
-			'SmsFallbackUrl' : request.get('SmsFallbackUrl',None),
-			'SmsFallbackMethod' : request.get('SmsFallbackMethod','POST').upper()
+			'FriendlyName' : parameters.arg_or_request(arg_value, request, arg_name),
+			'VoiceCallerIdLookup' : parameters.arg_or_request(arg_value, request, arg_name,False),
+			'VoiceUrl' : parameters.arg_or_request(arg_value, request, arg_name),
+			'VoiceMethod' : parameters.arg_or_request(arg_value, request, arg_name,'POST').upper(),
+			'VoiceFallbackUrl' : parameters.arg_or_request(arg_value, request, arg_name),
+			'VoiceFallbackMethod' : parameters.arg_or_request(arg_value, request, arg_name,'POST').upper(),
+			'StatusCallback' : parameters.arg_or_request(arg_value, request, arg_name),
+			'StatusCallbackMethod' : parameters.arg_or_request(arg_value, request, arg_name,'POST').upper(),
+			'SmsUrl' :parameters.arg_or_request(arg_value, request, arg_name),
+			'SmsMethod' : parameters.arg_or_request(arg_value, request, arg_name,'POST').upper(),
+			'SmsFallbackUrl' : parameters.arg_or_request(arg_value, request, arg_name),
+			'SmsFallbackMethod' : parameters.arg_or_request(arg_value, request, arg_name,'POST').upper()
 		}
 		if arg_name in sanitizers:
 			return sanitizers[arg_name]

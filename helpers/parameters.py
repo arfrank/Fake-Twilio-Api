@@ -1,10 +1,37 @@
 import urlparse
 import re
 import logging
+
+from models import incoming_phone_numbers, outgoing_caller_ids
+def arg_or_request(arg_value,request, arg_name, default = None):
+	return arg_value if ((arg_value is not None and arg_value != '') or request is None) else request.get(arg_name, default)
 #Parses the given phone number, and then makes sure that it can be put into a valid twilio format.
 #Returns the twilio formatted phone_number and whether or not it went well, Valid or not
+
 def parse_phone_number(phone_number):
-	return phone_number, True
+	#TAKEN FROM DIVE INTO PYTHON
+	# http://diveintopython.org/
+	phonePattern = re.compile(r'''
+	    (\+1)*          # optional +1 capture don't match beginning of string, number can start anywhere
+	    (\d{3})     # area code is 3 digits (e.g. '800')
+	    \D*         # optional separator is any number of non-digits
+	    (\d{3})     # trunk is 3 digits (e.g. '555')
+	    \D*         # optional separator
+	    (\d{4})     # rest of number is 4 digits (e.g. '1212')
+	    \D*         # optional separator
+	    (\d*)       # extension is optional and can be any number of digits
+	    $           # end of string
+	    ''', re.VERBOSE)
+	try:
+		phoneGroups = phonePattern.search(phone_number).groups()
+		pn = '+1'+str(phoneGroups[1])+str(phoneGroups[2])+str(phoneGroups[3])
+	except Exception, e:
+		logging.info('having trouble parsing phone number: '+phone_number)
+		return phone_number, False
+	else:
+		logging.info('successful parsing phone number: '+phone_number)
+		return pn, True
+	#should actually parse # and check for truth
 
 def valid_to_phone_number(phone_number,required = False):
 	if phone_number is None:
@@ -14,23 +41,51 @@ def valid_to_phone_number(phone_number,required = False):
 		if Valid:
 			return True, 0, ''
 		else:
-			return False, 21401, 'http://www.twilio.com/docs/errors/21401'
+			if required:
+				return False, 21401, 'http://www.twilio.com/docs/errors/21401'
+			else:
+				return True, 21401, 'http://www.twilio.com/docs/errors/21401'
 
-def valid_from_phone_number(phone_number,required = False):
-	if phone_number is None and required:
+def valid_from_phone_number(phone_number, required = False, Direction = 'outbound-api', SMS = False):
+	if (phone_number is None or phone_number == '') and required:
 		return False, 21603, 'http://www.twilio.com/docs/errors/21603'
 	else:
+#		logging.info('from phone number not none, and required')
 		number_parsed, Valid = parse_phone_number(phone_number)
 		if Valid:
-			return True, 0, ''
+			logging.info('valid from phone number, but is it outgoing')
+			logging.info('Direction is: '+str(Direction))
+			if Direction in ['outbound-call','outbound-api','outbound-reply']:
+				logging.info('outgoing direction from phone number')
+				#need to check numbers
+				#first check if we have that phone number as an incoming phone number
+				PN = incoming_phone_numbers.Incoming_Phone_Number.all().filter('PhoneNumber =',number_parsed).get()
+				if PN is None:
+					logging.info('no incoming phone number')
+					if SMS:
+						return False, 14108, 'http://www.twilio.com/docs/error/14108'
+					else:
+						PN = outgoing_caller_ids.Outgoing_Caller_Ids.all().filter('PhoneNumber =',number_parsed).get()
+						if PN is None:
+							return False, 14108, 'http://www.twilio.com/docs/error/14108'
+						else:
+							return True, 0, ''
+				else:
+					return True, 0, ''
+			else:
+				return True, 0, ''
 		else:
+			logging.info('not  a valid from phone number')
 			return False, 21401, 'http://www.twilio.com/docs/errors/21401'
 
 def valid_body(body, required=True):
-	if body is None and required:
+	if (body is None or body == '') and required:
 		return False, 14103, 'http://www.twilio.com/docs/errors/14103'
 	else:
-		return True, 0, ''
+		if body is not None and  len(body) > 160:
+			return False, 21605, 'http://www.twilio.com/docs/errors/21605'
+		else:
+			return True, 0, ''
 
 def required(required_list,request):
 	Valid = True
@@ -77,9 +132,9 @@ def check_url(URL):
 		return True
 
 # Checks for the normal callback url to make sure they are valid
-def standard_urls(request,StandardArgName):
-	if request.get(StandardArgName, None) is not None:
-	  	if check_url(request.get(StandardArgName,None)):
+def standard_urls(ArgValue):
+	if ArgValue is not None:
+	  	if check_url(ArgValue):
 			return True, 0, ''
 		else:
 			return False, 21502, 'http://www.twilio.com/docs/errors/21502'
@@ -89,12 +144,12 @@ def standard_urls(request,StandardArgName):
 #What should this pass back?
 #Passed,Twilio error code, Twilio error message
 #Checks fallback urls for validity, normal callback being created (cant have fallback without normal callback)
-def fallback_urls(request, FallbackArgName, StandardArgName, Instance, method = 'Voice'):
+def fallback_urls(fallback_arg_value, standard_arg_value, StandardArgName, Instance, method = 'Voice'):
 	# need to check that its a valid url,
-	if request.get(FallbackArgName,None) is not None and request.get(FallbackArgName,None) != '':
-		if check_url(request.get(FallbackArgName,None)):
+	if fallback_arg_value != '': #if not passed, then returns ''
+		if check_url(fallback_arg_value):
 			# need to check that a standard url is passed, or set already
-			if (request.get(StandardArgName,None) is not None and request.get(StandardArgName,None) != '') or (getattr(Instance,StandardArgName) is not None and getattr(Instance,StandardArgName) != ''):
+			if standard_arg_value != '' or getattr(Instance,StandardArgName) is not None:
 				return True, 0, ''
 			else:
 				#Hack to check for sms fallback missing or not.

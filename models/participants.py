@@ -38,7 +38,7 @@ class Participant(base.CommonModel):
 		else:
 			return arg_value
 
-	def validate(self, request, arg_name, arg_value):
+	def validate(self, request, arg_name,arg_value, **kwargs):
 		validators = {
 			'Muted' : parameters.allow_boolean(arg_value if arg_value is not None else request.get( arg_name, None) )
 		}

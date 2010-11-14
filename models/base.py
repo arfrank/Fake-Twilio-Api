@@ -28,7 +28,7 @@ class CommonModel(db.Model):
 		arg_length = len(kwargs)
 		for keyword in kwargs:
 			if hasattr(cls,keyword) and kwargs[keyword] is not None:
-				Valid, TwilioCode, TwilioMsg = cls().validate( request, keyword, kwargs[keyword] )
+				Valid, TwilioCode, TwilioMsg = cls().validate( request, keyword, kwargs[keyword], **kwargs)
 				if not Valid:
 					break
 				else:
@@ -49,5 +49,5 @@ class CommonModel(db.Model):
 	def sanitize(self, request, arg_name, arg_value):
 		return arg_value
 
-	def validate(self, request, arg_name, arg_value):
+	def validate(self, request, arg_name,arg_value, **kwargs):
 		return True, 0, ''

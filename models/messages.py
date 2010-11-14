@@ -44,12 +44,12 @@ class Message(base.CommonModel):
 		self.Price = 0.00
 		self.put()
 		
-	def validate(self, request, arg_name,arg_value):
+	def validate(self, request, arg_name,arg_value, **kwargs):
 		validators = {
-			'To' : parameters.valid_to_phone_number(arg_value if arg_value is not None else request.get('To',None),required=True),
-			'From' : parameters.valid_from_phone_number(arg_value if arg_value is not None else request.get('From',None),required=True),
-			'Body' : parameters.valid_body(arg_value if arg_value is not None else request.get('Body',None),required=True),
-			'StatusCallback' : arg_value if (arg_value is not None or request is None) else parameters.standard_urls(request,'StatusCallback')
+			'To' : parameters.valid_to_phone_number(parameters.arg_or_request(arg_value, request, arg_name),required=True),
+			'From' : parameters.valid_from_phone_number(parameters.arg_or_request(arg_value, request, arg_name),required=True, Direction = kwargs['Direction'] if 'Direction' in kwargs else None, SMS = True),
+			'Body' : parameters.valid_body(parameters.arg_or_request(arg_value, request, arg_name), required=True),
+			'StatusCallback' : parameters.standard_urls(parameters.arg_or_request(arg_value, request, arg_name))
 		}
 		if arg_name in validators:
 			return validators[arg_name]
