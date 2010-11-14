@@ -30,7 +30,7 @@ from django.utils import simplejson
 
 from libraries.gaesessions import get_current_session
 
-from models import accounts, incoming_phone_numbers, phone_numbers, calls, messages, twimls
+from models import accounts, incoming_phone_numbers, outgoing_caller_ids, phone_numbers, calls, messages, twimls
 
 from helpers import application, authorization, request, twiml
 
@@ -469,9 +469,25 @@ class Test(webapp.RequestHandler):
 	except Exception, e:
 		print e
 
+class CallerIds(webapp.RequestHandler):
+	@webapp_decorator.check_logged_in
+	def get(self):
+		self.data['PhoneNumbers'] = outgoing_caller_ids.Outgoing_Caller_Id.all().filter('AccountSid =',self.data['Account'].Sid)
+		path = os.path.join(os.path.dirname(__file__), '../templates/caller-ids.html')
+		self.response.out.write(template.render(path,{'data':self.data}))
+
+
+class CallerId(webapp.RequestHandler):
+	@webapp_decorator.check_logged_in
+	def get(self, Sid):
+		path = os.path.join(os.path.dirname(__file__), '../templates/caller-id.html')
+		self.response.out.write(template.render(path,{'data':self.data}))
+
 class Examples(webapp.RequestHandler):
 	@webapp_decorator.check_logged_in
 	def get(self):
+		import urlparse
+		self.data['host'] = urlparse.urlparse(self.request.url).netloc
 		path = os.path.join(os.path.dirname(__file__), '../templates/examples.html')
 		self.response.out.write(template.render(path,{'data':self.data}))
 		
@@ -490,6 +506,8 @@ def main():
 											('/examples',Examples),
 											('/calls', Calls),
 											('/calls/(.*)',Call),
+											('/caller-ids',CallerIds),
+											('/caller-ids/(.*)',CallerId),
 											('/phone-numbers',PhoneNumbers),
 											('/phone-numbers/sms/(.*)',FakeSms),
 											('/phone-numbers/voice/(.*)',FakeVoice),

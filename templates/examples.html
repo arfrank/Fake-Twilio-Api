@@ -3,13 +3,34 @@
 	<h1 id="fake_twilio_api">Fake Twilio API Examples</h1>
 	<div id="content">
 	<h2>Messages</h2>
-	<p class="wrap">
-		curl {{data.Account.Sid}}:{{data.Account.AuthToken}}@localhost:8094/2010-04-01/Accounts/{{data.Account.Sid}}/SMS/Messages.json
-	</p>
-	<h2>Phone Numbers</h2>
-	<h3>Requisition a number with Area Code(301) and assign a Friendly Name</h3>
-	<p class="wrap">
-		curl -d "AreaCode=301&amp;FriendlyName=Phone Number Example" --user {{data.Account.Sid}}:{{data.Account.AuthToken}} localhost:8094/2010-04-01/Accounts/{{data.Account.Sid}}/IncomingPhoneNumbers.json
-	</p>
+	<li>Retrieve a list of messages sent
+		<p class="wrap">
+			curl {{data.Account.Sid}}:{{data.Account.AuthToken}}@{{data.host}}/2010-04-01/Accounts/{{data.Account.Sid}}/SMS/Messages.json
+		</p>
+	</li>
+	<h2>Incoming Phone Numbers</h2>
+	<li>Requisition an incoming number with Area Code(301) and assign a Friendly Name
+		<p class="wrap">
+			curl -d "AreaCode=301&amp;FriendlyName=Phone Number Example" --user {{data.Account.Sid}}:{{data.Account.AuthToken}} {{data.host}}/2010-04-01/Accounts/{{data.Account.Sid}}/IncomingPhoneNumbers.json
+		</p>
+	</li>
+	<li>Get an incoming phone numbers information
+		<p class="wrap">
+			curl --user {{data.Account.Sid}}:{{data.Account.AuthToken}} {{data.host}}/2010-04-01/Accounts/{{data.Account.Sid}}/IncomingPhoneNumbers/*SID*
+		</p>
+		
+	</li>
+	<li>Update an incoming phone number's VoiceUrl and FriendlyName
+		<p class="wrap">
+			curl -d "FriendlyName=TVSHOW&amp;VoiceUrl=http://www.cnn.com" --user {{data.Account.Sid}}:{{data.Account.AuthToken}} {{data.host}}/2010-04-01/Accounts/{{data.Account.Sid}}/IncomingPhoneNumbers/*SID*
+		</p>
+	</li>
+	<li>Delete an incoming phone number
+		<p class="wrap">
+			curl -v -X DELETE --user {{data.Account.Sid}}:{{data.Account.AuthToken}} {{data.host}}/2010-04-01/Accounts/{{data.Account.Sid}}/IncomingPhoneNumbers/*SID*
+			
+		</p>
+	</li>
 	</div>
+	
 {% endblock %}
