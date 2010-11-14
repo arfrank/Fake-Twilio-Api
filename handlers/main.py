@@ -476,7 +476,6 @@ class CallerIds(webapp.RequestHandler):
 		path = os.path.join(os.path.dirname(__file__), '../templates/caller-ids.html')
 		self.response.out.write(template.render(path,{'data':self.data}))
 
-
 class CallerId(webapp.RequestHandler):
 	@webapp_decorator.check_logged_in
 	def get(self, Sid):
@@ -490,12 +489,13 @@ class Examples(webapp.RequestHandler):
 		self.data['host'] = urlparse.urlparse(self.request.url).netloc
 		path = os.path.join(os.path.dirname(__file__), '../templates/examples.html')
 		self.response.out.write(template.render(path,{'data':self.data}))
-		
+
 class Logout(webapp.RequestHandler):
 	def get(self):
 		session = get_current_session()
 		session.terminate()
 		self.redirect('/')
+
 def main():
 	application = webapp.WSGIApplication([
 											('/', MainHandler),

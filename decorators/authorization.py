@@ -34,6 +34,7 @@ def authorize_request(method):
 		if Account is not None:
 			authstring = base64.encodestring(Account.Sid+':'+Account.AuthToken).replace('\n','')
 			if 'Authorization' in self.request.headers: #hasattr(self.request.headers,'Authorization'):
+				logging.info("basic http authorization")
 				request_auth = self.request.headers['Authorization'].split(' ')
 				if request_auth[0] == 'Basic' and request_auth[1]==authstring:
 					if Account.Status == 'active':
@@ -45,10 +46,14 @@ def authorize_request(method):
 					logging.info('Basic Authorization Failed')
 					self.response.out.write(response.format_response(errors.rest_error_response(401,"Unauthorized",format),format))
 			else:
+				#CURRENTLY DOES NOT ENTIRELY WORK, the url is sometimes sanitized when done in a browser
+				logging.info("url authorization")
 				#should return a tuple of components, but documentation doesnt explain how to retrieve username & password
 				parsed_url = urlparse.urlparse(self.request.url)
+				#logging.info(parsed_url)
 				netloc = parsed_url.netloc
 				net_split = netloc.rsplit('@',1)
+				#logging.info(net_split)
 				if len(net_split) == 2:
 					auth_info = net_split[0]
 					auth_split = auth_info.split(':')

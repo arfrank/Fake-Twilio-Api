@@ -164,9 +164,9 @@ def walk_tree(nodes, parentType, sms = False):
 	for node in nodes:
 		if node.nodeType == node.ELEMENT_NODE:
 			#If its an element, makes 
-			logging.info(parentType)
-			logging.info(node.nodeName.encode('ascii'))
-			logging.info(sms)
+			#logging.info(parentType)
+			#logging.info(node.nodeName.encode('ascii'))
+			#logging.info(sms)
 			if ( ( parentType == 'Response' and ( ( node.nodeName.encode('ascii') in ALLOWED_SMS_ELEMENTS and sms == True) or (node.nodeName.encode('ascii') in ALLOWED_VOICE_ELEMENTS and sms == False) ) ) or ( parentType in ALLOWED_SUBELEMENTS ) ):
 				if parentType == 'Response' or  node.nodeName.encode('ascii') in ALLOWED_SUBELEMENTS[parentType]:
 					twiml.append( { 'Type' : node.nodeName.encode( 'ascii' ), 'Attr' : retrieve_attr(node, node.nodeName.encode('ascii'), sms),'Children': walk_tree(node.childNodes, node.nodeName.encode('ascii'), sms) } )

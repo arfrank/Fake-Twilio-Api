@@ -1,15 +1,19 @@
+import logging
+
 def to_html(dictionary):
+	#logging.info(dictionary)
 	string = ""
 	for item in dictionary:
+		#logging.info(item)
 		if item.lower() == 'twilioresponse' and type(dictionary[item]) is dict:
-			string += "<html><head><title>200</title></head>"+"<body class=\"twilioresponse\">"+to_html(dictionary[item])+"</body></html>"
-		if type(dictionary[item]) is dict:
-			string += "<div class=\""+item.lower()+"\">"+to_html(dictionary[item])+"</div>"
+			string += "<html><head><title>200</title><style>body{ margin:15px; } div{padding:10px;}</style></head>"+"<body class=\"twilioresponse\">"+to_html(dictionary[item])+"</body></html>"
+		elif type(dictionary[item]) is dict:
+			string += "<div class=\""+item.lower()+"\">"+item.lower()+': '+to_html(dictionary[item])+"</div>"
 		elif type(dictionary[item]) is list:
 			for element in dictionary[item]:
-				string+="<dic class=\""+item+"\">"+to_html(element)+"</div>"
+				string+="<dic class=\""+item+"\">"+item+': '+to_html(element)+"</div>"
 		else:
-			string +='<div class="'+item.lower()+'">'+str(dictionary[item])+"</div>"
+			string +='<div class="'+item.lower()+'">'+item.lower()+': '+str(dictionary[item])+"</div>"
 	return string
 
 

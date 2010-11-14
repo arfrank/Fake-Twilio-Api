@@ -2,10 +2,10 @@
 {% block 'content' %}
 	<h1 id="fake_twilio_api">Fake Twilio API Examples</h1>
 	<div id="content">
-	<h2>Messages</h2>
-	<li>Retrieve a list of messages sent
+	<h2>SMS Messages</h2>
+	<li>Retrieve a list of messages (json response)
 		<p class="wrap">
-			curl {{data.Account.Sid}}:{{data.Account.AuthToken}}@{{data.host}}/2010-04-01/Accounts/{{data.Account.Sid}}/SMS/Messages.json
+			curl --user {{data.Account.Sid}}:{{data.Account.AuthToken}} {{data.host}}/2010-04-01/Accounts/{{data.Account.Sid}}/SMS/Messages.json
 		</p>
 	</li>
 	<h2>Incoming Phone Numbers</h2>
@@ -16,19 +16,26 @@
 	</li>
 	<li>Get an incoming phone numbers information
 		<p class="wrap">
-			curl --user {{data.Account.Sid}}:{{data.Account.AuthToken}} {{data.host}}/2010-04-01/Accounts/{{data.Account.Sid}}/IncomingPhoneNumbers/*SID*
+			curl --user {{data.Account.Sid}}:{{data.Account.AuthToken}} {{data.host}}/2010-04-01/Accounts/{{data.Account.Sid}}/IncomingPhoneNumbers/<b>*SID*</b>
 		</p>
 		
 	</li>
 	<li>Update an incoming phone number's VoiceUrl and FriendlyName
 		<p class="wrap">
-			curl -d "FriendlyName=TVSHOW&amp;VoiceUrl=http://www.cnn.com" --user {{data.Account.Sid}}:{{data.Account.AuthToken}} {{data.host}}/2010-04-01/Accounts/{{data.Account.Sid}}/IncomingPhoneNumbers/*SID*
+			curl -d "FriendlyName=TVSHOW&amp;VoiceUrl=http://www.cnn.com" --user {{data.Account.Sid}}:{{data.Account.AuthToken}} {{data.host}}/2010-04-01/Accounts/{{data.Account.Sid}}/IncomingPhoneNumbers/<b>*SID*</b>
 		</p>
 	</li>
 	<li>Delete an incoming phone number
 		<p class="wrap">
-			curl -v -X DELETE --user {{data.Account.Sid}}:{{data.Account.AuthToken}} {{data.host}}/2010-04-01/Accounts/{{data.Account.Sid}}/IncomingPhoneNumbers/*SID*
+			curl -X DELETE --user {{data.Account.Sid}}:{{data.Account.AuthToken}} {{data.host}}/2010-04-01/Accounts/{{data.Account.Sid}}/IncomingPhoneNumbers/<b>*SID*</b>
 			
+		</p>
+	</li>
+	<h2>Accounts</h2>
+	<li>
+		Update an accounts information (friendly name)
+		<p class="wrap">
+			curl -d "FriendlyName=NewFriendlyName" --user {{data.Account.Sid}}:{{data.Account.AuthToken}} {{data.host}}/2010-04-01/Accounts/{{data.Account.Sid}}
 		</p>
 	</li>
 	</div>
