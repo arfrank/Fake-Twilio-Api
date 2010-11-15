@@ -26,10 +26,10 @@ def parse_phone_number(phone_number):
 		phoneGroups = phonePattern.search(phone_number).groups()
 		pn = '+1'+str(phoneGroups[1])+str(phoneGroups[2])+str(phoneGroups[3])
 	except Exception, e:
-		logging.info('having trouble parsing phone number: '+phone_number)
+		#logging.info('having trouble parsing phone number: '+phone_number)
 		return phone_number, False
 	else:
-		logging.info('successful parsing phone number: '+phone_number)
+		#logging.info('successful parsing phone number: '+phone_number)
 		return pn, True
 	#should actually parse # and check for truth
 
@@ -47,26 +47,29 @@ def valid_to_phone_number(phone_number,required = False):
 				return True, 21401, 'http://www.twilio.com/docs/errors/21401'
 
 def valid_from_phone_number(phone_number, required = False, Direction = 'outbound-api', SMS = False):
+	#logging.info('Trying to send a from message for SMS:' +str(SMS)+' '+str(phone_number))
 	if (phone_number is None or phone_number == '') and required:
 		return False, 21603, 'http://www.twilio.com/docs/errors/21603'
 	else:
 #		logging.info('from phone number not none, and required')
 		number_parsed, Valid = parse_phone_number(phone_number)
 		if Valid:
-			logging.info('valid from phone number, but is it outgoing')
-			logging.info('Direction is: '+str(Direction))
+			#logging.info('valid from phone number, but is it outgoing')
+			#logging.info('Direction is: '+str(Direction))
 			if Direction in ['outbound-call','outbound-api','outbound-reply']:
-				logging.info('outgoing direction from phone number')
+				#logging.info('outgoing direction from phone number')
 				#need to check numbers
 				#first check if we have that phone number as an incoming phone number
 				PN = incoming_phone_numbers.Incoming_Phone_Number.all().filter('PhoneNumber =',number_parsed).get()
 				if PN is None:
-					logging.info('no incoming phone number')
+					#logging.info('Not an incoming phone number to be used')
+					#logging.info('no incoming phone number')
 					if SMS:
 						return False, 14108, 'http://www.twilio.com/docs/error/14108'
 					else:
-						PN = outgoing_caller_ids.Outgoing_Caller_Ids.all().filter('PhoneNumber =',number_parsed).get()
+						PN = outgoing_caller_ids.Outgoing_Caller_Id.all().filter('PhoneNumber =',number_parsed).get()
 						if PN is None:
+							#logging.info('could not find an outgoing number')
 							return False, 14108, 'http://www.twilio.com/docs/error/14108'
 						else:
 							return True, 0, ''
@@ -75,7 +78,7 @@ def valid_from_phone_number(phone_number, required = False, Direction = 'outboun
 			else:
 				return True, 0, ''
 		else:
-			logging.info('not  a valid from phone number')
+			#logging.info('not  a valid from phone number')
 			return False, 21401, 'http://www.twilio.com/docs/errors/21401'
 
 def valid_body(body, required=True):

@@ -70,7 +70,7 @@ class Call(base.CommonModel):
 	def validate(self, request, arg_name,arg_value, **kwargs):
 		validators = {
 			'To' : parameters.valid_to_phone_number(arg_value if arg_value is not None else request.get('To',None),required=True),
-			'From' : parameters.valid_from_phone_number(arg_value if arg_value is not None else request.get('From',None),required=True, self = self)
+			'From' : parameters.valid_from_phone_number(arg_value if arg_value is not None else request.get('From',None),required=True, Direction = kwargs['Direction'] if 'Direction' in kwargs else None)
 		}
 		if arg_name in validators:
 			return validators[arg_name]
@@ -96,7 +96,7 @@ class Call(base.CommonModel):
 		self.Status = 'ringing'
 		self.put()
 
-	def connect(self, Instance, request):
+	def connect(self):#, Instance, request):
 		self.Status = 'in-progress'
 		self.StartTime = datetime.datetime.now()
 		#get url of twiml

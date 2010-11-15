@@ -46,7 +46,7 @@ class Account(base.CommonModel):
 			
 	def validate(self, request, arg_name,arg_value, **kwargs):
 		validators = {
-			'FriendlyName' : parameters.friendlyname_length(request.get('FriendlyName',''))
+			'FriendlyName' : parameters.friendlyname_length(parameters.arg_or_request(arg_value, request, arg_name,''))
 		}
 		if arg_name in validators:
 			
