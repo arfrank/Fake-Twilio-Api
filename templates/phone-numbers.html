@@ -8,5 +8,15 @@
 				<a href="/phone-numbers/{{phone_number.Sid}}">{{phone_number.FriendlyName}} {{phone_number.PhoneNumber}}</a>
 			</div>
 		{%endfor%}
+		<div id="" class="">
+			<h2>Provision a Phone Number</h2>
+			<form action="/phone-numbers" method="post" accept-charset="utf-8">
+				<p class="small">
+					There is very little error checking done on this number right now to allow you to have a specific number
+				</p>
+				<label for="phone_number">Phone Number: </label> <input name="phone_number" value="+1"><br>
+				<input type="submit" name="Submit" value="Provision">
+			</form>
+		</div>
 	</div>
 {% endblock %}

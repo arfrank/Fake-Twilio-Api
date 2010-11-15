@@ -32,7 +32,7 @@ from libraries.gaesessions import get_current_session
 
 from models import accounts, incoming_phone_numbers, outgoing_caller_ids, phone_numbers, calls, messages, twimls
 
-from helpers import application, authorization, request, twiml
+from helpers import application, authorization, request, twiml, parameters
 
 from decorators import webapp_decorator
 
@@ -90,10 +90,19 @@ class Account(webapp.RequestHandler):
 class PhoneNumbers(webapp.RequestHandler):
 	@webapp_decorator.check_logged_in
 	def get(self):
+
 		self.data['PhoneNumbers'] = incoming_phone_numbers.Incoming_Phone_Number.all().filter('AccountSid =',self.data['Account'].Sid)
 		path = os.path.join(os.path.dirname(__file__), '../templates/phone-numbers.html')
 		self.response.out.write(template.render(path,{'data':self.data}))
 
+	@webapp_decorator.check_logged_in
+	def post(self):
+		phone_number, Valid = parameters.parse_phone_number(self.request.get('phone_number'))
+		if Valid and len(phone_number) == 12:
+			PhoneNumber, Valid, TwilioCode, TwilioMsg = incoming_phone_numbers.Incoming_Phone_Number.new(PhoneNumber = phone_number, AccountSid = self.data['Account'].Sid, request = self.request)
+			if Valid:
+				PhoneNumber.put()
+		PhoneNumbers.get(self)
 class PhoneNumber(webapp.RequestHandler):
 	@webapp_decorator.check_logged_in
 	def get(self,Sid):
@@ -120,7 +129,7 @@ class PhoneNumber(webapp.RequestHandler):
 			Valid = True
 			for arg in self.request.arguments():
 				if Valid:
-					Valid,TwilioCode,TwilioMsg =  self.data['PhoneNumber'].validate(self.request, arg, self.request.get( arg ,None),{})
+					Valid,TwilioCode,TwilioMsg =  self.data['PhoneNumber'].validate(self.request, arg, self.request.get( arg ,None))
 				setattr(self.data['PhoneNumber'], arg, self.data['PhoneNumber'].sanitize( self.request, arg, self.request.get( arg ,None)))
 					
 			if Valid:
