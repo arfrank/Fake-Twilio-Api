@@ -14,16 +14,16 @@ class Parameters_Parse_Phone_Numbers(unittest.TestCase):
 		self.BadPhoneNumber = '+1999a123a23abc32'
 		
 	def test_Parse_Phone_Number_Valid(self):
-		phone_number, Valid = parameters.parse_phone_number(self.ValidPhoneNumber)
+		phone_number, Valid, phoneGroups = parameters.parse_phone_number(self.ValidPhoneNumber)
 		self.assertTrue(Valid)
 		self.assertEqual(phone_number, self.ValidPhoneNumber)
 		
 	def test_Parse_Phone_Number_Failure_TooShort(self):
-		phone_number, Valid = parameters.parse_phone_number(self.TooShortPhoneNumber)
+		phone_number, Valid, phoneGroups = parameters.parse_phone_number(self.TooShortPhoneNumber)
 		self.assertFalse(Valid)
 
 	def test_Parse_Phone_Number_Failure_BadNumber(self):
-		phone_number, Valid = parameters.parse_phone_number(self.BadPhoneNumber)
+		phone_number, Valid, phoneGroups = parameters.parse_phone_number(self.BadPhoneNumber)
 		self.assertFalse(Valid)
 
 class Parameters_Valid_To_Phone_Number(unittest.TestCase):
@@ -34,6 +34,7 @@ class Parameters_Valid_To_Phone_Number(unittest.TestCase):
 		self.PhoneNumber,Valid,TwilioCode, TwilioMsg = models.incoming_phone_numbers.Incoming_Phone_Number.new(PhoneNumber = '+13015559999', request = None, AccountSid = self.Account.Sid)
 		self.OutgoingCallerId, Valid, TwilioCode, TwilioMsg = models.outgoing_caller_ids.Outgoing_Caller_Id.new(PhoneNumber = '+13015556666', request = None, AccountSid = self.Account.Sid)
 		db.put([self.PhoneNumber, self.OutgoingCallerId])
+		self.InvalidNumbers = ['9006069292','9768675309','4118675309','9118675309','2025551212']
 		
 	def test_To_Phone_Number_Success(self):
 		Valid, TwilioCode, TwilioMsg = parameters.valid_to_phone_number(self.PhoneNumber.PhoneNumber)
@@ -46,6 +47,13 @@ class Parameters_Valid_To_Phone_Number(unittest.TestCase):
 	def test_To_Phone_Number_Failure_Bad_Number(self):
 		Valid, TwilioCode, TwilioMsg = parameters.valid_to_phone_number(self.BadPhoneNumber,True)
 		self.assertFalse(Valid)
+	
+	def test_To_Phone_Number_Failure_SMS_InvalidNumbers(self):
+		for number in self.InvalidNumbers:
+			Valid, TwilioCode, TwilioMsg = parameters.valid_to_phone_number(number,True, SMS = True)
+			self.assertFalse(Valid)
+			self.assertEqual(14101, TwilioCode)
+		
 		
 class Parameters_Valid_From_Phone_Number(unittest.TestCase):
 	def setUp(self):

@@ -69,7 +69,7 @@ class Call(base.CommonModel):
 	
 	def validate(self, request, arg_name,arg_value, **kwargs):
 		validators = {
-			'To' : parameters.valid_to_phone_number(arg_value if arg_value is not None else request.get('To',None),required=True),
+			'To' : parameters.valid_to_phone_number(arg_value if arg_value is not None else request.get('To',None),required=True, SMS = False),
 			'From' : parameters.valid_from_phone_number(arg_value if arg_value is not None else request.get('From',None),required=True, Direction = kwargs['Direction'] if 'Direction' in kwargs else None)
 		}
 		if arg_name in validators:

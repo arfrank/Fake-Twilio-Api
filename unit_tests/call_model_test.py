@@ -49,9 +49,9 @@ class CallModel(unittest.TestCase):
 	def test_Call_Failure_Invalid_To_Number(self):
 		Call, Valid, TwilioCode, TwilioMsg = models.calls.Call.new(To = '+12123123', From = self.PhoneNumber.PhoneNumber, request = None, Direction = 'outbound-api', AccountSid = self.Account.Sid)
 		self.assertFalse(Valid)
-		self.assertEqual(TwilioCode, 21401)
+		self.assertEqual(TwilioCode, 13224)
 		
 	def test_Call_Failure_Invalid_From_Number(self):
 		Call, Valid, TwilioCode, TwilioMsg = models.calls.Call.new(To = self.FakeToNumber, From = '+14105553232', request = None, Direction = 'outbound-api', AccountSid = self.Account.Sid)
 		self.assertFalse(Valid)
-		self.assertEqual(TwilioCode, 14108)
+		self.assertEqual(TwilioCode, 21212)

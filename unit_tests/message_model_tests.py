@@ -32,7 +32,7 @@ class MessagesModel(unittest.TestCase):
 	def test_Message_creation_to_failure(self):
 		Message, Valid, TwilioCode, TwilioMsg = models.messages.Message.new(To = 'adsfadsfasdf', From = self.PhoneNumber.PhoneNumber, Body = 'Good body text', Direction = 'outbound-api', request = None, AccountSid = self.Account.Sid)
 		self.assertFalse(Valid)
-		self.assertEqual(TwilioCode, 21401)
+		self.assertEqual(TwilioCode, 14101)
 
 	def test_Message_creation_from_failure_mistyped_number(self):
 		Message, Valid, TwilioCode, TwilioMsg = models.messages.Message.new(To = self.FakeToNumber, From = '+240555a123', Body = 'Good body text', Direction = 'outbound-api', request = None, AccountSid = self.Account.Sid)

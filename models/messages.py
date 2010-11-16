@@ -46,7 +46,7 @@ class Message(base.CommonModel):
 		
 	def validate(self, request, arg_name,arg_value, **kwargs):
 		validators = {
-			'To' : parameters.valid_to_phone_number(parameters.arg_or_request(arg_value, request, arg_name),required=True),
+			'To' : parameters.valid_to_phone_number(parameters.arg_or_request(arg_value, request, arg_name),required=True, SMS = True),
 			'From' : parameters.valid_from_phone_number(parameters.arg_or_request(arg_value, request, arg_name),required=True, Direction = kwargs['Direction'] if 'Direction' in kwargs else None, SMS = True),
 			'Body' : parameters.valid_body(parameters.arg_or_request(arg_value, request, arg_name), required=True),
 			'StatusCallback' : parameters.standard_urls(parameters.arg_or_request(arg_value, request, arg_name))

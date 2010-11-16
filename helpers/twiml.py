@@ -188,7 +188,7 @@ def walk_tree(nodes, parentType, sms = False):
 # BELOW PROCESSING CONSOLE FUNCTIONS
 
 def process_say(verb):
-	logging.info('process say')
+	#logging.info('process say')
 	return (process_text(verb),False,False)
 
 def process_play(verb):
@@ -257,7 +257,7 @@ def process_record(verb, Twiml, ModelInstance, Input = ''):
 		return msg, True, False
 
 def process_pause(verb):
-	logging.info('process pause')
+	#logging.info('process pause')
 	if 'Attr' in verb and 'length' in verb['Attr']:
 		return ('Pausing for '+verb['Attr']['length']+' seconds',False,False)
 	else:
@@ -271,7 +271,7 @@ def process_pause(verb):
 
 def process_gather(verb, Twiml, ModelInstance, Input):
 	msg = ''
-	logging.info(Input)
+	#logging.info(Input)
 	ALLOWED_RESPONSE = ['0','1','2','3','4','5','6','7','8','9','#','*']
 	#BAD SYSTEM but it should work
 	#Parse the input! - should just check that characters in 0-9 # *, dont know what my mind was thinking originally
@@ -305,12 +305,13 @@ def process_gather(verb, Twiml, ModelInstance, Input):
 			length = int(verb['Attr']['numDigits'])
 		except ValueError, e:
 			#no a number in the twiml, 
-			logging.info('unable to process length, not a number')
+			#logging.info('unable to process length, not a number')
 			msg = 'Unable to parse numDigits in Twiml, not a number\nMoving onto the next verb\n'
 			badLength = True
 			Break = False
 		except KeyError, e:
-			logging.info('unable to process length, not in Attr')
+			#logging.info('unable to process length, not in Attr')
+			pass
 		else:
 			if len(str(dur)) > length:
 				badLength = True
@@ -334,7 +335,7 @@ def process_gather(verb, Twiml, ModelInstance, Input):
 					Action = Twiml.Url
 				if Action is not None:
 					#Whether or not twiml parsed, the twiml dictionary, and any error messages
-					logging.info('Getting new twiml doc')
+					#logging.info('Getting new twiml doc')
 					Valid, Twiml, AddMessage = get_external_twiml(Account, Action, Method, ModelInstance,{'Digits':str(Input)} , Twiml)
 				msg += AddMessage
 				if NewDoc:
@@ -362,7 +363,7 @@ def process_sms(verb, OTwiml, Instance):
 		Direction = 'outbound-reply' if Instance.Sid[0:2] == 'SM' else 'outbound-call',
 		Status = 'queued'
 	)
-	logging.info(str(Valid)+' '+TwilioMsg)
+	#logging.info(str(Valid)+' '+TwilioMsg)
 	Message.put()
 
 	msg += 'SMS sent to '+To+' from '+From+' with body "'+process_text(verb)+'"\n'
@@ -419,14 +420,14 @@ def process_reject(verb):
 		return 'Call rejected, reason: rejected'
 
 def process_text(verb):
-	logging.info('process text')
+	#logging.info('process text')
 	if 'Data' in verb['Children'][0]:
 		return verb['Children'][0]['Data']
 	else:
 		return ''
 
 def process_verb(verb,Twiml, ModelInstance, Input):
-	logging.info(verb)
+	#logging.info(verb)
 	if verb['Type'] =='Say': 
 		return process_say(verb) #done
 	elif verb['Type'] == 'Play': 
