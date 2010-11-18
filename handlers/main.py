@@ -32,7 +32,7 @@ from libraries.gaesessions import get_current_session
 
 from models import accounts, incoming_phone_numbers, outgoing_caller_ids, phone_numbers, calls, messages, twimls
 
-from helpers import application, authorization, request, twiml, parameters
+from helpers import application, authorization, request, twiml, parameters, phone_number_helper as pn_helper
 
 from decorators import webapp_decorator
 
@@ -97,7 +97,7 @@ class PhoneNumbers(webapp.RequestHandler):
 
 	@webapp_decorator.check_logged_in
 	def post(self):
-		phone_number, Valid, phoneGroups = parameters.parse_phone_number(self.request.get('phone_number'))
+		phone_number, Valid, phoneGroups = pn_helper.parse_phone_number(self.request.get('phone_number'))
 		if Valid and len(phone_number) == 12:
 			PhoneNumber, Valid, TwilioCode, TwilioMsg = incoming_phone_numbers.Incoming_Phone_Number.new(PhoneNumber = phone_number, AccountSid = self.data['Account'].Sid, ApiVersion = '2010-04-01', request = self.request)
 			if Valid:

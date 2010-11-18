@@ -3,7 +3,7 @@ from models import base
 from random import random
 from hashlib import sha256
 
-from helpers import parameters
+from helpers import parameters, phone_number_helper as pn_helper
 
 from google.appengine.api.labs import taskqueue
 
@@ -46,8 +46,8 @@ class Message(base.CommonModel):
 		
 	def validate(self, request, arg_name,arg_value, **kwargs):
 		validators = {
-			'To' : parameters.valid_to_phone_number(parameters.arg_or_request(arg_value, request, arg_name),required=True, SMS = True),
-			'From' : parameters.valid_from_phone_number(parameters.arg_or_request(arg_value, request, arg_name),required=True, Direction = kwargs['Direction'] if 'Direction' in kwargs else None, SMS = True),
+			'To' : pn_helper.valid_to_phone_number(parameters.arg_or_request(arg_value, request, arg_name),required=True, SMS = True),
+			'From' : pn_helper.valid_from_phone_number(parameters.arg_or_request(arg_value, request, arg_name),required=True, Direction = kwargs['Direction'] if 'Direction' in kwargs else None, SMS = True),
 			'Body' : parameters.valid_body(parameters.arg_or_request(arg_value, request, arg_name), required=True),
 			'StatusCallback' : parameters.standard_urls(parameters.arg_or_request(arg_value, request, arg_name))
 		}
