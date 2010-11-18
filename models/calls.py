@@ -5,7 +5,7 @@ from random import random
 import string
 import datetime
 
-from helpers import parameters
+from helpers import parameters, phone_number_helper as pn_helper
 
 from google.appengine.api.labs import taskqueue
 from google.appengine.api import urlfetch
@@ -69,8 +69,8 @@ class Call(base.CommonModel):
 	
 	def validate(self, request, arg_name,arg_value, **kwargs):
 		validators = {
-			'To' : parameters.valid_to_phone_number(arg_value if arg_value is not None else request.get('To',None),required=True, SMS = False),
-			'From' : parameters.valid_from_phone_number(arg_value if arg_value is not None else request.get('From',None),required=True, Direction = kwargs['Direction'] if 'Direction' in kwargs else None)
+			'To' : pn_helper.valid_to_phone_number(arg_value if arg_value is not None else request.get('To',None),required=True, SMS = False),
+			'From' : pn_helper.valid_from_phone_number(arg_value if arg_value is not None else request.get('From',None),required=True, Direction = kwargs['Direction'] if 'Direction' in kwargs else None)
 		}
 		if arg_name in validators:
 			return validators[arg_name]

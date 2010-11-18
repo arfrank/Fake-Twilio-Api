@@ -389,14 +389,25 @@ def process_sms(verb, OTwiml, Instance):
 	else:
 		return msg,False,False
 
-def process_dial(verb):
-	pass
+def process_dial(verb, OrigionalTwiml, Instance):
+	if Input == '':
+		if len(verb['Children']):
+			msg = 'Dialing, nested elements to follow'
+			for node in verb['Children']:
+				response, Break, newTwiml = process_verb(node, Twiml, ModelInstance, '')
+				msg += response + '\n'
+				if Break:
+					break
+			return msg, True, False
+		else:
+			msg = 'Dialing number, creating call if number is detected'+numDigits
+			return msg, True, False
 
 def process_number(verb):
-	pass
+	return 'Dialing number: '+ process_text(verb)
 
 def process_conference(verb):
-	pass
+	return 'Putting into conference room: '+process_text(verb)
 
 def process_hangup(verb):
 	return 'Call Hung Up'
@@ -426,6 +437,8 @@ def process_text(verb):
 	else:
 		return ''
 
+#this not ideal, but was getting errors other ways so will refactor when needed.
+#returns the text, whether or not it should stop processing and wait for input and the new twiml document, if applicable
 def process_verb(verb,Twiml, ModelInstance, Input):
 	#logging.info(verb)
 	if verb['Type'] =='Say': 
@@ -441,9 +454,9 @@ def process_verb(verb,Twiml, ModelInstance, Input):
 	elif verb['Type'] == 'Dial':
 		return (process_dial(verb),True,False)
 	elif verb['Type'] == 'Number':
-		return (process_number(verb),True,False)
+		return (process_number(verb),False,False)
 	elif verb['Type'] == 'Conference':
-		return (process_conference(verb),True,False)
+		return (process_conference(verb),False,False)
 	elif verb['Type'] == 'Hangup':
 		return (process_hangup(verb),True,False) #done
 	elif verb['Type'] == 'Redirect':
