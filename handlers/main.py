@@ -124,9 +124,6 @@ class PhoneNumber(webapp.RequestHandler):
 		self.data['PhoneNumber'] = incoming_phone_numbers.Incoming_Phone_Number.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Sid = ',Sid).get()
 
 		if self.data['PhoneNumber'] is not None:
-			#authstring = base64.encodestring(self.data['Account'].Sid+':'+self.data['Account'].AuthToken).replace('\n','')
-			#self.request.headers['Authorization'] =  'Basic '+str(authstring)
-			#print incoming_phone_numbers.IncomingPhoneNumberInstance.post(incoming_phone_numbers.IncomingPhoneNumberInstance(),'2010-04-01',self.data['Account'].Sid, Sid+'.json', request = self.request,response = self.response)
 			Valid = True
 			for arg in self.request.arguments():
 				if Valid:
@@ -145,152 +142,43 @@ class PhoneNumber(webapp.RequestHandler):
 			self.redirect('/phone-numbers')
 		
 class FakeSms(webapp.RequestHandler):
-	@webapp_decorator.check_logged_in
-	def get(self,Sid):
-		Sid = urllib.unquote(Sid)
-		self.data['PhoneNumber'] = incoming_phone_numbers.Incoming_Phone_Number.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Sid = ',Sid).get()
-		if self.data['PhoneNumber'] is not None:
-			path = os.path.join(os.path.dirname(__file__), '../templates/fake-sms.html')
-			self.response.out.write(template.render(path,{'data':self.data}))
-		else:
-			self.redirect('/phone-numbers')
-
-	@webapp_decorator.check_logged_in
-	def post(self,Sid):
-		self.data['PhoneNumber'] = incoming_phone_numbers.Incoming_Phone_Number.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Sid = ',Sid).get()
-		if self.data['PhoneNumber'] is not None:
-			#########Doing webapp error checking!
-			REQUIRED = ['From','Body']
-			ALLOWED_PARAMETERS = ['FromCity','FromState','FromZip','FromCounty','ToCity','ToState','ToZip','ToCounty']
-			Valid = True
-			Any = False
-			Blank = False
-			for param in REQUIRED:
-				if self.request.get(param,'') == '':
-					Valid = False
-			for param in ALLOWED_PARAMETERS:
-				if self.request.get(param,'') != '':
-					Any = True
-				else:
-					Blank = True
-			if Valid and (Any and Blank):
-				Valid = False
-			if Valid:
-			### ERROR CHECKING DONE FOR PASSED IN
-				Message, Valid, self.data['TwilioCode'],self.data['TwilioMsg'] = messages.Message.new(
-											To = self.data['PhoneNumber'].PhoneNumber,
-											From = self.request.get('From'),
-											Body = self.request.get('Body'),
-											request = self.request,
-											AccountSid = self.data['Account'].Sid,
-											Direction = 'incoming',
-											Status = 'sent'
-										)
-				#CHECK IF WE'VE PASSED VALID INFO TO MESSAGE
-				if Valid:
-					Message.put()
-					Payload = Message.get_dict()
-					#This is some really really bad bad form processing
-					Payload = {}
-					for param in ALLOWED_PARAMETERS:
-						Payload[param] = self.request.get(param)
-					#has to have a smsurl, not necessarily fallback url
-
-					# GET THE TWIML URLS
-					self.data['Response'] = request.request_twiml(self.data['Account'], self.data['PhoneNumber'].SmsUrl, self.data['PhoneNumber'].SmsMethod, Payload)
-					
-					if 200<= self.data['Response'].status_code <= 300:
-					
-						TwimlText = str(self.data['Response'].content.replace('\n',''))
-					
-						Valid, self.data['twiml_object'], self.data['ErrorMessage'] = twiml.parse_twiml(self.data['Response'].content, True)
-						Url = self.data['PhoneNumber'].SmsUrl
-					
-					elif 400 <= self.data['Response'].status_code <= 600 or Valid == False:
-					
-						#bad response and see if there is a fallback and repeat	or bad twiml
-					
-						if self.data['PhoneNumber'].SmsFallbackUrl is not None and self.data['PhoneNumber'].SmsFallbackUrl != '':
-					
-							self.data['FallbackResponse'] = request.request_twiml(self.data['Account'], self.data['PhoneNumber'].SmsFallbackUrl, self.data['PhoneNumber'].SmsFallbackMethod, Payload)
-					
-							if 200 <= self.data['FallbackResponse'].status_code <=300:
-					
-								TwimlText = str(self.data['FallbackResponse'].content)
-					
-								Valid, self.data['twiml_object'], self.data['ErrorMessage']  = twiml.parse_twiml(self.data['FallbackResponse'].content.replace('\n',''), True)
-								
-								Url = self.data['PhoneNumber'].SmsFallbackUrl
-					
-					if Valid:
-					
-						#logging.info(TwimlText)
-					
-						Twiml, Valid, TwilioCode,TwilioMsg  = twimls.Twiml.new(
-							request = self.request,
-							Url = Url,
-							AccountSid = self.data['Account'].Sid,
-							Twiml = pickle.dumps(self.data['twiml_object']),
-							Current = [],
-							SmsSid = Message.Sid
-						)
-						#logging.info(Twiml)
-						Twiml.put()
-						self.data['Twiml'] = Twiml
-					#parse the twiml and do some fake things
-					path = os.path.join(os.path.dirname(__file__), '../templates/fake-sms-result.html')
-					self.response.out.write(template.render(path,{'data':self.data}))
-				else:
-					self.data['Arguments'] = {}
-					for key in self.request.arguments():
-						self.data['Arguments'][key] = self.request.get(key,'')
-					FakeSms.get(self,Sid)
-			else:
-				self.data['Arguments'] = {}
-				for key in self.request.arguments():
-					self.data['Arguments'][key] = self.request.get(key,'')
-				FakeSms.get(self,Sid)
-		else:
-			self.redirect('/phone-numbers')
-class FakeVoice(webapp.RequestHandler):
-	"""
-	Parameter	Description
-	CallSid	A unique identifier for this call, generated by Twilio.
-	AccountSid	Your Twilio account id. It is 34 characters long, and always starts with the letters AC.
-	From	The phone number of the party that initiated the call. Formatted with a '+' and country code e.g., +16175551212 (E.164 format). If the call is inbound, then it is the caller's caller ID. If the call is outbound, i.e., initiated via a request to the REST API, then this is the phone number you specify as the caller ID.
-	To	The phone number of the called party. Formatted with a '+' and country code e.g., +16175551212 (E.164 format). If the call is inbound, then it's your Twilio phone number. If the call is outbound, then it's the phone number you provided to call.
-	CallStatus	A descriptive status for the call. The value is one of queued, ringing, in-progress, completed, busy, failed or no-answer. See the CallStatus section below for more details.
-	ApiVersion	The version of the Twilio API used to handle this call. For incoming calls, this is determined by the API version set on the called number. For outgoing calls, this is the API version used by the outgoing call's REST API request.
-	Direction	Indicates the direction of the call. In most cases this will be inbound, but if you are using <Dial> it will be outbound-dial.
-	ForwardedFrom	This parameter is set only when Twilio receives a forwarded call, but its value depends on the caller's carrier including information when forwarding. Not all carriers support passing this information.
-	"""
+	def __init__(self):
+		self.get_template = '../templates/fake-sms.html'
+		self.post_template = '../templates/fake-sms-result.html'
+		self.InstanceMain = ['SmsUrl', 'SmsMethod']
+		self.InstanceFallback = ['SmsFallbackUrl', 'SmsFallbackMethod']
+		self.REQUIRED = ['From','Body']
+		self.ALLOWED_PARAMETERS = ['FromCity','FromState','FromZip','FromCounty','ToCity','ToState','ToZip','ToCounty']
+		self.Instance = messages.Message
+		self.SMS = True
 	
+
+class FakeInbound(webapp.RequestHandler):
 	@webapp_decorator.check_logged_in
-	def get(self,Sid):
+	def get(self, Sid):
 		Sid = urllib.unquote(Sid)
 		self.data['PhoneNumber'] = incoming_phone_numbers.Incoming_Phone_Number.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Sid = ',Sid).get()
 		if self.data['PhoneNumber'] is not None:
-			path = os.path.join(os.path.dirname(__file__), '../templates/fake-voice.html')
+			path = os.path.join(os.path.dirname(__file__), self.get_template)
 			self.response.out.write(template.render(path,{'data':self.data}))
 		else:
 			self.redirect('/phone-numbers')
 
-	#COPIED FROM SMS, TOTALLY NOT DRY!
 	@webapp_decorator.check_logged_in
 	def post(self,Sid):
+		Sid = urllib.unquote(Sid)
 		self.data['PhoneNumber'] = incoming_phone_numbers.Incoming_Phone_Number.all().filter('AccountSid = ',self.data['Account'].Sid).filter('Sid = ',Sid).get()
 		if self.data['PhoneNumber'] is not None:
+			
 			#########Doing webapp error checking!
-			REQUIRED = ['From']
-			ALLOWED_PARAMETERS = ['FromCity','FromState','FromZip','FromCounty','ToCity','ToState','ToZip','ToCounty']
 			Valid = True
 			Any = False
 			Blank = False
-			for param in REQUIRED:
+			for param in self.REQUIRED:
 				if self.request.get(param,'') == '':
 					logging.info('Missing Required Parameter'+ param)
 					Valid = False
-			for param in ALLOWED_PARAMETERS:
+			for param in self.ALLOWED_PARAMETERS:
 				if self.request.get(param,'') != '':
 					logging.info('Have optional parameter'+ param)
 					Any = True
@@ -300,84 +188,117 @@ class FakeVoice(webapp.RequestHandler):
 				Valid = False
 			if Valid:
 			### ERROR CHECKING DONE FOR PASSED IN
-				Call, Valid, self.data['TwilioCode'],self.data['TwilioMsg'] = calls.Call.new(
+				Instance, Valid, self.data['TwilioCode'],self.data['TwilioMsg'] = self.Instance.new(
 											To = self.data['PhoneNumber'].PhoneNumber,
 											From = self.request.get('From'),
-											Body = self.request.get('Body'),
+											Body = self.request.get('Body') if self.SMS else None,
 											request = self.request,
 											AccountSid = self.data['Account'].Sid,
 											Direction = 'incoming',
-											Status = 'sent'
+											Status = 'sent' if self.SMS else 'queued'
 										)
 				#CHECK IF WE'VE PASSED VALID INFO TO MESSAGE
 				if Valid:
-					Call.put()
-					Payload = Call.get_dict()
+					Instance.put()
+					Payload = Instance.get_dict()
 					#This is some really really bad bad form processing
 					Payload = {}
-					for param in ALLOWED_PARAMETERS:
+					for param in self.ALLOWED_PARAMETERS:
 						Payload[param] = self.request.get(param)
 					#has to have a smsurl, not necessarily fallback url
 
 					# GET THE TWIML URLS
-					self.data['Response'] = request.request_twiml(self.data['Account'], self.data['PhoneNumber'].VoiceUrl, self.data['PhoneNumber'].VoiceMethod, Payload)
+					self.data['Response'] = request.request_twiml(self.data['Account'], getattr( self.data['PhoneNumber'], self.InstanceMain[0]), getattr( self.data['PhoneNumber'], self.InstanceMain[1] ), Payload)
 
 					if 200<= self.data['Response'].status_code <= 300:
+						logging.info('normal response')
+						Valid, TwimlText, self.data['TwilioCode'], self.data['TwilioMsg'] = twiml.check_twiml( self.data['Response'] )
+						logging.info(self.request.headers)
+						if Valid:
+							logging.info('Valid twiml check for content-type')
+							Valid, self.data['twiml_object'], self.data['ErrorMessage'] = twiml.parse_twiml(TwimlText, False)
 
-						TwimlText = str(self.data['Response'].content.replace('\n',''))
-
-						Valid, self.data['twiml_object'], self.data['ErrorMessage'] = twiml.parse_twiml(self.data['Response'].content, False)
-						Url = self.data['PhoneNumber'].VoiceUrl
+							Url = getattr( self.data['PhoneNumber'], self.InstanceMain[0] )
 
 					elif 400 <= self.data['Response'].status_code <= 600 or Valid == False:
 
 						#bad response and see if there is a fallback and repeat	or bad twiml
 
-						if self.data['PhoneNumber'].VoiceFallbackUrl is not None and self.data['PhoneNumber'].VoiceFallbackUrl != '':
+						if getattr( self.data['PhoneNumber'], self.InstanceFallback[0] ) is not None and getattr( self.data['PhoneNumber'], self.InstanceFallback[0] ) != '':
 
-							self.data['FallbackResponse'] = request.request_twiml(self.data['Account'], self.data['PhoneNumber'].VoiceFallbackUrl, self.data['PhoneNumber'].VoiceFallbackMethod, Payload)
+							self.data['FallbackResponse'] = request.request_twiml(self.data['Account'], getattr( self.data['PhoneNumber'], self.InstanceFallback[0] ), getattr( self.data['PhoneNumber'], self.InstanceFallback[1] ), Payload)
 
 							if 200 <= self.data['FallbackResponse'].status_code <=300:
 
-								TwimlText = str(self.data['FallbackResponse'].content)
+								Valid, TwimlText, self.data['TwilioCode'], self.data['TwilioMsg'] = twiml.check_twiml( self.data['FallbackResponse'] )
+								if Valid:
 
-								Valid, self.data['twiml_object'], self.data['ErrorMessage']  = twiml.parse_twiml(self.data['FallbackResponse'].content.replace('\n',''), True)
+									Valid, self.data['twiml_object'], self.data['ErrorMessage']  = twiml.parse_twiml(TwimlText, True)
 
-								Url = self.data['PhoneNumber'].VoiceFallbackUrl
+									Url = getattr( self.data['PhoneNumber'], self.InstanceFallback[0] )
 
 					if Valid:
 
 						#logging.info(TwimlText)
 
-						Twiml, Valid, TwilioCode,TwilioMsg  = twimls.Twiml.new(
+						#Always returns model object, validity, errorcode, msg
+						Twiml, Valid, self.data['TwilioCode'], self.data['TwilioMsg']  = twimls.Twiml.new(
 							request = self.request,
 							Url = Url,
 							AccountSid = self.data['Account'].Sid,
 							Twiml = pickle.dumps(self.data['twiml_object']),
 							Current = [],
-							CallSid = Call.Sid
+							CallSid = Instance.Sid if self.SMS == False else None,
+							MessageSid = Instance.Sid if self.SMS == True else None
 						)
 						#logging.info(Twiml)
 						Twiml.put()
 						self.data['Twiml'] = Twiml
 					#parse the twiml and do some fake things
-					path = os.path.join(os.path.dirname(__file__), '../templates/fake-voice-result.html')
+					path = os.path.join(os.path.dirname(__file__), self.post_template)
 					self.response.out.write(template.render(path,{'data':self.data}))
 				else:
 					self.data['Arguments'] = {}
 					for key in self.request.arguments():
 						self.data['Arguments'][key] = self.request.get(key,'')
-					FakeVoice.get(self,Sid)
+					FakeInbound.get(self,Sid)
 			else:
 				self.data['Arguments'] = {}
-				logging.info
 				for key in self.request.arguments():
 					self.data['Arguments'][key] = self.request.get(key,'')
-				FakeVoice.get(self,Sid)
+				FakeInbound.get(self,Sid)
 		else:
 			self.redirect('/phone-numbers')
-		
-		
+
+
+
+class FakeVoice(FakeInbound):
+	"""
+	Parameter	Description
+	CallSid	A unique identifier for this call, generated by Twilio.
+	AccountSid	Your Twilio account id. It is 34 characters long, and always starts with the letters AC.
+	From	The phone number of the party that initiated the call. Formatted with a '+' and country code e.g., +16175551212 (E.164 format). If the call is inbound, then it is the caller's caller ID. If the call is outbound, i.e., initiated via a request to the REST API, then this is the phone number you specify as the caller ID.
+	To	The phone number of the called party. Formatted with a '+' and country code e.g., +16175551212 (E.164 format). If the call is inbound, then it's your Twilio phone number. If the call is outbound, then it's the phone number you provided to call.
+		CallStatus	A descriptive status for the call. The value is one of queued, ringing, in-progress, completed, busy, failed or no-answer. See the CallStatus section below for more details.
+		ApiVersion	The version of the Twilio API used to handle this call. For incoming calls, this is determined by the API version set on the called number. For outgoing calls, this is the API version used by the outgoing call's REST API request.
+		Direction	Indicates the direction of the call. In most cases this will be inbound, but if you are using <Dial> it will be outbound-dial.
+		ForwardedFrom	This parameter is set only when Twilio receives a forwarded call, but its value depends on the caller's carrier including information when forwarding. Not all carriers support passing this information.
+		"""
+
+	def __init__(self):
+		self.get_template = '../templates/fake-voice.html'
+		self.post_template = '../templates/fake-voice-result.html'
+		self.InstanceMain = ['VoiceUrl', 'VoiceMethod']
+		self.InstanceFallback = ['VoiceFallbackUrl', 'VoiceFallbackMethod']
+		self.REQUIRED = ['From']
+		self.ALLOWED_PARAMETERS = ['FromCity','FromState','FromZip','FromCounty','ToCity','ToState','ToZip','ToCounty']
+		self.Instance = calls.Call
+		self.SMS = False
+
+
+##########################################################################################################################
+
+
 class Calls(webapp.RequestHandler):
 	@webapp_decorator.check_logged_in
 	def get(self):

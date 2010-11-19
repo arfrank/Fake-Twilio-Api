@@ -183,6 +183,23 @@ def walk_tree(nodes, parentType, sms = False):
 		
 	return twiml
 
+
+def check_twiml(response):
+	TWIML_CONTENT_TYPES = ['text/xml','application/xml','text/html']
+	TEXT_CONTENT_TYPES = ['text/plain']
+	AUDIO_CONTENT_TYPES = ['audio/mpeg', 'audio/wav', 'audio/wave', 'audio/x-wav', 'audio/aiff', 'audio/x-aifc', 'audio/x-aiff', 'audio/x-gsm', 'audio/gsm', 'audio/ulaw']
+	if response.headers['Content-Type'] in TWIML_CONTENT_TYPES:
+		content = str(response.content).replace('\n','')
+		return True, content, 0, ''
+	elif response.headers['Content-Type'] in TEXT_CONTENT_TYPES:
+		content = """<?xml version="1.0" encoding="UTF-8" ?><Response><Say>""" + response.content + """</Say></Response>"""
+		return True, content, 0, ''
+	elif response.headers['Content-Type'] in AUDIO_CONTENT_TYPES:
+		content = """<?xml version="1.0" encoding="UTF-8" ?><Response><Play>""" + response.path + """</Play></Response>"""
+		return True, content, 0, ''
+	else:
+		return False, '', 12300, 'http://www.twilio.com/docs/errors/12300'
+
 # ABOVE PROCESSING TwiML
 #############################################################################################
 # BELOW PROCESSING CONSOLE FUNCTIONS

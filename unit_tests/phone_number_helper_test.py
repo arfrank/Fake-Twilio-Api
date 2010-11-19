@@ -63,3 +63,18 @@ class Phone_Number_Valid_From_Phone_Number(unittest.TestCase):
 		self.PhoneNumber,Valid,TwilioCode, TwilioMsg = models.incoming_phone_numbers.Incoming_Phone_Number.new(PhoneNumber = '+13015559999', request = None, AccountSid = self.Account.Sid)
 		self.OutgoingCallerId, Valid, TwilioCode, TwilioMsg = models.outgoing_caller_ids.Outgoing_Caller_Id.new(PhoneNumber = '+13015556666', request = None, AccountSid = self.Account.Sid)
 		db.put([self.PhoneNumber, self.OutgoingCallerId])
+
+	def test_From_Phone_Number_Success_Incoming_Phone_Number(self):
+		Valid, TwilioCode, TwilioMsg = pn_helper.valid_to_phone_number(self.PhoneNumber.PhoneNumber)
+		self.assertTrue(Valid)
+
+	def test_From_Phone_Number_Success_Outgoing_Phone_Number(self):
+		Valid, TwilioCode, TwilioMsg = pn_helper.valid_to_phone_number(self.OutgoingCallerId.PhoneNumber)
+		self.assertTrue(Valid)
+
+	def test_From_Phone_Number_Failure_Blank_Required(self):
+		Valid, TwilioCode, TwilioMsg = pn_helper.valid_to_phone_number('',True)
+		self.assertFalse(Valid)
+	
+	def test_From_Phone_Number_Failure_Not_Incoming_or_Outgoing(self):
+		pass
