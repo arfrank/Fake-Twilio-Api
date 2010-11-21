@@ -170,15 +170,24 @@ def walk_tree(nodes, parentType, sms = False):
 			#logging.info(node.nodeName.encode('ascii'))
 			#logging.info(sms)
 			if ( ( parentType == 'Response' and ( ( node.nodeName.encode('ascii') in ALLOWED_SMS_ELEMENTS and sms == True) or (node.nodeName.encode('ascii') in ALLOWED_VOICE_ELEMENTS and sms == False) ) ) or ( parentType in ALLOWED_SUBELEMENTS ) ):
+				
 				if parentType == 'Response' or  node.nodeName.encode('ascii') in ALLOWED_SUBELEMENTS[parentType]:
+				
 					twiml.append( { 'Type' : node.nodeName.encode( 'ascii' ), 'Attr' : retrieve_attr(node, node.nodeName.encode('ascii'), sms),'Children': walk_tree(node.childNodes, node.nodeName.encode('ascii'), sms) } )
+				
 				else:
+				
 					raise TwiMLSyntaxError(0, 0, 'Invalid TwiML nested element in '+parentType+'. Not allowed to nest '+node.nodeName.encode('ascii'))					
 			else:
+
 				raise TwiMLSyntaxError(0, 0, 'Invalid TwiML in '+parentType+'. Problem with '+node.nodeName.encode('ascii')+' element: '+str(count))
+
 		elif node.nodeType == node.TEXT_NODE and parentType != 'Response':
+
 			if node.nodeValue.encode('ascii') != '\n':
+
 				twiml.append( { 'Type' : 'Text', 'Data': node.nodeValue.encode('ascii') })
+
 		count +=1
 		
 	return twiml
@@ -417,11 +426,19 @@ def process_dial(verb, OrigionalTwiml, Instance):
 					break
 			return msg, True, False
 		else:
-			msg = 'Dialing number, creating call if number is detected'+numDigits
+			msg = 'DIAL SHOULD HAVE CHILDREN, NOT SURE HOW WE GOT HERE'
 			return msg, True, False
+	else:
+		pass
 
 def process_number(verb):
-	return 'Dialing number: '+ process_text(verb)
+	msg = 'Dialing number: '+ process_text(verb)
+	if 'sendDigits' in verb['Attr']:
+		msg+='\nSending digits: '+verb['Attr']['sendDigits']
+	if 'url' in verb['Attr']:
+		pass
+		#need to grab this twiml document, create a new call and pass in a bunch of other things, damn this gets much more complex to maintain state for, not impossible, but certainly harder and more trees
+	return 
 
 def process_conference(verb):
 	return 'Putting into conference room: '+process_text(verb)

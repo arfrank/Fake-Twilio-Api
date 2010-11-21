@@ -86,3 +86,15 @@ class TwimlHelper_Processing_TwiML(unittest.TestCase):
 		Twiml = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><Response><Say length=10>Hello</Say></Response>"
 		Valid, Twiml, ErrorMessage = twiml.parse_twiml(Twiml)
 		self.assertFalse(Valid)
+		
+	def test_Parse_Fail_Dial_Children_None(self):
+		pass
+		
+	def test_Parse_Fail_Dial_Children_Both_Number_Conference(self):
+		pass
+		
+	def test_Parse_Fail_Dial_Children_MultiConference(self):
+		pass
+
+	def test_Parse_Fail_Dial_Children_Number_Twiml_Dial(self):
+		pass
