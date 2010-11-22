@@ -1,6 +1,6 @@
 Fake Twilio API
 
-Disclaimer: This project is in no way Authorized or supported by Twilio Inc. http://www.twilio.com
+Disclaimer: This project is in no way authorized or supported by Twilio Inc. http://www.twilio.com
 ==================================================================================================
 
 1. Whats this about?
