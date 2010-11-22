@@ -119,8 +119,9 @@ class CallList(base_handlers.ListHandler):
 				#ringing, what should we do? connect and read twiml and parse, fail, busy signal or no answer
 				#default is to connect, read twiml and do some things i guess
 
-				Call.connect(Phone_Number, self.request)
+				#Call.connect(Phone_Number, self.request)
 
+				"""
 				if self.request.get('StatusCallback',None) is not None:
 					StatusCallback = self.request.get('StatusCallback')
 					StatusCallbackMethod = self.request.get('StatusCallbackMethod','POST').upper()
@@ -129,8 +130,11 @@ class CallList(base_handlers.ListHandler):
 				elif Phone_Number.StatusCallback is not None:
 					StatusCallback = Phone_Number.StatusCallback
 					StatusCallbackMethod = Phone_Number.StatusCallbackMethod
+
 				if self.request.get('StatusCallback',None) is not None or Phone_Number.StatusCallback is not None:
 					Call.disconnect(StatusCallback,StatusCallbackMethod)
+				"""
+				response_data = Call.get_dict()
 				self.response.out.write(response.format_response(response.add_nodes(self,response_data,format),format))
 			else:
 				#we dont have a valid outgoing phone number to which to make the call
