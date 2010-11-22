@@ -35,16 +35,16 @@ class TwimlHelper_Check_Twiml_Response_Type(unittest.TestCase):
 		self.TextRequests.append(FakeRequest( content_type = self.TextHeader['Content-Type']))
 	def test_Check_Twiml_Success_Twiml(self):
 		for req in self.TwimlRequests:
-			Valid, Twiml, TwilioCode, TwilioMsg = twiml.check_twiml( req )
+			Valid, Twiml, TwilioCode, TwilioMsg = twiml.check_twiml_content_type( req )
 			self.assertTrue(Valid)
 	
 	def test_Check_Twiml_Success_Text(self):
-		Valid, Twiml, TwilioCode, TwilioMsg = twiml.check_twiml( self.TextRequests[0] )
+		Valid, Twiml, TwilioCode, TwilioMsg = twiml.check_twiml_content_type( self.TextRequests[0] )
 		self.assertTrue(Valid)
 		
 	def test_Check_Twiml_Success_Audio(self):
 		for req in self.AudioRequests:
-			Valid, Twiml, TwilioCode, TwilioMsg = twiml.check_twiml( req )
+			Valid, Twiml, TwilioCode, TwilioMsg = twiml.check_twiml_content_type( req )
 			self.assertTrue(Valid)
 
 
@@ -54,12 +54,12 @@ class TwimlHelper_Processing_TwiML(unittest.TestCase):
 		pass
 	def test_Parse_Fail_Missing_Reponse_Twiml_Tag(self):
 		Twiml = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><Say>Hello</Say>"
-		Valid, Twiml, ErrorMessage = twiml.parse_twiml(Twiml)
+		Valid, Twiml, TwilioCode, TwilioMsg = twiml.parse_twiml(Twiml)
 		self.assertFalse(Valid)
 		
 	def test_Parse_Fail_No_Content(self):
 		Twiml = ""
-		Valid, Twiml, ErrorMessage = twiml.parse_twiml(Twiml)
+		Valid, Twiml, TwilioCode, TwilioMsg = twiml.parse_twiml(Twiml)
 		self.assertFalse(Valid)
 		
 	def test_Parse_Fail_Nested_Elements(self):
@@ -70,8 +70,8 @@ class TwimlHelper_Processing_TwiML(unittest.TestCase):
 <Play>http://twilio.com</Play>
 </Say>
 </Response>"""
-		Valid, Twiml, ErrorMessage = twiml.parse_twiml(Twiml)
-		logging.info( ErrorMessage )
+		Valid, Twiml, TwilioCode, TwilioMsg = twiml.parse_twiml(Twiml)
+		logging.info( TwilioCode, TwilioMsg )
 		self.assertFalse(Valid)
 
 	def test_Parse_Fail_Capitalize_Verb(self):
@@ -79,22 +79,32 @@ class TwimlHelper_Processing_TwiML(unittest.TestCase):
 		<Response>
 		<say>This is the second one</say>
 		</Response>"""
-		Valid, Twiml, ErrorMessage = twiml.parse_twiml(Twiml)
+		Valid, Twiml, TwilioCode, TwilioMsg = twiml.parse_twiml(Twiml)
 		self.assertFalse(Valid)
 
 	def test_Parse_Fail_Bad_Attributes(self):
 		Twiml = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><Response><Say length=10>Hello</Say></Response>"
-		Valid, Twiml, ErrorMessage = twiml.parse_twiml(Twiml)
+		Valid, Twiml, TwilioCode, TwilioMsg = twiml.parse_twiml(Twiml)
 		self.assertFalse(Valid)
 		
 	def test_Parse_Fail_Dial_Children_None(self):
-		pass
+		Twiml = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><Response><Dial></Dial></Response>"
+		Valid, Twiml, TwilioCode, TwilioMsg = twiml.parse_twiml(Twiml)
+		self.assertFalse(Valid)
+		self.assertEqual(TwilioCode, 12100)
 		
 	def test_Parse_Fail_Dial_Children_Both_Number_Conference(self):
-		pass
+		Twiml = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><Response><Dial><Number>+12405553333</Number><Conference>Test</Conference></Dial></Response>"
+		Valid, Twiml, TwilioCode, TwilioMsg = twiml.parse_twiml(Twiml)
+		self.assertFalse(Valid)
+		self.assertEqual(TwilioCode, 12100)
 		
 	def test_Parse_Fail_Dial_Children_MultiConference(self):
 		pass
 
 	def test_Parse_Fail_Dial_Children_Number_Twiml_Dial(self):
-		pass
+		Twiml = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><Response><Dial><Conference>Test</Conference></Dial></Response>"
+		Valid, Twiml, TwilioCode, TwilioMsg = twiml.parse_twiml(Twiml, sms = False, allow_dial = False)
+		self.assertFalse(Valid)
+		self.assertEqual(TwilioCode, 13201)
+

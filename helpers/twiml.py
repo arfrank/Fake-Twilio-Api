@@ -119,37 +119,37 @@ def emulate(url, method = 'GET', digits = None):
 """
 
 class TwiMLSyntaxError(Exception):
-	def __init__(self, lineno, col, doc):
-		self.lineno = lineno
-		self.col = col
-		self.doc = doc
+	def __init__(self, error, code, msg):
+		self.error = error
+		self.code = code
+		self.msg = msg		
 
 	def __str__(self):
-		return "TwiMLSyntaxError at line %i col %i near %s" \
-			% (self.lineno, self.col, self.doc)
+		return "%s\nTwilioCode: %s TwilioMsg: %s" \
+			% (self.error, str(self.code), self.msg)
 
-#Returns valid, twiml_object, error message
-def parse_twiml(response, sms = False):
+#Returns valid, twiml_object, twilio code, twilio message
+def parse_twiml(response, sms = False, allow_dial = True):
 	try:
 		rdoc = minidom.parseString(response)
 	except ExpatError, e:
-		return False, False, 'Bad TwiML Document'
+		return False, False, 12100, 'http://www.twilio.com/docs/errors/12100'
 
 	try:
 		respNode = rdoc.getElementsByTagName('Response')[0]
 	except IndexError, e:
-		return False, False, 'No response tag in TwiML'
+		return False, False, 12100, 'http://www.twilio.com/docs/errors/12100'
 
 	if not respNode.hasChildNodes():
-		return False, False, 'No child nodes, nothing to do.'
+		return False, False, 12100, 'http://www.twilio.com/docs/errors/12100'
 	nodes = respNode.childNodes
 	try:
-		twiml_object = walk_tree(nodes,'Response', sms)
+		twiml_object = walk_tree(nodes,'Response', sms = sms, allow_dial = allow_dial)
 	except TwiMLSyntaxError, e:
-		return False, False, e
+		return False, False, e.code, e.msg
 	#lets walk the tree and create a list [ { 'Verb' : '', 'Attr': { 'action' : '', 'Method' : 'POST' } } ]
 	else:
-		return True, twiml_object, False
+		return True, twiml_object, 0, ''
 
 def retrieve_attr(node, Type, sms = False):
 	d = {}
@@ -157,10 +157,10 @@ def retrieve_attr(node, Type, sms = False):
 		if (sms == False and attr[0] in ALLOWED_VOICE_ELEMENTS[Type]) or (sms == True and attr[0] in ALLOWED_SMS_ELEMENTS[Type]):
 			d[attr[0]] = attr[1]
 		else:
-			raise TwiMLSyntaxError(0, 0, 'Invalid attribute in '+Type+':('+attr[0]+'='+attr[1]+')')
+			raise TwiMLSyntaxError('Invalid attribute in '+Type+':('+attr[0]+'='+attr[1]+')', 12200,'http://www.twilio.com/docs/errors/12200')
 	return d
 
-def walk_tree(nodes, parentType, sms = False):
+def walk_tree(nodes, parentType, sms = False, allow_dial = True):
 	twiml = []
 	count = 0
 	for node in nodes:
@@ -169,18 +169,30 @@ def walk_tree(nodes, parentType, sms = False):
 			#logging.info(parentType)
 			#logging.info(node.nodeName.encode('ascii'))
 			#logging.info(sms)
-			if ( ( parentType == 'Response' and ( ( node.nodeName.encode('ascii') in ALLOWED_SMS_ELEMENTS and sms == True) or (node.nodeName.encode('ascii') in ALLOWED_VOICE_ELEMENTS and sms == False) ) ) or ( parentType in ALLOWED_SUBELEMENTS ) ):
-				
+			#if we are at the top level of the response, and we are in the allowed verbs for the request type, or we are a valid subelement
+			nodeName = node.nodeName.encode( 'ascii' )
+
+			if ( ( parentType == 'Response' and ( ( nodeName in ALLOWED_SMS_ELEMENTS and sms == True) or ( nodeName in ALLOWED_VOICE_ELEMENTS and sms == False ) ) ) or ( parentType in ALLOWED_SUBELEMENTS ) ):
+
+				if allow_dial == False and nodeName == 'Dial':
+
+					raise TwiMLSyntaxError( 'Cannot Dial out from a dial call segment', 13201, 'http://www.twilio.com/docs/errors/13201' )
+
 				if parentType == 'Response' or  node.nodeName.encode('ascii') in ALLOWED_SUBELEMENTS[parentType]:
-				
-					twiml.append( { 'Type' : node.nodeName.encode( 'ascii' ), 'Attr' : retrieve_attr(node, node.nodeName.encode('ascii'), sms),'Children': walk_tree(node.childNodes, node.nodeName.encode('ascii'), sms) } )
-				
+
+					check_twiml_verb_attr(node)
+
+					check_twiml_verb_children(node)
+
+					twiml.append( { 'Type' : node.nodeName.encode( 'ascii' ), 'Attr' : retrieve_attr(node, node.nodeName.encode('ascii'), sms),'Children': walk_tree(node.childNodes, node.nodeName.encode('ascii'), sms = sms) } )
+
 				else:
-				
-					raise TwiMLSyntaxError(0, 0, 'Invalid TwiML nested element in '+parentType+'. Not allowed to nest '+node.nodeName.encode('ascii'))					
+
+					raise TwiMLSyntaxError('Invalid TwiML nested element in '+parentType+'. Not allowed to nest '+node.nodeName.encode('ascii'), 12200, 'http://www.twilio.com/docs/errors/12200')					
+
 			else:
 
-				raise TwiMLSyntaxError(0, 0, 'Invalid TwiML in '+parentType+'. Problem with '+node.nodeName.encode('ascii')+' element: '+str(count))
+				raise TwiMLSyntaxError( 'Invalid TwiML in ' + parentType + '. Problem with '+node.nodeName.encode('ascii')+' element ('+str(count)+')', 12200, 'http://www.twilio.com/docs/errors/12200' )
 
 		elif node.nodeType == node.TEXT_NODE and parentType != 'Response':
 
@@ -192,8 +204,46 @@ def walk_tree(nodes, parentType, sms = False):
 		
 	return twiml
 
+def check_twiml_verb_attr(node):
+	name = node.nodeName.encode( 'ascii' )
+	if name == 'Dial':
+		pass
+	elif name == 'Conference':
+		pass
+	elif name == 'Number':
+		pass
+	
+def check_twiml_dial_attr():
+	"""docstring for check_twiml_dial_attr"""
+	pass
 
-def check_twiml(response):
+def check_twiml_conference_attr():
+	"""docstring for check_twiml_conference_attr"""
+	pass
+	
+def check_twiml_number_attr():
+	"""docstring for check_twiml_number_attr"""
+	pass
+	
+def check_twiml_verb_children(node):
+	verb = node.nodeName.encode( 'ascii' )
+	if verb == 'Dial':
+		#should be a seperate function, but right now this is the only place where it matters"
+		if not len(node.childNodes):
+			raise TwiMLSyntaxError( 'The dial verb needs to have nested nouns', 12100, 'http://www.twilio.com/docs/errors/12100' )
+		else:
+			conf = False
+			num = False
+			for child in node.childNodes:
+				if child.nodeName.encode( 'ascii' ) == 'Conference':
+					conf = True
+				elif child.nodeName.encode( 'ascii' ) == 'Number':
+					num = True
+			if num and conf:
+				raise TwiMLSyntaxError( 'Cannot have nested Number and Conference in the same Dial Verb', 12100, 'http://www.twilio.com/docs/errors/12100' )
+				
+
+def check_twiml_content_type(response):
 	TWIML_CONTENT_TYPES = ['text/xml','application/xml','text/html']
 	TEXT_CONTENT_TYPES = ['text/plain']
 	AUDIO_CONTENT_TYPES = ['audio/mpeg', 'audio/wav', 'audio/wave', 'audio/x-wav', 'audio/aiff', 'audio/x-aifc', 'audio/x-aiff', 'audio/x-gsm', 'audio/gsm', 'audio/ulaw']
@@ -521,7 +571,7 @@ def get_external_twiml(Account, Action, Method, Instance, Payload, Twiml):
 		#parse the new twiml document
 		if 'Content-Length' in Response.headers and Response.headers['Content-Length'] > 0:
 			#return Valid, Twiml_object, ErrorMessage
-			Valid, Twiml_object, ErrorMessage =  parse_twiml(Response.content, True if Instance.Sid[0:2] == 'SM' else False) #returns Valid, Twiml_object, ErrorMessage
+			Valid, Twiml_object, TwilioCode, TwilioMsg =  parse_twiml(Response.content, True if Instance.Sid[0:2] == 'SM' else False) #returns Valid, Twiml_object, ErrorMessage
 			Twiml = None
 			if Valid:
 				#if all that works, create new twiml document
@@ -538,7 +588,7 @@ def get_external_twiml(Account, Action, Method, Instance, Payload, Twiml):
 				)
 				Twiml.put()
 			else:
-				msg+='An error occurred parsing your action\'s Twiml document, will continue parsing original\n'+ErrorMessage+'\n'
+				msg+='An error occurred parsing your action\'s Twiml document, will continue parsing original\n'+TwilioMsg+'\n'
 			return Valid, Twiml, msg
 
 	return False, False, 'Could not retrieve a valid TwiML document'

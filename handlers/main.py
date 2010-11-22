@@ -212,11 +212,11 @@ class FakeInbound(webapp.RequestHandler):
 
 					if 200<= self.data['Response'].status_code <= 300:
 						logging.info('normal response')
-						Valid, TwimlText, self.data['TwilioCode'], self.data['TwilioMsg'] = twiml.check_twiml( self.data['Response'] )
+						Valid, TwimlText, self.data['TwilioCode'], self.data['TwilioMsg'] = twiml.check_twiml_content_type( self.data['Response'] )
 						logging.info(self.request.headers)
 						if Valid:
 							logging.info('Valid twiml check for content-type')
-							Valid, self.data['twiml_object'], self.data['ErrorMessage'] = twiml.parse_twiml(TwimlText, False)
+							Valid, self.data['twiml_object'], self.data['TwilioCode'], self.data['TwilioMsg'] = twiml.parse_twiml(TwimlText, sms = False)
 
 							Url = getattr( self.data['PhoneNumber'], self.InstanceMain[0] )
 
@@ -230,10 +230,10 @@ class FakeInbound(webapp.RequestHandler):
 
 							if 200 <= self.data['FallbackResponse'].status_code <=300:
 
-								Valid, TwimlText, self.data['TwilioCode'], self.data['TwilioMsg'] = twiml.check_twiml( self.data['FallbackResponse'] )
+								Valid, TwimlText, self.data['TwilioCode'], self.data['TwilioMsg'] = twiml.check_twiml_content_type( self.data['FallbackResponse'] )
 								if Valid:
 
-									Valid, self.data['twiml_object'], self.data['ErrorMessage']  = twiml.parse_twiml(TwimlText, True)
+									Valid, self.data['twiml_object'], self.data['TwilioCode'], self.data['TwilioMsg']  = twiml.parse_twiml(TwimlText, sms = True)
 
 									Url = getattr( self.data['PhoneNumber'], self.InstanceFallback[0] )
 
