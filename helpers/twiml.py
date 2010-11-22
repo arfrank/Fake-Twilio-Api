@@ -309,7 +309,7 @@ def process_record(verb, Twiml, ModelInstance, Input = ''):
 					Account = accounts.Account.all().filter('Sid =',ModelInstance.AccountSid).get()
 					
 					#Whether or not twiml parsed, the twiml dictionary, and any error messages
-					Valid, Twiml, AddMessage = get_external_twiml(Account, Action, Method, ModelInstance, {'SmsSid' : Instance.Sid, 'SmsStatus' : Message.Status}, OTwiml)
+					Valid, Twiml, AddMessage = get_external_twiml(Account, Action, Method, ModelInstance, {'SmsSid' : Instance.Sid, 'SmsStatus' : Message.Status}, OrigionalTwiml)
 				msg+=AddMessage
 				if 'transcribe' in verb['Attr'] and verb['Attr']['transcribe'] == 'true':
 					transcribeCallback = verb['Attr']['transcribeCallback'] if 'Attr' in verb and 'transcribeCallback' in verb['Attr'] else None
@@ -422,7 +422,7 @@ def process_gather(verb, Twiml, ModelInstance, Input):
 					return msg, False, False
 
 #the verb node of the tiwml document, the twiml document, and the instance that caused the creation of the twiml document
-def process_sms(verb, OTwiml, Instance):
+def process_sms(verb, OrigionalTwiml, Instance):
 	msg = ''
 	To = verb['Attr']['to'] if 'Attr' in verb and 'to' in verb['Attr'] else Instance.From
 	From = verb['Attr']['from'] if 'Attr' in verb and 'from' in verb['Attr'] else Instance.To
@@ -449,10 +449,10 @@ def process_sms(verb, OTwiml, Instance):
 	if Action is None:
 		#then techincally we should rerequest the original url
 		#but i dont make sure the method is the same :/
-		#Action = OTwiml.Url
+		#Action = OrigionalTwiml.Url
 		pass
 	if Action is not None:
-		Valid, Twiml, AddMessage = get_external_twiml(Account, Action, Method, Instance,{'SmsSid' : Instance.Sid, 'SmsStatus' : Message.Status}, OTwiml)
+		Valid, Twiml, AddMessage = get_external_twiml(Account, Action, Method, Instance,{'SmsSid' : Instance.Sid, 'SmsStatus' : Message.Status}, OrigionalTwiml)
 	
 	msg+=AddMessage
 
@@ -481,26 +481,37 @@ def process_dial(verb, OrigionalTwiml, Instance):
 	else:
 		pass
 
-def process_number(verb):
+def process_number(verb, OrigionalTwiml, Instance):
 	msg = 'Dialing number: '+ process_text(verb)
 	if 'sendDigits' in verb['Attr']:
 		msg+='\nSending digits: '+verb['Attr']['sendDigits']
 	if 'url' in verb['Attr']:
 		pass
-		#need to grab this twiml document, create a new call and pass in a bunch of other things, damn this gets much more complex to maintain state for, not impossible, but certainly harder and more trees
+	#can i make it look like it came from a different number
+	#create a new call and make it ring!
+	"""
+	Call = calls.Call.new(	AccountSid = Instance.AccountSid,
+							ParentSid = Instance.Sid,
+							request = None,
+							To = str( process_text( verb ) ),
+							From = Instance.From,
+							PhoneNumberSid = Instance.PhoneNumberSid,
+							Direction = 'outbound-dial')
+	"""
+	#need to grab this twiml document, create a new call and pass in a bunch of other things, damn this gets much more complex to maintain state for, not impossible, but certainly harder and more trees
 	return 
 
-def process_conference(verb):
+def process_conference(verb, OrigionalTwiml, Instance):
 	return 'Putting into conference room: '+process_text(verb)
 
 def process_hangup(verb):
 	return 'Call Hung Up'
 
-def process_redirect(verb, OTwiml, Instance):
+def process_redirect(verb, OrigionalTwiml, Instance):
 	msg = 'Redirecting to '+process_text(verb)
 	Account = accounts.Account.all().filter('Sid =',Instance.AccountSid).get()
 	NewDoc = False
-	Valid, Twiml, AddMessage = get_external_twiml(Account,process_text(verb),verb['Attr']['method'] if 'method' in verb['Attr'] else 'POST', Instance, {}, OTwiml)
+	Valid, Twiml, AddMessage = get_external_twiml(Account,process_text(verb),verb['Attr']['method'] if 'method' in verb['Attr'] else 'POST', Instance, {}, OrigionalTwiml)
 	msg+=AddMessage
 	if Valid:
 		msg+='A new Twiml document was created, processing will continue on that document'
@@ -523,7 +534,7 @@ def process_text(verb):
 
 #this not ideal, but was getting errors other ways so will refactor when needed.
 #returns the text, whether or not it should stop processing and wait for input and the new twiml document, if applicable
-def process_verb(verb,Twiml, ModelInstance, Input):
+def process_verb(verb, Twiml, ModelInstance, Input):
 	#logging.info(verb)
 	if verb['Type'] =='Say': 
 		return process_say(verb) #done
@@ -536,11 +547,11 @@ def process_verb(verb,Twiml, ModelInstance, Input):
 	elif verb['Type'] == 'Sms':
 		return process_sms(verb, Twiml, ModelInstance) #done
 	elif verb['Type'] == 'Dial':
-		return (process_dial(verb),True,False)
+		return (process_dial(verb, Twiml, ModelInstance),True,False)
 	elif verb['Type'] == 'Number':
-		return (process_number(verb),False,False)
+		return (process_number(verb, Twiml, ModelInstance),False,False)
 	elif verb['Type'] == 'Conference':
-		return (process_conference(verb),False,False)
+		return (process_conference(verb, Twiml, ModelInstance),False,False)
 	elif verb['Type'] == 'Hangup':
 		return (process_hangup(verb),True,False) #done
 	elif verb['Type'] == 'Redirect':

@@ -100,6 +100,9 @@ class CallList(base_handlers.ListHandler):
 		format = response.response_format(self.request.path.split('/')[-1])
 		if parameters.required(['From','To','Url'],self.request):
 			Phone_Number = incoming_phone_numbers.Incoming_Phone_Number.all().filter('PhoneNumber = ',self.request.get('From')).filter('AccountSid =',ACCOUNT_SID).get()
+			if Phone_Number is None:
+				Phone_Number = outgoing_caller_ids.Outgoing_Caller_Id.all().filter('PhoneNumber =', self.request.get('From')).filter('AccountSid =', ACCOUNT_SID).get()
+				
 			if Phone_Number is not None:
 				Call = calls.Call.new(
 						From = self.request.get('From'),
@@ -130,7 +133,8 @@ class CallList(base_handlers.ListHandler):
 					Call.disconnect(StatusCallback,StatusCallbackMethod)
 				self.response.out.write(response.format_response(response.add_nodes(self,response_data,format),format))
 			else:
-				self.response.out.write(response.format_response(errors.rest_error_response(404,"Resource not found",format),format))				
+				#we dont have a valid outgoing phone number to which to make the call
+				self.response.out.write(response.format_response(errors.rest_error_response(400,"Resource not found",format,21212, 'http://www.twilio.com/docs/error/21212' ),format))				
 		else:
 			self.response.out.write(response.format_response(errors.rest_error_response(400,"Missing Parameters",format),format))
 			
