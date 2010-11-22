@@ -100,6 +100,9 @@ class CallList(base_handlers.ListHandler):
 		format = response.response_format(self.request.path.split('/')[-1])
 		if parameters.required(['From','To','Url'],self.request):
 			Phone_Number = incoming_phone_numbers.Incoming_Phone_Number.all().filter('PhoneNumber = ',self.request.get('From')).filter('AccountSid =',ACCOUNT_SID).get()
+			if Phone_Number is None:
+				Phone_Number = outgoing_caller_ids.Outgoing_Caller_Id.all().filter('PhoneNumber =', self.request.get('From')).filter('AccountSid =', ACCOUNT_SID).get()
+				
 			if Phone_Number is not None:
 				Call = calls.Call.new(
 						From = self.request.get('From'),
@@ -116,8 +119,9 @@ class CallList(base_handlers.ListHandler):
 				#ringing, what should we do? connect and read twiml and parse, fail, busy signal or no answer
 				#default is to connect, read twiml and do some things i guess
 
-				Call.connect(Phone_Number, self.request)
+				#Call.connect(Phone_Number, self.request)
 
+				"""
 				if self.request.get('StatusCallback',None) is not None:
 					StatusCallback = self.request.get('StatusCallback')
 					StatusCallbackMethod = self.request.get('StatusCallbackMethod','POST').upper()
@@ -126,11 +130,15 @@ class CallList(base_handlers.ListHandler):
 				elif Phone_Number.StatusCallback is not None:
 					StatusCallback = Phone_Number.StatusCallback
 					StatusCallbackMethod = Phone_Number.StatusCallbackMethod
+
 				if self.request.get('StatusCallback',None) is not None or Phone_Number.StatusCallback is not None:
 					Call.disconnect(StatusCallback,StatusCallbackMethod)
+				"""
+				response_data = Call.get_dict()
 				self.response.out.write(response.format_response(response.add_nodes(self,response_data,format),format))
 			else:
-				self.response.out.write(response.format_response(errors.rest_error_response(404,"Resource not found",format),format))				
+				#we dont have a valid outgoing phone number to which to make the call
+				self.response.out.write(response.format_response(errors.rest_error_response(400,"Resource not found",format,21212, 'http://www.twilio.com/docs/error/21212' ),format))				
 		else:
 			self.response.out.write(response.format_response(errors.rest_error_response(400,"Missing Parameters",format),format))
 			

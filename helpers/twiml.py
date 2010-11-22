@@ -119,37 +119,37 @@ def emulate(url, method = 'GET', digits = None):
 """
 
 class TwiMLSyntaxError(Exception):
-	def __init__(self, lineno, col, doc):
-		self.lineno = lineno
-		self.col = col
-		self.doc = doc
+	def __init__(self, error, code, msg):
+		self.error = error
+		self.code = code
+		self.msg = msg		
 
 	def __str__(self):
-		return "TwiMLSyntaxError at line %i col %i near %s" \
-			% (self.lineno, self.col, self.doc)
+		return "%s\nTwilioCode: %s TwilioMsg: %s" \
+			% (self.error, str(self.code), self.msg)
 
-#Returns valid, twiml_object, error message
-def parse_twiml(response, sms = False):
+#Returns valid, twiml_object, twilio code, twilio message
+def parse_twiml(response, sms = False, allow_dial = True):
 	try:
 		rdoc = minidom.parseString(response)
 	except ExpatError, e:
-		return False, False, 'Bad TwiML Document'
+		return False, False, 12100, 'http://www.twilio.com/docs/errors/12100'
 
 	try:
 		respNode = rdoc.getElementsByTagName('Response')[0]
 	except IndexError, e:
-		return False, False, 'No response tag in TwiML'
+		return False, False, 12100, 'http://www.twilio.com/docs/errors/12100'
 
 	if not respNode.hasChildNodes():
-		return False, False, 'No child nodes, nothing to do.'
+		return False, False, 12100, 'http://www.twilio.com/docs/errors/12100'
 	nodes = respNode.childNodes
 	try:
-		twiml_object = walk_tree(nodes,'Response', sms)
+		twiml_object = walk_tree(nodes,'Response', sms = sms, allow_dial = allow_dial)
 	except TwiMLSyntaxError, e:
-		return False, False, e
+		return False, False, e.code, e.msg
 	#lets walk the tree and create a list [ { 'Verb' : '', 'Attr': { 'action' : '', 'Method' : 'POST' } } ]
 	else:
-		return True, twiml_object, False
+		return True, twiml_object, 0, ''
 
 def retrieve_attr(node, Type, sms = False):
 	d = {}
@@ -157,10 +157,10 @@ def retrieve_attr(node, Type, sms = False):
 		if (sms == False and attr[0] in ALLOWED_VOICE_ELEMENTS[Type]) or (sms == True and attr[0] in ALLOWED_SMS_ELEMENTS[Type]):
 			d[attr[0]] = attr[1]
 		else:
-			raise TwiMLSyntaxError(0, 0, 'Invalid attribute in '+Type+':('+attr[0]+'='+attr[1]+')')
+			raise TwiMLSyntaxError('Invalid attribute in '+Type+':('+attr[0]+'='+attr[1]+')', 12200,'http://www.twilio.com/docs/errors/12200')
 	return d
 
-def walk_tree(nodes, parentType, sms = False):
+def walk_tree(nodes, parentType, sms = False, allow_dial = True):
 	twiml = []
 	count = 0
 	for node in nodes:
@@ -169,18 +169,30 @@ def walk_tree(nodes, parentType, sms = False):
 			#logging.info(parentType)
 			#logging.info(node.nodeName.encode('ascii'))
 			#logging.info(sms)
-			if ( ( parentType == 'Response' and ( ( node.nodeName.encode('ascii') in ALLOWED_SMS_ELEMENTS and sms == True) or (node.nodeName.encode('ascii') in ALLOWED_VOICE_ELEMENTS and sms == False) ) ) or ( parentType in ALLOWED_SUBELEMENTS ) ):
-				
+			#if we are at the top level of the response, and we are in the allowed verbs for the request type, or we are a valid subelement
+			nodeName = node.nodeName.encode( 'ascii' )
+
+			if ( ( parentType == 'Response' and ( ( nodeName in ALLOWED_SMS_ELEMENTS and sms == True) or ( nodeName in ALLOWED_VOICE_ELEMENTS and sms == False ) ) ) or ( parentType in ALLOWED_SUBELEMENTS ) ):
+
+				if allow_dial == False and nodeName == 'Dial':
+
+					raise TwiMLSyntaxError( 'Cannot Dial out from a dial call segment', 13201, 'http://www.twilio.com/docs/errors/13201' )
+
 				if parentType == 'Response' or  node.nodeName.encode('ascii') in ALLOWED_SUBELEMENTS[parentType]:
-				
-					twiml.append( { 'Type' : node.nodeName.encode( 'ascii' ), 'Attr' : retrieve_attr(node, node.nodeName.encode('ascii'), sms),'Children': walk_tree(node.childNodes, node.nodeName.encode('ascii'), sms) } )
-				
+
+					check_twiml_verb_attr(node)
+
+					check_twiml_verb_children(node)
+
+					twiml.append( { 'Type' : node.nodeName.encode( 'ascii' ), 'Attr' : retrieve_attr(node, node.nodeName.encode('ascii'), sms),'Children': walk_tree(node.childNodes, node.nodeName.encode('ascii'), sms = sms) } )
+
 				else:
-				
-					raise TwiMLSyntaxError(0, 0, 'Invalid TwiML nested element in '+parentType+'. Not allowed to nest '+node.nodeName.encode('ascii'))					
+
+					raise TwiMLSyntaxError('Invalid TwiML nested element in '+parentType+'. Not allowed to nest '+node.nodeName.encode('ascii'), 12200, 'http://www.twilio.com/docs/errors/12200')					
+
 			else:
 
-				raise TwiMLSyntaxError(0, 0, 'Invalid TwiML in '+parentType+'. Problem with '+node.nodeName.encode('ascii')+' element: '+str(count))
+				raise TwiMLSyntaxError( 'Invalid TwiML in ' + parentType + '. Problem with '+node.nodeName.encode('ascii')+' element ('+str(count)+')', 12200, 'http://www.twilio.com/docs/errors/12200' )
 
 		elif node.nodeType == node.TEXT_NODE and parentType != 'Response':
 
@@ -192,8 +204,46 @@ def walk_tree(nodes, parentType, sms = False):
 		
 	return twiml
 
+def check_twiml_verb_attr(node):
+	name = node.nodeName.encode( 'ascii' )
+	if name == 'Dial':
+		pass
+	elif name == 'Conference':
+		pass
+	elif name == 'Number':
+		pass
+	
+def check_twiml_dial_attr():
+	"""docstring for check_twiml_dial_attr"""
+	pass
 
-def check_twiml(response):
+def check_twiml_conference_attr():
+	"""docstring for check_twiml_conference_attr"""
+	pass
+	
+def check_twiml_number_attr():
+	"""docstring for check_twiml_number_attr"""
+	pass
+	
+def check_twiml_verb_children(node):
+	verb = node.nodeName.encode( 'ascii' )
+	if verb == 'Dial':
+		#should be a seperate function, but right now this is the only place where it matters"
+		if not len(node.childNodes):
+			raise TwiMLSyntaxError( 'The dial verb needs to have nested nouns', 12100, 'http://www.twilio.com/docs/errors/12100' )
+		else:
+			conf = False
+			num = False
+			for child in node.childNodes:
+				if child.nodeName.encode( 'ascii' ) == 'Conference':
+					conf = True
+				elif child.nodeName.encode( 'ascii' ) == 'Number':
+					num = True
+			if num and conf:
+				raise TwiMLSyntaxError( 'Cannot have nested Number and Conference in the same Dial Verb', 12100, 'http://www.twilio.com/docs/errors/12100' )
+				
+
+def check_twiml_content_type(response):
 	TWIML_CONTENT_TYPES = ['text/xml','application/xml','text/html']
 	TEXT_CONTENT_TYPES = ['text/plain']
 	AUDIO_CONTENT_TYPES = ['audio/mpeg', 'audio/wav', 'audio/wave', 'audio/x-wav', 'audio/aiff', 'audio/x-aifc', 'audio/x-aiff', 'audio/x-gsm', 'audio/gsm', 'audio/ulaw']
@@ -259,7 +309,7 @@ def process_record(verb, Twiml, ModelInstance, Input = ''):
 					Account = accounts.Account.all().filter('Sid =',ModelInstance.AccountSid).get()
 					
 					#Whether or not twiml parsed, the twiml dictionary, and any error messages
-					Valid, Twiml, AddMessage = get_external_twiml(Account, Action, Method, ModelInstance, {'SmsSid' : Instance.Sid, 'SmsStatus' : Message.Status}, OTwiml)
+					Valid, Twiml, AddMessage = get_external_twiml(Account, Action, Method, ModelInstance, {'SmsSid' : Instance.Sid, 'SmsStatus' : Message.Status}, OrigionalTwiml)
 				msg+=AddMessage
 				if 'transcribe' in verb['Attr'] and verb['Attr']['transcribe'] == 'true':
 					transcribeCallback = verb['Attr']['transcribeCallback'] if 'Attr' in verb and 'transcribeCallback' in verb['Attr'] else None
@@ -372,7 +422,7 @@ def process_gather(verb, Twiml, ModelInstance, Input):
 					return msg, False, False
 
 #the verb node of the tiwml document, the twiml document, and the instance that caused the creation of the twiml document
-def process_sms(verb, OTwiml, Instance):
+def process_sms(verb, OrigionalTwiml, Instance):
 	msg = ''
 	To = verb['Attr']['to'] if 'Attr' in verb and 'to' in verb['Attr'] else Instance.From
 	From = verb['Attr']['from'] if 'Attr' in verb and 'from' in verb['Attr'] else Instance.To
@@ -399,10 +449,10 @@ def process_sms(verb, OTwiml, Instance):
 	if Action is None:
 		#then techincally we should rerequest the original url
 		#but i dont make sure the method is the same :/
-		#Action = OTwiml.Url
+		#Action = OrigionalTwiml.Url
 		pass
 	if Action is not None:
-		Valid, Twiml, AddMessage = get_external_twiml(Account, Action, Method, Instance,{'SmsSid' : Instance.Sid, 'SmsStatus' : Message.Status}, OTwiml)
+		Valid, Twiml, AddMessage = get_external_twiml(Account, Action, Method, Instance,{'SmsSid' : Instance.Sid, 'SmsStatus' : Message.Status}, OrigionalTwiml)
 	
 	msg+=AddMessage
 
@@ -431,26 +481,37 @@ def process_dial(verb, OrigionalTwiml, Instance):
 	else:
 		pass
 
-def process_number(verb):
+def process_number(verb, OrigionalTwiml, Instance):
 	msg = 'Dialing number: '+ process_text(verb)
 	if 'sendDigits' in verb['Attr']:
 		msg+='\nSending digits: '+verb['Attr']['sendDigits']
 	if 'url' in verb['Attr']:
 		pass
-		#need to grab this twiml document, create a new call and pass in a bunch of other things, damn this gets much more complex to maintain state for, not impossible, but certainly harder and more trees
+	#can i make it look like it came from a different number
+	#create a new call and make it ring!
+	"""
+	Call = calls.Call.new(	AccountSid = Instance.AccountSid,
+							ParentSid = Instance.Sid,
+							request = None,
+							To = str( process_text( verb ) ),
+							From = Instance.From,
+							PhoneNumberSid = Instance.PhoneNumberSid,
+							Direction = 'outbound-dial')
+	"""
+	#need to grab this twiml document, create a new call and pass in a bunch of other things, damn this gets much more complex to maintain state for, not impossible, but certainly harder and more trees
 	return 
 
-def process_conference(verb):
+def process_conference(verb, OrigionalTwiml, Instance):
 	return 'Putting into conference room: '+process_text(verb)
 
 def process_hangup(verb):
 	return 'Call Hung Up'
 
-def process_redirect(verb, OTwiml, Instance):
+def process_redirect(verb, OrigionalTwiml, Instance):
 	msg = 'Redirecting to '+process_text(verb)
 	Account = accounts.Account.all().filter('Sid =',Instance.AccountSid).get()
 	NewDoc = False
-	Valid, Twiml, AddMessage = get_external_twiml(Account,process_text(verb),verb['Attr']['method'] if 'method' in verb['Attr'] else 'POST', Instance, {}, OTwiml)
+	Valid, Twiml, AddMessage = get_external_twiml(Account,process_text(verb),verb['Attr']['method'] if 'method' in verb['Attr'] else 'POST', Instance, {}, OrigionalTwiml)
 	msg+=AddMessage
 	if Valid:
 		msg+='A new Twiml document was created, processing will continue on that document'
@@ -473,7 +534,7 @@ def process_text(verb):
 
 #this not ideal, but was getting errors other ways so will refactor when needed.
 #returns the text, whether or not it should stop processing and wait for input and the new twiml document, if applicable
-def process_verb(verb,Twiml, ModelInstance, Input):
+def process_verb(verb, Twiml, ModelInstance, Input):
 	#logging.info(verb)
 	if verb['Type'] =='Say': 
 		return process_say(verb) #done
@@ -486,11 +547,11 @@ def process_verb(verb,Twiml, ModelInstance, Input):
 	elif verb['Type'] == 'Sms':
 		return process_sms(verb, Twiml, ModelInstance) #done
 	elif verb['Type'] == 'Dial':
-		return (process_dial(verb),True,False)
+		return (process_dial(verb, Twiml, ModelInstance),True,False)
 	elif verb['Type'] == 'Number':
-		return (process_number(verb),False,False)
+		return (process_number(verb, Twiml, ModelInstance),False,False)
 	elif verb['Type'] == 'Conference':
-		return (process_conference(verb),False,False)
+		return (process_conference(verb, Twiml, ModelInstance),False,False)
 	elif verb['Type'] == 'Hangup':
 		return (process_hangup(verb),True,False) #done
 	elif verb['Type'] == 'Redirect':
@@ -521,7 +582,7 @@ def get_external_twiml(Account, Action, Method, Instance, Payload, Twiml):
 		#parse the new twiml document
 		if 'Content-Length' in Response.headers and Response.headers['Content-Length'] > 0:
 			#return Valid, Twiml_object, ErrorMessage
-			Valid, Twiml_object, ErrorMessage =  parse_twiml(Response.content, True if Instance.Sid[0:2] == 'SM' else False) #returns Valid, Twiml_object, ErrorMessage
+			Valid, Twiml_object, TwilioCode, TwilioMsg =  parse_twiml(Response.content, True if Instance.Sid[0:2] == 'SM' else False) #returns Valid, Twiml_object, ErrorMessage
 			Twiml = None
 			if Valid:
 				#if all that works, create new twiml document
@@ -538,7 +599,7 @@ def get_external_twiml(Account, Action, Method, Instance, Payload, Twiml):
 				)
 				Twiml.put()
 			else:
-				msg+='An error occurred parsing your action\'s Twiml document, will continue parsing original\n'+ErrorMessage+'\n'
+				msg+='An error occurred parsing your action\'s Twiml document, will continue parsing original\n'+TwilioMsg+'\n'
 			return Valid, Twiml, msg
 
 	return False, False, 'Could not retrieve a valid TwiML document'

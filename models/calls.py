@@ -43,6 +43,7 @@ class Call(base.CommonModel):
 	AnsweredBy = db.StringProperty()
 	ForwardedFrom = db.StringProperty()
 	CallerName = db.StringProperty()
+	ParentCallSid = db.StringProperty()
 	
 	"""
 	#No longer needed!
