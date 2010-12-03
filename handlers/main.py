@@ -141,18 +141,6 @@ class PhoneNumber(webapp.RequestHandler):
 		else:
 			self.redirect('/phone-numbers')
 		
-class FakeSms(webapp.RequestHandler):
-	def __init__(self):
-		self.get_template = '../templates/fake-sms.html'
-		self.post_template = '../templates/fake-sms-result.html'
-		self.InstanceMain = ['SmsUrl', 'SmsMethod']
-		self.InstanceFallback = ['SmsFallbackUrl', 'SmsFallbackMethod']
-		self.REQUIRED = ['From','Body']
-		self.ALLOWED_PARAMETERS = ['FromCity','FromState','FromZip','FromCounty','ToCity','ToState','ToZip','ToCounty']
-		self.Instance = messages.Message
-		self.SMS = True
-	
-
 class FakeInbound(webapp.RequestHandler):
 	@webapp_decorator.check_logged_in
 	def get(self, Sid):
@@ -270,6 +258,16 @@ class FakeInbound(webapp.RequestHandler):
 		else:
 			self.redirect('/phone-numbers')
 
+class FakeSms(FakeInbound):
+	def __init__(self):
+		self.get_template = '../templates/fake-sms.html'
+		self.post_template = '../templates/fake-sms-result.html'
+		self.InstanceMain = ['SmsUrl', 'SmsMethod']
+		self.InstanceFallback = ['SmsFallbackUrl', 'SmsFallbackMethod']
+		self.REQUIRED = ['From','Body']
+		self.ALLOWED_PARAMETERS = ['FromCity','FromState','FromZip','FromCounty','ToCity','ToState','ToZip','ToCounty']
+		self.Instance = messages.Message
+		self.SMS = True
 
 
 class FakeVoice(FakeInbound):
