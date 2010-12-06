@@ -190,11 +190,14 @@ class FakeInbound(webapp.RequestHandler):
 					Instance.put()
 					Payload = Instance.get_dict()
 					#This is some really really bad bad form processing
+
 					#Payload = {}
 					for param in self.ALLOWED_PARAMETERS:
-						Payload[param] = self.request.get(param)
+						Payload[param] = self.request.get(param,'')
+					for k in Payload:
+						if Payload[k] is None:
+							Payload[k] = ''
 					#has to have a smsurl, not necessarily fallback url
-
 					# GET THE TWIML URLS
 					self.data['Response'] = request.request_twiml(self.data['Account'], getattr( self.data['PhoneNumber'], self.InstanceMain[0]), getattr( self.data['PhoneNumber'], self.InstanceMain[1] ), Payload)
 
