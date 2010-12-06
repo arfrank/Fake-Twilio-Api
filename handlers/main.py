@@ -190,7 +190,7 @@ class FakeInbound(webapp.RequestHandler):
 					Instance.put()
 					Payload = Instance.get_dict()
 					#This is some really really bad bad form processing
-					Payload = {}
+					#Payload = {}
 					for param in self.ALLOWED_PARAMETERS:
 						Payload[param] = self.request.get(param)
 					#has to have a smsurl, not necessarily fallback url
